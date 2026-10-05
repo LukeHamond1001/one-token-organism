@@ -160,6 +160,7 @@ KINDS = {
     "knee_over": "the far knee bent over within 76 N, then let go (A8)",
     "pull_to_sit": "both forearms held, the pull growing to her brief cap; at the cap for 2 ticks she stops and lays it back (A9)",
     "prop": "the trunk held where it reached, within 30 deg of vertical, easing and hovering, the catch (A9)",
+    "stand_up": "her hands at its trunk lead it from the mat to its feet, steady it standing, walk it forward beside her, and sit it down (C268)",
     "turn": "the brief turn from its front toward its back: springs on its pelvis and a shoulder, growing within the caps, at most "
             "2 s (A7)",
     "bring_back": "fetch a toy that rolled away and set it down within the child's reach (4.10's reach ladder, level 1)",
@@ -2159,6 +2160,9 @@ class ParentMotion:
         brief = any(h.brief for h in self.holds) and self.brief_s < K.BRIEF_S
         one = K.CAP_ONE_BRIEF if brief else K.CAP_ONE
         two = K.CAP_TWO_BRIEF if brief else K.CAP_TWO
+        if any(h.kind == "stand" and h.ctl.get("mode") in ("raise", "lower") for h in self.holds):   # C268: while she raises it to its feet
+            wt_ = float(m.body_subtreemass[m.body("pelvis").id]) * 9.81                    # or sits it down her caps are a share of its
+            two = max(two, K.STAND_CAP_SHARE * wt_); one = max(one, K.STAND_CAP_SHARE * wt_ / 2)   # weight (_ctl_stand)
         body = self.body_hist.max(axis=0)                                   # what her body already presses on the G1 (the most of the
         touch = self.hold_touch                                             # last 5 steps, per chain) and her holding hands' own touch
         scale = np.ones(len(raw))
@@ -4980,6 +4984,8 @@ class ParentMotion:
                     # hand sagged 16 to 22 cm below its plan on day 66's copy, the spring on the link carrying the force all the while)
                     pushed = bool(self.yielding.get(f"arm_{h.side}", False))
                     off = float(np.linalg.norm(g_act - self._grip_now(h.side)[0])) if pushed else 0.0
+                    if h.kind == "stand":                                   # C268: her grip at its trunk is not knocked off by its own
+                        off = 0.0                                           # arms' flailing against her wrists
                 if h.kind in ("turn", "gather", "pull") and off > K.GRIP_TOL_M:   # C88 (A103): the turn's hand GRASPS the limb's root: while it
                     # A168 (2026-10-02): and so do the pull-to-sit's hands on its forearms (A9: 'takes both its forearms'), the gather's
                     # too. Day 58's second pull with the whole chain (tick 2,804,015): both forearms gathered, the pull begun at the
@@ -4994,7 +5000,7 @@ class ParentMotion:
                         off = 0.0
                 e = max(e or 0.0, off)
             slip = e is not None and e > K.HOLD_SLIP_M                      # the held point left her reach: it slipped from her grip
-            if slip and self._grasp(h) and e <= 2 * K.HOLD_SLIP_M and self._trunk_coming():
+            if slip and self._grasp(h) and e <= 2 * K.HOLD_SLIP_M and (self._trunk_coming() or h.kind == "stand"):   # (C268: she is shuffling after it)
                 slip = False                                                # C237: a grasp's slack while her trunk is on its way (below)
             if slip:
                 if h.kind == "prop" and c.get("fall"):
@@ -5025,6 +5031,11 @@ class ParentMotion:
             c.update(mode="hold", k=0, steady=0, last_up=-99, best=self.child.trunk_deg, ref=_lst(p), head_z=float(self.child.head[2]),
                      react=0, alone=0, catches=0, falls=0)
             h.cap = K.PROP_EASE[0] * K.CAP_TWO / 2
+        elif h.kind == "stand":
+            centre = self._chest_point()
+            c.update(mode="raise", lead=_lst(centre), up=float(centre[2]), steady=0, walk_t=0, stood=False, walked=0.0,
+                     feet0=_lst(self._feet_mid()), grasp=True, both=False)   # (a grasp under its arm: it rides with the trunk, C236)
+            h.cap = K.CAP_TWO / 2
         elif h.kind in ("pull", "turn"):
             c.update(ramp=0.0, top=0)
             h.cap = 0.0
@@ -5179,6 +5190,125 @@ class ParentMotion:
             return
         falls.append(f)
         del falls[:-50]
+
+    def _chest_point(self):
+        t_ = self.m.body("torso_link").id
+        return self.d.xpos[t_] + self.d.xmat[t_].reshape(3, 3) @ np.array([0.0, 0.0, 0.22])
+
+    def _feet_mid(self):
+        return 0.5 * (self.d.xpos[self.m.body("left_ankle_roll_link").id] + self.d.xpos[self.m.body("right_ankle_roll_link").id])
+
+    def _ctl_stand(self, h, c):
+        """C268 (2026-10-04): THE CHILD STOOD UP, HELD, WALKED AND SAT DOWN. Her two hands on the corner of its chest that faces her
+        lead the chest from where it lies up over its pelvis (it sits up) and then over its feet (raise), steady it there (steady),
+        lead it ahead of its feet the way it faces at its own pace (walk: the stepping reflex's, A193), then lead it back behind
+        its feet and down to sitting, and lay it back (lower, lay). She shuffles beside it on her knees throughout, keeping its
+        chest as far before her as when she took it. Each hand's spring target is the chest's led point plus that hand's own
+        offset from it as the trunk stands now; the led point is never more than STAND_LEAD_M from the chest. Her caps: while she
+        raises it or sits it down, a share of its weight (STAND_CAP_SHARE: her handling caps are a woman's for a human infant, and
+        this child weighs three toddlers; at her own 156 N it came to sitting at 31 to 45 deg and no further); while it stands and
+        walks, her own. The day-84 copy (p1/standup.py): on its feet in 9 to 10 s, standing on its own legs with 50 to 116 N of
+        her steadying. A raise that does not stand it in RAISE_MAX_TICKS, a held stand whose pelvis sinks under STAND_FALL_M, or a
+        hand that loses it: she sits it down and lays it back with what she holds; she never drops it"""
+        ch = self.child; mode = c["mode"]
+        feet = self._feet_mid(); lead = np.asarray(c["lead"], float)
+        off = self.d.xmat[h.body].reshape(3, 3) @ (h.local - np.array([0.0, 0.0, 0.22]))   # this hand's point from the chest's led point
+        now = self._chest_point()
+        pz = float(ch.pelvis[2]); th = float(ch.trunk_deg)
+        fwd_c = unit(self.d.xmat[h.body].reshape(3, 3)[:, 0] * [1, 1, 0])[:2]             # the way it faces
+        if mode in ("steady", "walk"):                                      # standing, her hands hold its trunk UPRIGHT: each hand's point
+            yw_ = math.atan2(fwd_c[1], fwd_c[0])                            # where it would be on a trunk standing straight, facing as it
+            Rz_ = np.array([[math.cos(yw_), -math.sin(yw_), 0.0], [math.sin(yw_), math.cos(yw_), 0.0], [0.0, 0.0, 1.0]])   # faces (led
+            off = Rz_ @ (h.local - np.array([0.0, 0.0, 0.22]))              # by its chest alone it pitched onto its front in the walk)
+        h.cap = K.CAP_TWO / 2
+        if mode in ("raise", "lower"):
+            wt_ = float(self.m.body_subtreemass[self.m.body("pelvis").id]) * 9.81
+            h.cap = max(h.cap, K.STAND_CAP_SHARE * wt_ / 2)
+        if h.side == "L" and mode in ("raise", "steady", "walk", "lower"):                 # SHE MOVES WITH IT ON HER KNEES (once a tick)
+            b = self.base; yaw = float(b["yaw"]); fwd_ = np.array([math.cos(yaw), math.sin(yaw)])
+            at = np.asarray(b["at"], float)
+            if "reach0" not in c:
+                c["reach0"] = float((now[:2] - at) @ fwd_)                  # how far before her its chest lay when she took it
+            want = now[:2] - fwd_ * float(c["reach0"])
+            dv_ = want - at; dn_ = float(np.linalg.norm(dv_))
+            if dn_ > 0.03:
+                b["at"] = _lst(at + dv_ / dn_ * min(dn_, K.STAND_SHUFFLE_MPS * TICK_S))
+        n_on = sum(1 for x in self.holds if x.kind == "stand")
+        if n_on >= 2:
+            c["both"] = True
+        elif c.get("both"):                                                 # her other hand has lost it: she sits it down with this one
+            if mode not in ("lower", "lay"):
+                c["mode"] = mode = "lower"; c["why"] = "her other hand lost its hold"
+        elif mode == "raise":
+            h.next = h.point(self.d); h.cap = 0.0; c["lead"] = _lst(now); c["up"] = float(now[2]); c["t"] = 0   # one hand on: it waits
+            return
+        stood = pz >= K.STAND_PELVIS_M and th <= K.STAND_DEG
+
+        def near(lead_):                                                    # the led point kept within STAND_LEAD_M of the chest
+            dv = lead_ - now; dn = float(np.linalg.norm(dv))
+            return lead_ if dn <= K.STAND_LEAD_M else now + dv / dn * K.STAND_LEAD_M
+
+        if mode == "raise":
+            if not c.get("sat") and th <= K.SITTING_DEG - 5.0:
+                c["sat"] = True                                             # its trunk is up: now over its feet
+            goal = np.array([feet[0], feet[1], K.STAND_CHEST_M]) if c.get("sat") else \
+                np.array([ch.pelvis[0], ch.pelvis[1], K.SIT_CHEST_M + 0.15])
+            v = goal - lead; n = float(np.linalg.norm(v))
+            if n > 1e-6:
+                lead = lead + v / n * min(n, K.RAISE_MPS * TICK_S)
+            c["up"] = min(float(goal[2]), float(c["up"]) + 1.5 * K.RAISE_MPS * TICK_S, float(now[2]) + K.STAND_LEAD_M)   # up before across
+            lead = near(np.array([lead[0], lead[1], max(lead[2], float(c["up"]))]))
+            c["lead"] = _lst(lead); h.next = lead + off
+            if stood:
+                c["mode"] = "steady"; c["steady"] = 0; c["stood"] = True; c["feet0"] = _lst(feet)
+            elif c["t"] >= K.RAISE_MAX_TICKS:
+                c["mode"] = "lower"; c["why"] = "it did not come to its feet"
+        elif mode == "steady":
+            lead = near(np.array([feet[0], feet[1], K.STAND_CHEST_M]))
+            c["lead"] = _lst(lead); h.next = lead + off
+            c["steady"] += 1
+            if pz < K.STAND_FALL_M:
+                c["mode"] = "lower"; c["why"] = "it sank from standing"
+            elif c["steady"] >= K.STAND_HOLD_TICKS:
+                c["mode"] = "walk"; c["walk_t"] = 0; c["feet0"] = _lst(feet)
+        elif mode == "walk":
+            c["walk_t"] += 1
+            c["walked"] = max(float(c.get("walked", 0.0)), float((feet[:2] - np.asarray(c["feet0"], float)[:2]) @ fwd_c))
+            if float((lead[:2] - feet[:2]) @ fwd_c) < K.WALK_LEAD_M:        # her hands wait for its feet
+                lead[:2] = lead[:2] + fwd_c * K.WALK_MPS * TICK_S
+            lead[2] = K.STAND_CHEST_M
+            lead = near(lead)
+            c["lead"] = _lst(lead); h.next = lead + off
+            if pz < K.STAND_FALL_M:
+                c["mode"] = "lower"; c["why"] = "it sank while walking"
+            elif c["walked"] >= K.WALK_FAR_M or c["walk_t"] >= K.WALK_MAX_TICKS:
+                c["mode"] = "lower"; c["why"] = None
+            elif c["walked"] >= float(c.get("far", 0.0)) + 0.02:            # still going: 2 cm more since she last looked
+                c["far"] = float(c["walked"]); c["far_t"] = int(c["walk_t"])
+            elif c["walk_t"] - int(c.get("far_t", 0)) >= K.WALK_STALL_TICKS:   # it has stopped stepping: she sits it down while it
+                c["mode"] = "lower"; c["why"] = None                        # still stands (the first walk: 0.40 m, then 8 s of
+                                                                            # standing still, then it sank at her cap)
+        elif mode == "lower":
+            # IT IS SAT DOWN AS IT WAS STOOD UP, backwards: its chest led back behind its feet and down to sitting height (lowered
+            # straight down it pivoted forward over its stiff legs onto its face: the first copy that stood)
+            if "sit_at" not in c:                                           # (fallen already, it is laid down where it is)
+                c["sit_at"] = _lst(feet[:2] - fwd_c * K.SIT_BACK_M) if th <= K.SITTING_DEG and pz >= K.STAND_FALL_M else _lst(now[:2])
+            goal = np.array([c["sit_at"][0], c["sit_at"][1], K.SIT_CHEST_M])
+            v = goal - lead; n = float(np.linalg.norm(v))
+            if n > 1e-6:
+                lead = lead + v / n * min(n, K.LOWER_MPS * TICK_S)
+            lead = near(lead)
+            c["lead"] = _lst(lead); h.next = lead + off
+            c["lower_t"] = int(c.get("lower_t", 0)) + 1
+            if (n <= 0.03 and pz < 0.30) or c["lower_t"] >= K.LOWER_MAX_TICKS:
+                c["mode"] = "lay"; c["lay_t"] = 0; c["lay_cap"] = h.cap
+        elif mode == "lay":
+            c["lay_t"] += 1
+            n_ = K.LAY_BACK_S / TICK_S
+            h.cap = c["lay_cap"] * max(0.0, 1 - c["lay_t"] / n_)
+            h.next = lead + off
+            if c["lay_t"] >= n_:
+                c["state"] = "done" if c.get("stood") else f"stopped: {c.get('why') or 'it did not stand'}; she laid it back (C268)"
 
     def _ctl_pull(self, h, c):
         """the pull-to-sit (A9): both forearms pulled toward her and up with a force growing at CAP_RAMP_NPS to her brief cap; the
@@ -6220,6 +6350,10 @@ class ParentMotion:
                 i = self.phases.index(ph)
                 self.phases[i:] = [dict(type="holds_wait", kind="prop")]
                 return "next"
+            if a is not None and ph["kind"] == "stand":
+                a["info"]["walked_m"] = round(max(float(h.ctl.get("walked", 0.0)) for h in hs), 2)
+                a["why"] = f"stood on its own legs in her hands and walked {a['info']['walked_m']:.2f} m (C268)"
+                self.stats["stands"] = self.stats.get("stands", 0) + 1
             if a is not None and any(h.ctl.get("turned") for h in hs):
                 a["why"] = "turned from its front past its side within her caps (A7, A101)"
             return "done"
@@ -6267,6 +6401,43 @@ class ParentMotion:
                                    ctl={}, tall_if_needed=(sd == "L"))
             out += ph[:-1] + [dict(ph[-1], wait=False)]
         out.append(dict(type="holds_wait", kind="prop"))
+        return out
+
+    def _act_stand_up(self, a, t):
+        if self.child.posture not in ("back", "sitting"):
+            raise Refuse("she stands it up from its back or from sitting (C268)")
+        return self._near(a, where="side", offs=(0.70, 0.75), alongs=(0.22, 0.12, 0.32)) + [dict(type="plan", what="stand", args={})]   # beside its hips
+
+    def _plan_stand(self, a):
+        """she rises onto her knees, her hands go onto the corner of its chest that faces her (one under its arm, one at its ribs:
+        reached from above while it lies, from beside it once it stands, as it turns about its own side-to-side axis), then the
+        stand's holds"""
+        if any(v is not None for v in self.holding.values()):
+            raise Refuse("her hands are busy: standing it up takes both (C268)")
+        torso = self.m.body("torso_link").id
+        her = np.asarray(self.base["at"], float)
+        Rt = self.d.xmat[torso].reshape(3, 3)
+        sg_ = 1.0 if float((her - self.d.xpos[torso][:2]) @ (Rt[:, 1][:2])) > 0 else -1.0      # its left (+y) or its right toward her
+        sides = {"hi": dict(local=[0.07, sg_ * 0.11, 0.30], normal=[0.7071, sg_ * 0.7071, 0.0]),      # under its arm, and at its waist: a
+                 "lo": dict(local=[0.06, sg_ * 0.12, 0.02], normal=[0.7071, sg_ * 0.7071, 0.0])}      # hand's breadth apart they could not
+                                                                                                       # keep it upright as it was led (it
+                                                                                                       # pitched onto its front in the walk)
+        pts = {k: self.d.xpos[torso] + Rt @ np.array(v["local"]) for k, v in sides.items()}
+        yaw = self.base["yaw"]; left = np.array([-math.sin(yaw), math.cos(yaw)])
+        order = sorted(sides, key=lambda k: -float((pts[k][:2] - her) @ left))
+        out = []
+        if self.base["mode"] == "heels":                                    # its chest will stand a metre up: above her reach from her heels
+            b = self.base
+            fw = np.array([math.cos(b["yaw"]), math.sin(b["yaw"])])
+            out.append(dict(type="kneel_down", at=_lst(np.asarray(b["at"], float) + fw * HEELS_BACK), yaw=b["yaw"], u0=3.0, u1=2.0))
+        for sd, k in zip("LR", order):
+            spec = sides[k]
+            ph = self._hold_phases(a, sd, torso, "stand", cap=K.CAP_TWO / 2, local=spec["local"], normal=spec["normal"], ctl={},
+                                   tall_if_needed=False)
+            out += ph[:-1] + [dict(ph[-1], wait=False)]
+        out.append(dict(type="holds_wait", kind="stand"))
+        out.append(dict(type="plan", what="let_go", args=dict(names=[f"stand_{s_}" for s_ in "LR"])))
+        out.append(dict(type="relax", sides="LR"))
         return out
 
     def _act_turn(self, a, t):

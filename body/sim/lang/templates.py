@@ -192,7 +192,7 @@ FRAMES = {
     "narrate_rolled": [F("oh! you roll.", "roll"), F("roll! you roll.", "roll")],
     "narrate_sat": [F("oh! you sit.", "sit"), F("you sit! sit.", "sit")],
     "body": [F("your {b}.", "{b}"), F("here is your {b}.", "{b}"), F("your {b}! your {b}.", "{b}"), F("this is your {b}.", "{b}")],
-    "motor_sit": [F("sit. you sit.", "sit"), F("up! sit up.", "up"), F("up. up. up!", "up")],
+    "motor_sit": [F("up! stand up.", "up"), F("stand. you stand.", "stand"), F("up. up. up!", "up"), F("walk. you walk.", "walk")],   # C268
     "motor_roll": [F("roll. roll.", "roll"), F("roll. you roll.", "roll")],
     "leave": [F("bye bye {n}.", "{n}"), F("bye {n}. bye bye.", "bye")],
     "peekaboo_hide": [F("where is mama?", "mama")],

@@ -489,3 +489,26 @@ HANDOVER_PALM_RISE_MIN = -0.2   # C240: a palm whose normal's rise is at least t
                                 # before one facing the floor further (the copy's -0.30 and -0.62: the toy pressed onto the back of the hand) (ours)
 TAKE_BACK_N = 0.3               # taking a toy back: she closes only after the child's palm force stayed under 0.3 N ... (A4)
 TAKE_BACK_TICKS = 2             # ... for 2 ticks
+
+# ---------------------------------------------------------------- C268 (2026-10-04): the child stood up, held, and walked to her
+STAND_CHEST_M = 1.06            # m: its upper chest's height standing (the G1's; the held point's goal over its feet)
+STAND_PELVIS_M = 0.70           # m: its pelvis above this with the trunk within STAND_DEG is standing (ours; the G1's stands at 0.79)
+STAND_DEG = 20.0                # deg: the trunk within this of vertical counts as upright in her hands (the prop's steady line)
+RAISE_MPS = 0.08                # m/s: her hands lead its chest up and over its feet at this speed (ours; the day-84 copy: on its feet
+                                # in 9 s on 100 to 135 N with its own legs' thrust, A193)
+RAISE_MAX_TICKS = 260           # a raise that has not stood it in this long (24 s) is given up and it is laid back (ours)
+STAND_HOLD_TICKS = 40           # she steadies it standing this long (6 s) before the walk or the sitting down (ours)
+WALK_LEAD_M = 0.10              # m: her hands lead its chest this far ahead of its feet's middle, toward her (ours; the copy's grid)
+WALK_MPS = 0.04                 # m/s: and no faster than this (ours; the copy: 0.78 m in 45 s)
+WALK_STOP_M = 0.45              # m: its feet this near her knees, the walk is done (ours: her own reach's comfort)
+WALK_MAX_TICKS = 400            # a walk's longest (60 s; ours)
+STAND_FALL_M = 0.50             # m: its pelvis under this while she holds it standing: it has sunk; she lowers it (ours)
+LOWER_MPS = 0.10                # m/s: her hands lower its chest to sitting height at this speed (ours)
+SIT_CHEST_M = 0.45              # m: its upper chest's height sitting on the mat (the G1's)
+STAND_SHUFFLE_MPS = 0.40        # m/s: her knee-shuffle beside the child while she raises and walks it (ours: the shuffle's own pace)
+STAND_LEAD_M = 0.15             # m: her hands' led point at most this far from its chest (ours: twice the cap's stretch at HOLD_K)
+STAND_CAP_SHARE = 0.8           # of the child's weight, both hands together, while she raises it to its feet (ours; see _ctl_stand)
+WALK_FAR_M = 1.0                # m: she walks it this far, then sits it down (ours)
+SIT_BACK_M = 0.55               # m: its chest is led this far behind its feet as she sits it down (the G1's sitting: its pelvis behind its heels)
+LOWER_MAX_TICKS = 120           # the sitting down's longest (18 s; ours)
+WALK_STALL_TICKS = 80           # a walk with no 2 cm of progress in this long (4.5 s) is over (ours)

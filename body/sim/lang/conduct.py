@@ -226,6 +226,7 @@ ACT_KINDS = {
     "withdraw": "her hand drawn back from where she was hit (4.10)",
     "guide": "guide the named limb within the guide's cap (g1acts.guide, A10)",
     "pull_to_sit": "the pull-to-sit by the forearms, rising only with its own flexion (A9)",
+    "stand_up": "her hands at its chest's sides stand it on its feet, steady it, walk it toward her and sit it down (C268)",
     "wave": "a wave",
     "walk": "walk to the target (the door, the sofa, the child's side: A6's paths)",
     "cover_face": "her hands over her face (peekaboo)",
@@ -244,7 +245,7 @@ ACT_KINDS = {
 }
 STUB_FOCUS = 60                               # the stub runs a during='focus' act until the conduct cancels it (its word's end)
 STUB_TICKS = {"look": 2, "lean_in": 7, "attend": 20, "show": 7, "point": 5, "open_hand": 5, "hand_over": 12, "touch": 7,
-              "withdraw": 2, "bring_back": 20, "bring_far": 24, "hide": 24, "turn": 14, "guide": 8, "pull_to_sit": 20, "wave": 5, "walk": 30, "cover_face": 3,
+              "withdraw": 2, "bring_back": 20, "bring_far": 24, "hide": 24, "turn": 14, "guide": 8, "pull_to_sit": 20, "stand_up": 30, "wave": 5, "walk": 30, "cover_face": 3,
               "reveal_face": 2, "do": 7, "copy": 7, "present": 12}   # the stub's nominal times, ours; W2 measures its own
 
 
@@ -279,7 +280,7 @@ TOLD_MEMORY = 300                # C135: the telling may speak of the bucket and
                                  # 'bucket'" after the wait): she saw the bucket at her look before the drop and let the toy go into it (ours)
 LEFT_WHY = ("nowhere to kneel", "out of her reach", "beyond her reach", "cannot reach")   # ... and the motion's words for a toy she cannot get to
 LEFT_MOVED_M = 0.10                           # a left toy that has moved this far is a toy again (something changed: the child, or she, moved it)
-HANDS_ON = ("guide", "knee_over", "turn", "pull_to_sit", "prop")   # her acts that move its body: no judgment of its acts while one runs (A90)
+HANDS_ON = ("guide", "knee_over", "turn", "pull_to_sit", "prop", "stand_up")   # her acts that move its body: no judgment of its acts while one runs (A90)
 UNNAMED = "?"                                 # a field her motion left out or gave as no word: it points anywhere (fail-closed)
 AT_CHILD = ("child", "child_eyes", "child_periphery", "child_line")   # the child itself: her eyes or face on its face, her hand held open or
                                                          # waved toward it, touching nothing (a part she touches is a place)
@@ -339,6 +340,8 @@ def directs(act):
         return [("hand", tg)]                                         # the part she touches, the limb she guides
     if k == "wave":
         return [("hand", "child")]
+    if k == "stand_up":
+        return [("both", "trunk"), ("trunk", UNNAMED)]                # her hands at its trunk (C268), her own trunk working
     if k == "pull_to_sit":
         return [("both", "arm"), ("trunk", UNNAMED)]                  # by the forearms (A9), her trunk leaning back
     if k == "turn":
@@ -539,7 +542,9 @@ INTENTS = {
     "narrate_rolled": Intent("plain", False, None, (EYES,)),
     "narrate_sat": Intent("plain", False, None, (EYES,)),
     "body": Intent("plain", False, None, (Act("touch", "{b}"),)),
-    "motor_sit": Intent("plain", False, None, (Act("pull_to_sit", "child"),)),
+    "motor_sit": Intent("plain", False, None, (Act("stand_up", "child"),)),   # C268: the motor block's offer is her stand_up (it sits the
+                                                                              # child up on the way, stands it, walks it, sits it down);
+                                                                              # the pull-to-sit by the forearms had not sat it once in a week
     "motor_roll": Intent("plain", False, None, (Act("guide", "far_arm"),)),
     "leave": Intent("plain", False, None, (Act("wave", "child"), Act("walk", "door"))),
     "peekaboo_hide": Intent("plain", True, None, (Act("cover_face", "child"),)),

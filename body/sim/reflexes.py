@@ -440,7 +440,9 @@ def opens(hand, act):
 # in 45 s in 10 steps without sinking. The constants below are ours, from that grid; the joint's own rate (one big step, 0.27 rad a
 # tick) sets the swing's length: 4 ticks of lift, 3 of placing, about a second, as supported infants' steps are.
 STAND_LIMBS = ("waist", "leg_l", "leg_r")
-STAND_UP_G = 8.5                # m/s2 along the torso's long axis: upright within about 30 deg (9.81 cos 30 deg; ours)
+STAND_UP_G = 5.6                # m/s2 along the torso's long axis: upright within about 55 deg (9.81 cos 55 deg; ours). 8.5 (30 deg) as
+                                # first built: raised by her hands (C268) it hung at 35 to 50 deg with its soles loaded and its legs
+                                # limp, and never came under itself; at 55 deg the thrust takes its weight as soon as it is half up
 SOLE_N = 20.0                   # N on a sole: loaded (ours: a sixteenth of the body's weight)
 STAND_GAIN, STAND_STEP = 1.0, W.STEP_BIG        # the supporting reaction is an extensor THRUST: the whole distance to the straight leg,
                                                 # at most one big step a tick. With the tone's soft spring (0.3, one small step) the
@@ -448,7 +450,8 @@ STAND_GAIN, STAND_STEP = 1.0, W.STEP_BIG        # the supporting reaction is an 
                                                 # (156 N) it stayed sitting; with the thrust it came from lying to its feet in 9 s
                                                 # on her 100 to 156 N and stood on its own legs with 20 to 45 N of her steadying
                                                 # (p1/raise.py, the day-84 copy)
-STEP_EXT = 0.12                 # rad: the stance hip's extension that starts the swing (ours)
+STEP_EXT = 0.08                 # rad: the stance hip's extension that starts the swing (ours; 0.12 on the stand-in's grid, 0.08 for
+                                # her hands' slower lead: C268's copy walked 0.40 m at it)
 STEP_LIFT, STEP_PLACE = 4, 3    # ticks: hip and knee flexing (the foot lifted and brought forward), then the knee extending (set down)
 STEP_HIP, STEP_KNEE = -0.9, 1.3 # rad: the swing's hip flexion and knee flexion targets (ours)
 STEP_HIP_PLACE = 0.8            # the hip's target while the foot is set down, as a share of STEP_HIP

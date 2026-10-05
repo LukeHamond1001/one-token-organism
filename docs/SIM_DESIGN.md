@@ -3707,6 +3707,36 @@ THREE DAYS UNDER THE FACE (days 58 to 60, the first with the reward's carrier de
 
 **C227. Where she takes a forearm depends on how it lies: the pull's spots searched for the tops first, then for either grip** (the lead, 2026-10-02 13:25; the teacher's method, branch c227; lands at the next 1,000-tick save). Day 63's six pull-to-sit offers (C224) were all refused, two 'no spot she can kneel at lets her do it (pull): her reach', and the day-64 copy showed why: the pull's and the gather's holds take the forearm at its TOP (FOREARM_HOLD along the elbow link's +z), and on a child whose arm is raised or flung out that face points away from her, so no trunk of hers reaches her hand onto it from any spot (every spot at 0.34 to 0.95 m from the forearms failed the trunk solve), where the same pull had sat the child up at 06:45 with its arms low. The spot check (`_pull_pairing`, `_gather_reach`) now asks, per forearm, whether a trunk of hers reaches the top from the spot, else the anchor from her side (`_anchor`, the general grip of A25: a point on the link's surface facing her shoulder), and keeps the grip each forearm solved with (`_pull_grips`, by link) for the hold she then makes (`_forearm_grip`); the spots are searched twice (`_act_pull_to_sit`): for the tops alone first, as A163 and A165 built it (the rig's gather engages a top the step-10 solve calls unreachable, and reached 32 cm short of an anchor the solve approved when the spot was chosen by either grip at once), then, when no spot passes, for either grip. On the day-64 copy at tick 3,090,088 (her hands free, the child supine at the mat's middle): 'sat up with its own flexion (A9)', both holds engaged. Parent 7, 7b, 9, 30, 32, 33 green. No new constant; the sim pins untouched (her method).
 
+**C268. She stands it up, steadies it, walks it and sits it down (2026-10-04).** The owner's word: walking is in, as fast as it can
+be had; the teacher wasting nothing. A193 gave the body its standing and stepping reflexes; this is her side. Her act `stand_up`
+(parent_motion: `_act_stand_up`, `_plan_stand`, `_ctl_stand`): she kneels beside its hips, rises onto her knees, takes its trunk on
+the corner that faces her (one hand under its arm, one at its waist: that corner faces her while it lies, sits and stands, as it
+turns about its own side-to-side axis), and leads its chest up over its pelvis (it sits up) and then over its feet (it stands on
+its legs' thrust); steadies it STAND_HOLD_TICKS; leads it ahead of its feet the way it faces at WALK_MPS, her hands waiting for
+its feet (WALK_LEAD_M), until WALK_FAR_M, WALK_MAX_TICKS or a stall of WALK_STALL_TICKS; then leads its chest back behind its feet
+and down to sitting and lays it back. She knee-shuffles after its chest throughout (her base follows at STAND_SHUFFLE_MPS, its
+chest kept as far before her as when she took it). Each hand's spring target is the led point plus that hand's offset as the
+trunk stands (while it stands and walks: as an upright trunk would have it, so her hands hold it upright); the led point never
+more than STAND_LEAD_M from the chest. HER CAPS: while she raises it or sits it down, both hands together STAND_CAP_SHARE (0.8) of
+its weight; standing and walking, her own (CAP_TWO). Her handling caps are a woman's for a human infant (156 N: NIOSH); this
+child weighs 337 N, three toddlers: at 156 N her hands brought it to sitting at 31 to 45 deg and no further (three copies); a
+parent raising a toddler to its feet carries most of its weight for the seconds that takes. Ours, disclosed. The reflex's
+constants moved with it: STAND_UP_G 5.6 (upright within 55 deg: raised by her it hung at 35 to 50 deg with its soles loaded and
+its legs limp at the 30 deg line) and STEP_EXT 0.08. WHAT WAS LEARNED ON THE DAY-84 COPY (p1/standup.py, a dozen runs): from her
+heels she cannot reach a chest standing a metre up (the tall kneel first); from one kneeling spot her arms cannot follow the
+chest from the mat to over its feet (the shuffle); hands on the front of its chest face up while it lies and sideways once it
+stands (the corner); a lead that runs ahead of the chest leaves her reach behind (STAND_LEAD_M); led by its chest alone it
+pitches onto its front in the walk (the upright offsets, the hands a trunk's length apart); lowered straight down it pivots
+over its stiff legs onto its face (sat down backwards). RESULTS: on its feet in 8 to 10 s; standing on its own legs with 33 to
+116 N of her steadying, the trunk 2 to 14 deg; walked 0.40 m in 35 s upright (her force 32 to 74 N), then stalled; the whole act
+with its sitting down, 250 ticks: 1 pain tick (a wrist, in the lowering), none in the raise, the stand or the walk. HER DAY: the
+motor block's offer (motor_sit) is now this act, her lines 'up! stand up.', 'stand. you stand.', 'walk. you walk.'; after a
+stand done the next is owed STAND_AGAIN_GAP on; the motor blocks four a day of 1,500 to 2,000 ticks (two of 1,000 to 1,500). A
+stand that ends with the child on its front is turned over by the block's own turn (C254). NOT YET: walking alone (alone it
+falls in a second: balance is its cerebellum's to learn in her hands), long walks, turning toward a named toy. Sim pins
+unchanged (the stub world has no parent; the reflex's constants are the G1 world's), the language default kept. World test of
+the reflexes green; parent test 58 green; the parent suite's stale tests as before. The teacher's method, the lead's.
+
 **C270. She names what it did, not the thing alone (2026-10-04).** The owner's word: enough language to understand; the teacher
 wasting nothing. Life day 86: 816 lines, nearly all bare labels ('a ball.', 'this is a car.', 'hi pip!'); her answer to the child's
 own act was 'yes! a ball.' A parent says what the baby just did as it does it, and the verb is learned from that contingent talk
@@ -4822,5 +4852,6 @@ The nine decisions of the G1 amendment are settled (section 14). These are the e
 | C269 | Her pace: floor play's gap 30-60 ticks (150-300), idle lines every 15 (40), copies every 4 s (10) | 2026-10-04 | day-84 copy: her idle 33% -> 16% of ticks; child lifted 17 -> 23, hit 5 -> 11; pins unchanged |
 | A190 | The deliberation weighs one effector's proposed act against its rest (vte_act); landed after its second trial | 2026-10-04 | with A191's strain line: pain 18 -> 6 and 13 -> 6, lifted 17 -> 32 and 0 -> 26, reward up in both pairs; sim pins re-taken |
 | C270 | Her words for the child's own act at her judgment of it ('you got the ball!', 'you hold the car.', 'the ball is up.') | 2026-10-04 | day-84 copy: said, none refused; pins unchanged |
+| C268 | Her stand_up act: the raise, the steadying, the held walk, the sitting down; her caps a share of its weight while she lifts; in her motor blocks, four a day | 2026-10-04 | day-84 copy: on its feet in 8-10 s, stands on its own legs with 33-116 N of steadying, walked 0.40 m held; pins unchanged |
 | C227 | The pull's holds take a forearm at its top; raised or flung out, that face points away from her and no spot reaches it (day 63's six refusals, the copy's every spot failing the trunk solve). | The spot check solves the top first, then the anchor from her side, keeps the grip per forearm for the hold, and searches the spots twice, tops first; the copy's pull sat the child up. Parent tests green. | 2026-10-02 |
 | C228 | Day 64 had holds of 6 to 12 s at most and no 'held' event: the smile for holding on, set at 10 s, never fired. | HELD_TICKS 20 (3 s), the smile then worn by A2's fall with mastery per toy; lane 10 as it was. | 2026-10-02 |

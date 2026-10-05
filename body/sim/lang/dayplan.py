@@ -50,7 +50,7 @@ DAY_TICKS = 24000                      # a life day (4.7)
 WAKE = 300                             # the wake episode (4.7)
 WIND = 1000                            # the winding down (4.7)
 GOODNIGHT = 300                        # goodnight (4.7)
-BLOCKS = (("floor", 3, 4000, 5000), ("motor", 2, 1000, 1500), ("show", 1, 1500, 1500), ("away", 1, 400, 600),
+BLOCKS = (("floor", 3, 4000, 5000), ("motor", 4, 1500, 2000), ("show", 1, 1500, 1500), ("away", 1, 400, 600),
           ("tasks", 1, 600, 600))      # 4.7's table: kind, how many, shortest, longest. TRAINING MODE (2026-09-29, the owner's word: fix
                                        # fast; her pace is the lead's): away 2-4 x 400-1,200 and her own tasks 3,000 cut to one short block
                                        # each, so the play blocks (drawn, then scaled to the day) carry about a quarter more of the day
@@ -59,6 +59,7 @@ PLAY_GAP = (30, 60)                    # ticks between her floor play's offers (
                                        # acted nor spoke on 33% of the day's ticks, 6,009 of them in stretches of 3 s or more
 SIT_TRIES_PER_BLOCK = 3         # C224: the pull-to-sit offered this many times a motor block when her reach or her hold refused it (ours)
 SIT_TURNS_PER_BLOCK = 1         # C254: a child on its front at the sit's offer is turned onto its back first, this many turns a block (ours)
+STAND_AGAIN_GAP = 100           # C268: after a stand done, the next one this many ticks on (15 s of rest; ours)
 SIT_RETRY_GAP = 200             # C224: ... the next try this many ticks after the refusal (30 s: a parent tries again in a minute; ours)
 SIT_RETRY_WHY = ("cannot reach", "lost their hold", "slipped", "no spot she can kneel", "did not arrive",
                  "the guide sat at its cap",
@@ -237,13 +238,23 @@ class DayPlan:
             self.last_pain = t
         if p.child_sounding and self.away:
             self.bids = [b for b in self.bids if b > t - BIDS_BACK[1]] + [t]
+        if not hasattr(self, "stood_seen"):
+            self.stood_seen = set()
         if kind == "motor" and not self.sit_due and self.sit_tries < SIT_TRIES_PER_BLOCK:
             for mid, st in (getattr(c, "ended", None) or {}).items():
                 try:
                     a_ = c.motion._act(mid)
                 except Exception:
                     a_ = {}
-                if a_.get("kind") == "pull_to_sit" and st == "refused" and any(x in str(a_.get("why", "")) for x in SIT_RETRY_WHY):
+                if a_.get("kind") == "stand_up" and st == "done" and mid not in self.stood_seen:
+                    # C268: IT STOOD AND WALKED: AGAIN, after a rest. Standing and stepping are learned by doing them many times
+                    # (a parent stands a baby up a dozen times in a play); the block owes the next one STAND_AGAIN_GAP on, as long
+                    # as the block runs
+                    self.stood_seen.add(mid); self.sit_due = True
+                    self.next_play = max(self.next_play, t + STAND_AGAIN_GAP)
+                    self.log.append((t, "motor_sit done (stood): owed again (C268)", a_.get("why", "")[:80]))
+                    break
+                if a_.get("kind") in ("pull_to_sit", "stand_up") and st == "refused" and any(x in str(a_.get("why", "")) for x in SIT_RETRY_WHY):
                     # C224 (2026-10-02): THE SIT IS TRIED AGAIN IN THE BLOCK WHEN HER REACH OR HER HOLD FAILED. Days 61 and 62: every pull-to-sit
                     # offered (one a block, A161; two a day with C220) was refused at her kneel or her hold, 'her left hand cannot reach it from
                     # here (38, 64 cm short)', 'her hands lost their hold on it before she began (it slipped)', 'no spot she can kneel at lets her
