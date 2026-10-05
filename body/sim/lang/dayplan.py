@@ -278,6 +278,7 @@ class DayPlan:
             if spot_ is not None:
                 was_ = [round(float(x), 2) for x in world.d.qpos[:2]]
                 world.carry_to_mat(to=spot_)
+                world.toys_beside(list(self.focus))                         # C286: its toys with it
                 self.log.append((t, "the walk over: carried to its mat (C281)", was_))
                 print(f"the walk over: carried to its mat at tick {t} from {was_} (C281)", flush=True)
         if not hasattr(self, "blocked_seen"):
@@ -310,6 +311,7 @@ class DayPlan:
             if float(np.hypot(pm.base["at"][0] - mat_[0], pm.base["at"][1] - mat_[1])) >= CARRY_CLEAR_M:
                 was_ = [round(float(x), 2) for x in world.d.qpos[:2]]
                 if world.carry_to_mat():
+                    world.toys_beside(list(self.focus))                     # C286: its toys with it
                     self.log.append((t, "carried back to its mat (C277)" if not hurt_ else "laid on its back: hurting on its front (C278)", was_))
                     print(f"{'laid on its back' if hurt_ else 'carried back to its mat'} at tick {t} from {was_} (C277, C278)", flush=True)
                 self.blocked_at = []; self.prone_run = self.prone_pain = 0
@@ -353,7 +355,11 @@ class DayPlan:
                 o_ = first_[int(self.rng.integers(len(first_)))]
                 c.request(["ask_where", "ask_where", "ask_what"][int(self.rng.integers(3))], o=o_)
                 self.log.append((t, "ask (C283)", o_))
-            self.next_ask = t + int(self.rng.integers(*ASK_GAP))
+                self.next_ask = t + int(self.rng.integers(*ASK_GAP))
+            else:
+                self.next_ask = t + 10                                      # C286: nothing in its view now: asked as soon as something is
+                                                                            # (the whole gap was waited each time, and a toy was in its
+                                                                            # view on 40 ticks of 500: no ask in day 92's first 7,500)
         busy = (c.pending is not None or c.trial is not None or not c.fast.voice_free(t)
                 or any(a[5] not in ("done", "refused", "cancelled") for a in c.acts_open))
         if kind == "wake":

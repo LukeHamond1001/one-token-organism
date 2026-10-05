@@ -1325,6 +1325,49 @@ class G1World(SimWorld):
         self.tidied.append((int(self.tick), "bucket", [float(xy[0]), float(xy[1])], [float(place[0]), float(place[1])]))
         return True
 
+    def toys_beside(self, names, rings=(0.45, 0.57)):
+        """C286: THE CARRY BRINGS ITS TOYS ALONG. After a carry back to its mat (C277, C281) the toys lay where the walk had left
+        them: on the day-92 copy the child saw a toy on 40 of 500 ticks, her 'you see the X.' lines were refused 'not true', and
+        her asks found nothing to ask about. Each named toy (the day's focus toys) that neither holds and that lies farther than
+        the outer ring from both its shoulders is set upright on a free point of a ring round the point between its shoulders
+        (off its body, 0.15 m from the other toys, on the floor she can plan on, 0.5 m from where she is), nearest a shoulder;
+        whoever carries a child to its mat brings its toys. An environment's act, disclosed; logged in `tidied`. -> the toys moved"""
+        m, d = self.m, self.d
+        par = self.parent
+        if par is None:
+            return []
+        par.child = PM_Child(m, d, self.scene.g1_set)
+        sh = [d.xpos[m.body(f"{s_}_shoulder_pitch_link").id][:2].copy() for s_ in ("left", "right")]
+        chest = (sh[0] + sh[1]) / 2.0
+        her = np.asarray(par.base["at"], float)[:2]
+        held = set(v for v in par.holding.values() if v is not None) | set(getattr(getattr(getattr(self, "lane", None), "_p", None), "child_holds", None) or ())
+        moved = []
+        for k in names:
+            if k not in par.toys or k in held or k == "bucket":
+                continue
+            b = par.toys[k]; xy = d.xpos[b][:2].copy()
+            if min(float(np.linalg.norm(xy - p_)) for p_ in sh) <= rings[-1] + 0.05:
+                continue
+            others = [d.xpos[b2][:2] for k2, b2 in par.toys.items() if k2 != k]
+            cands = []
+            for r_ in rings:
+                for i in range(12):
+                    q = chest + r_ * np.array([math.cos(2 * math.pi * i / 12), math.sin(2 * math.pi * i / 12)])
+                    if par.child.clearance_xy(q) >= 0.12 and all(np.linalg.norm(q - o) >= 0.15 for o in others) and par._in_plan(q) \
+                            and par.plan.dist[par.plan.cell(q)] >= 0.10 and float(np.linalg.norm(q - her)) >= 0.5:
+                        cands.append((min(float(np.linalg.norm(q - p_)) for p_ in sh), q))
+                if cands:
+                    break
+            if not cands:
+                continue
+            place = min(cands, key=lambda x: x[0])[1]
+            j = m.body_jntadr[b]; adr = m.jnt_qposadr[j]; dof = m.jnt_dofadr[j]; home = m.qpos0[adr:adr + 7]
+            d.qpos[adr:adr + 2] = place; d.qpos[adr + 2] = home[2]; d.qpos[adr + 3:adr + 7] = home[3:7]; d.qvel[dof:dof + 6] = 0.0
+            mujoco.mj_forward(m, d)
+            self.tidied.append((int(self.tick), k, [float(xy[0]), float(xy[1])], [float(place[0]), float(place[1])]))
+            moved.append(k)
+        return moved
+
     def save_state(self):
         """the whole world as bytes: the physics, the model's run-time fields, the senses' carry, the world's random
         stream and the parent's pose as the scene last drew it (Scene.pose: the W1 verifier's third round)"""
