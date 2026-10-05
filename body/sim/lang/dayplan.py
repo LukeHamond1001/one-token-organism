@@ -359,9 +359,22 @@ class DayPlan:
             seen_ = {s_.id: s_ for s_ in p.seen}
             sees_ = [o_ for o_, s_ in seen_.items() if s_.child_sees and o_ not in TP.OPEN_CONTAINERS and s_.on != "mama"]
             first_ = [o_ for o_ in sees_ if o_ in self.focus] or sees_
+            ask_ = ["ask_where", "ask_where", "ask_what"][int(self.rng.integers(3))]
+            if not first_:
+                # C290: 'WHERE IS THE X?' IS ASKED OF A TOY IT CAN FIND BY LOOKING: one she sees lying within ASK_NEAR_M of its head,
+                # in its view or not (the ask tests whether the word turns its eyes there; C283 asked only of a toy already in its
+                # view, and on its back that was 8% of ticks: no ask in 3,200 ticks of day 93)
+                hd_ = np.asarray(pm.child.head, float)[:2]
+                near_ = [o_ for o_, s_ in seen_.items() if o_ in pm.toys and o_ not in TP.OPEN_CONTAINERS and s_.on not in ("mama", "hand") and
+                         float(np.linalg.norm(world.d.xpos[pm.toys[o_]][:2] - hd_)) <= K.ASK_NEAR_M]
+                first_ = [o_ for o_ in near_ if o_ in self.focus] or near_
+                ask_ = "ask_where"
+            att_ = [s_.id for s_ in p.attended() if s_.id in getattr(pm, "toys", {}) and s_.id not in TP.OPEN_CONTAINERS and s_.on != "mama"]
+            if att_:                                                        # C290: what it is looking at or holding: 'what is this?' (the
+                first_, ask_ = att_, "ask_what"                             # name ask is of what it attends; a where ask of it is met unasked)
             if first_:
                 o_ = first_[int(self.rng.integers(len(first_)))]
-                c.request(["ask_where", "ask_where", "ask_what"][int(self.rng.integers(3))], o=o_)
+                c.request(ask_, o=o_)
                 self.log.append((t, "ask (C283)", o_))
                 self.next_ask = t + int(self.rng.integers(*ASK_GAP))
             else:

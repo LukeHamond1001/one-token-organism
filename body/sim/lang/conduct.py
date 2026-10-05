@@ -2325,8 +2325,8 @@ class Conduct:
         if intent in ASKS_NEEDING_O and o is None:
             return self._drop(t, intent, "an ask about an object needs its object")
         if it.ask == "gaze" or it.ask == "act":
-            if not o.child_sees:
-                return self._drop(t, intent, "an ask needs its object in the child's view (4.8)")
+            if not o.child_sees and not (it.ask == "gaze" and self._near_head(o.id)):   # C290: or, for the gaze ask, lying where a turn
+                return self._drop(t, intent, "an ask needs its object in the child's view (4.8)")   # of its head finds it (K.ASK_NEAR_M)
             if it.ask == "gaze" and o.name in p.attended_names():
                 return self._drop(t, intent, f"a {o.name} already where she reads the child looking, in its hand or reached "
                                              f"toward: the ask would be met unasked (4.8, A40)")
@@ -2562,6 +2562,16 @@ class Conduct:
         """C157: a toy she knows the place of though she does not see it now: one of the room's toys (her motion's bodies), not a
         container (the bucket is never fetched, C119) and not one she left where it lies (A117)"""
         return toy in getattr(self.motion, "toys", {}) and toy not in TP.OPEN_CONTAINERS and not self.left_where_it_lies(toy)
+
+    def _near_head(self, toy):
+        """C290: whether a toy lies within K.ASK_NEAR_M of the child's head on the floor plan (her motion's bodies): 'where is the X?'
+        is asked of a thing the child can find by looking, in its view already or not; on its back a toy was in its view on 8% of
+        ticks, and eight asks her day plan made in 3,200 ticks of day 93 were all dropped here"""
+        m_ = self.motion
+        try:
+            return float(np.linalg.norm(m_.d.xpos[m_.toys[toy]][:2] - np.asarray(m_.child.head, float)[:2])) <= K.ASK_NEAR_M
+        except Exception:
+            return False
 
     def left_where_it_lies(self, toy):
         """A117 (C102): whether a toy is one she left where it lies (a fetch of it refused) and it has not moved LEFT_MOVED_M since;
