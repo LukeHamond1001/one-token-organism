@@ -1999,7 +1999,7 @@ class Conduct:
                 if label in ("echo", "right_name"):                    # C85 (2026-09-26): her smile at a word said again habituates as
                     n = self.vocal_book.get(w, 0)                      # at a motor act (A2's fall with mastery, HABIT_TAU, HABIT_FLOOR):
                     worth = K.WORTH_RIGHT_NAME * math.exp(-n / K.HABIT_TAU)   # the n-th right name or echo of the same word is worth
-                    if label == "right_name":                          # C282: a RIGHT NAME's smile wears no lower than RIGHT_NAME_FLOOR
+                    if label == "right_name" and w != PARENT_NAME:     # C282: a RIGHT NAME's smile wears no lower than RIGHT_NAME_FLOOR (C288: a thing's name; her own name wears as before)
                         worth = max(worth, K.RIGHT_NAME_FLOOR)         # (the thing named while it attends it is answered every time)
                     if worth < K.HABIT_FLOOR:                          # 2 e^(-n/10), none under 0.05 (life day 2: 205 echoes of "oh"
                         worth = None                                   # paid 2 each, the body's 8 acts beside them); a met ask pays

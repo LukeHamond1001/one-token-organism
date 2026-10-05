@@ -344,6 +344,13 @@ class DayPlan:
         if self.away:
             self._away_tick(t, t_day, lane, world, kind)
             return
+        for mid_, st_ in (getattr(c, "ended", None) or {}).items():           # C288: a toy just shown or handed is in its view: the ask now
+            if st_ == "done":
+                try:
+                    if c.motion._act(mid_).get("kind") in ("show", "hand_over", "bring_back"):
+                        self.next_ask = min(getattr(self, "next_ask", 0), t)
+                except Exception:
+                    pass
         if kind in ("floor", "motor", "show") and t >= getattr(self, "next_ask", 0) and c.pending is None and c.trial is None and \
                 c.fast.voice_free(t) and not pm.holds:
             # C283: HER ASKS ON THEIR OWN CADENCE: of a toy the child sees (a focus toy first), 'where is the X?' twice in three,
