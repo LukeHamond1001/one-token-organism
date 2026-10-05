@@ -71,6 +71,7 @@ joint the other way (the own act wins there, as it opens the grasp); an own step
 reflex (the truth's spinal: "prone" per effector), no gate eligibility. The legs keep their own acts (the newborn's flexed hips in
 prone would drive the thigh housings into the pelvis on this body: C22's artifact), disclosed."""
 import math
+import numpy as np
 import sys
 from pathlib import Path
 
@@ -460,6 +461,61 @@ STEP_UNLOAD = 0.30 # A194: the swing begins only in a leg carrying no more than 
 STEP_LIFT, STEP_PLACE = 4, 3    # ticks: hip and knee flexing (the foot lifted and brought forward), then the knee extending (set down)
 STEP_HIP, STEP_KNEE = -0.9, 1.3 # rad: the swing's hip flexion and knee flexion targets (ours)
 STEP_HIP_PLACE = 0.8            # the hip's target while the foot is set down, as a share of STEP_HIP
+
+
+# A195 (2026-10-05): THE POSTURAL TONE AND THE VESTIBULOSPINAL REFLEX, below the tick. Standing alone it fell in 1.2 s. Read on a copy
+# (p1_tools/balphys.py, balstiff.py, balprobe.py): its servos are soft (about 40 N m/rad at an ankle, 49 at the waist) where an
+# upright body of its mass and height needs about 240 at the ankles; the standing reflex's step, one big step a tick toward the
+# straight leg, is at most 11 N m of holding; and its feet reach 5 cm behind the ankle, so any backward sway tips it onto its heels.
+# Two born patterns, run every 10 ms (the loop below the tick, with the cerebellum's): (1) the postural tone: each joint of a
+# stance leg and of the waist is driven toward its stance angle with POSTURE_STIFF times its distance from it, less POSTURE_DAMP
+# times its speed (the antigravity muscles' stiffness about the stance posture; the own act's step rides on top, so a voluntary
+# move displaces a stiff joint a little instead of throwing the body); the stance leans a little forward (the ankle's stance
+# angle), over the middle of the foot; (2) the vestibulospinal reflex: the pelvis's pitch and its rate, from the pelvis IMU,
+# push the ankles against the lean (the ankle's own angle does not show a lean: the foot tips with the body). In pure physics the
+# tone alone stands it 10 s and through a 20 N push at gains 6 to 12; with its brain running, tone 8 and the reflex 4 and 0.8
+# stood the 30 s of the trial in two of three (16 ticks in the third; 1.2 s without). Constants ours, from that grid.
+POSTURE_UP_G, POSTURE_KNEE = 9.0, 0.5                         # the tone holds a body upright within about 23 deg (9.81 cos 23) on legs within 0.5 rad of straight (ours)
+SUPPORT_N = 5.0                                               # N felt on its trunk's touch zones (torso, pelvis): held (ours)
+POSTURE_HIP_EXT = 1.0                                         # x the distance, for a hip extended past its stance angle (ours)
+POSTURE_STIFF, POSTURE_DAMP, POSTURE_MAX = 8.0, 0.05, 1.0     # x the distance to the stance angle; x the joint's speed (s); the step's cap, rad
+STANCE = {"hip_pitch": -0.05, "knee": 0.10, "ankle_pitch": -0.10}   # the stance angles, rad (the rest 0): knees a little bent, leaning forward
+VEST_TAU = 2.0                                                # s: the gyro's summed lean is drawn toward the accelerometer's tilt over this (ours)
+VEST_P, VEST_D, VEST_MAX = 4.0, 0.8, 1.2                       # the ankles' push per rad of pelvis pitch and per rad/s; its cap, rad
+
+
+def posture(ev, q=None, imu_torso=None, on=False):
+    """the limbs under the postural tone this tick: {limb: (stance angles in its joints' order, the index of its ankle pitch or None)} for
+    the waist and each leg the standing reflex holds in stance (`ev` its second return); a swinging leg is the stepping reflex's"""
+    out = {}
+    if not on and imu_torso is not None and float(imu_torso[2]) < POSTURE_UP_G:    # (`on`: the tone held last tick: it holds while the standing reflex does) only once it is up: raised by her hands, its trunk still
+        return out                                                      # leaning and its knees bent, the thrust (A193) brings it up,
+    for limb, e in (ev or {}).items():                                  # and the tone's stiffness there drove its joints to their
+        if e != "stand":                                                # load lines (38 pain ticks in a raise of 98 on the copy)
+            continue
+        names = [j.split("_", 1)[1].replace("_joint", "") if limb != "waist" else j.replace("_joint", "") for j in _JOINTS[limb]]
+        if not on and q is not None and "knee" in names and float(q[limb][names.index("knee")]) > STANCE["knee"] + POSTURE_KNEE:
+            continue                                                    # (a leg still bent is the thrust's)
+        out[limb] = ([float(STANCE.get(n, 0.0)) for n in names], names.index("ankle_pitch") if "ankle_pitch" in names else None,
+                     names.index("hip_pitch") if "hip_pitch" in names else None)
+    return out
+
+
+def posture_step(q, qd, ref, own, ankle, pitch, pitch_rate, hip=None, supported=False):
+    """one limb's targets' offsets from its measured angles for the next 10 ms: the tone toward the stance angles, the own act's step on
+    top, and at the ankle the vestibular push"""
+    g = np.full(len(q), POSTURE_STIFF)
+    if hip is not None and float(q[hip]) > float(ref[hip]):             # a hip extended past its stance angle (the leg trailing as the
+        g[hip] = POSTURE_HIP_EXT                                        # body passes over its foot) is held softly, or the stance hip
+                                                                        # could never extend and no step begin (A193's rule, kept)
+    if supported and ankle is not None and float(q[ankle]) < float(ref[ankle]):   # SUPPORTED (a hold felt on its trunk: SUPPORT_N), an ankle bent past its stance angle (the shank leaning forward
+        g[ankle] = POSTURE_HIP_EXT                                      # over the foot) is held softly too: forward the toes carry
+                                                                        # it and the vestibular push and the step answer; stiff both
+                                                                        # ways it held the body back from her lead and no step began
+    off = np.clip(g * (np.asarray(ref, float) - q) - POSTURE_DAMP * qd, -POSTURE_MAX, POSTURE_MAX) + own
+    if ankle is not None and not supported:                             # (the postural responses of the legs fall away when the body
+        off[ankle] += float(np.clip(VEST_P * pitch + VEST_D * pitch_rate, -VEST_MAX, VEST_MAX))   # holds or is held by a support: Cordo and Nashner 1982; recalled)
+    return off
 
 
 def stand(q, imu_torso, soles, state):

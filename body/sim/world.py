@@ -564,7 +564,7 @@ class G1World(SimWorld):
     from it); `extra(spec)` adds an instrument's rig to the scene before it compiles (tests only). Born at construction: the G1 on
     its back on the mat, settled, tick 0."""
 
-    def __init__(self, seed=1, extra=None, xml=G.XML, spinal=True, parent=True, righting=True, tone=True, standing=True):
+    def __init__(self, seed=1, extra=None, xml=G.XML, spinal=True, parent=True, righting=True, tone=True, standing=True, posture=True):
         global R
         from body.sim import reflexes as R                              # the body's spinal cord (it reads this module's constants)
         _catch_mujoco_warnings()
@@ -609,6 +609,7 @@ class G1World(SimWorld):
         self.f_pain = PAIN_WEIGHTS * self.body_mass * float(np.linalg.norm(m.opt.gravity))
         self.palm_zones = [self.zones.index(f"{s}_hand_palm") for s in ("left", "right")]
         self.sole_zones = [[i for i, z in enumerate(self.zones) if z.startswith(f"{s}_ankle")] for s in ("left", "right")]   # A193: each foot's zones
+        self._trunk_zones = [self.zones.index(z) for z in ("torso", "pelvis")]   # A195: where a hold on its trunk is felt
         self.palm_of_hand = {"hand_l": self.palm_zones[0], "hand_r": self.palm_zones[1]}
         self.own_hand = np.zeros((2, self.nz + 1), dtype=bool)          # each hand's other links (index nz: no zone), for palm_own_N
         for h, grp in enumerate(("hand_l", "hand_r")):
@@ -622,6 +623,8 @@ class G1World(SimWorld):
                                                                                 # its own: [palmar (toward its back), dorsal (toward its palm)]
         self.spinal = bool(spinal)                                      # the palmar grasp at the spinal cord (off: an instrument's switch)
         self.standing = bool(standing)                                  # A193: the standing and stepping reflexes (off: an instrument's switch)
+        self.posture = bool(posture)                                    # A195: the postural tone and the vestibulospinal reflex below the tick (off: an instrument's switch)
+        self._vest_pitch, self._vest_on = 0.0, False
         self._stepping = {"leg_l": ["stance", 0], "leg_r": ["stance", 0]}
         self.righting = bool(righting)                                  # the prone pattern at the cord (A92; off: an instrument's switch)
         self.tone = bool(tone)                                          # the arms' resting tone at the cord (A185; off: an instrument's switch)
@@ -918,14 +921,27 @@ class G1World(SimWorld):
                 t_ = R.tone(limb, q_[self.eff_slices[limb]])
                 c_ = cord.get(limb)
                 cord[limb] = t_ if c_ is None else tuple(float(a_) + float(b_) for a_, b_ in zip(c_, t_))
+        posture_ = {}
         if self.standing:                                               # A193: THE STANDING AND STEPPING REFLEXES (reflexes.stand): upright
             q_ = d.qpos[self.qadr]                                      # on a loaded sole the legs carry the body and, the stance hip
             tf_ = self._sensed["touch_force"]                           # extended, step; lying or sitting, nothing
             st_, ev_ = R.stand({n_: q_[self.eff_slices[n_]] for n_ in R.STAND_LIMBS}, self._sensed["imu_torso"],
                                (float(tf_[self.sole_zones[0]].sum()), float(tf_[self.sole_zones[1]].sum())), self._stepping)
+            posture_ = R.posture(ev_, {n_: q_[self.eff_slices[n_]] for n_ in R.STAND_LIMBS}, self._sensed["imu_torso"], getattr(self, "_tone_on", False)) if self.posture else {}
+            if posture_ and float(np.asarray(self._sensed["touch_force"], float)[self._trunk_zones].sum()) > R.SUPPORT_N:
+                posture_ = {}                                               # HELD (a hold felt on its trunk last tick): the standing
+                                                                            # reflex alone, as before: the legs' postural responses fall
+                                                                            # away when the body is held by a support (Cordo and Nashner
+                                                                            # 1982; recalled), and in her hands the tone held it back
+                                                                            # from her lead and her sway: no step (0.00 to 0.05 m)
+            self._tone_on = bool(posture_)              # A195: the limbs under the postural tone this tick
+
             for limb, t_ in st_.items():
-                c_ = cord.get(limb)
-                cord[limb] = t_ if c_ is None else tuple(float(a_) + float(b_) for a_, b_ in zip(c_, t_))
+                if limb in posture_:                                        # (the tone below the tick holds them; the standing
+                    cord.setdefault(limb, tuple(0.0 for _ in t_))           # reflex's one step a tick is not added on top)
+                else:
+                    c_ = cord.get(limb)
+                    cord[limb] = t_ if c_ is None else tuple(float(a_) + float(b_) for a_, b_ in zip(c_, t_))
                 spinal[limb] = ev_[limb] if limb not in spinal else spinal[limb] + "+" + ev_[limb]
         own = self._efference(acts)                                     # the efference copy (the own acts, after the grasp's sum)
         steps = {}                                                      # every act read before anything moves (a bad act moves nothing)
@@ -988,6 +1004,14 @@ class G1World(SimWorld):
             for s in range(n):
                 if below is not None and s % W_ == 0:
                     self._below_step(s // W_, own, imu_last, F_last, obs_last, lim)
+                if posture_ and s % W_ == 0:                             # A195: THE POSTURAL TONE AND THE VESTIBULOSPINAL REFLEX, every 10 ms:
+                    pit_ = self._vest_pitch                             # the pelvis's lean as the vestibular sense holds it (below)
+                    sup_ = False
+                    for limb, (ref_, ank_, hip_) in posture_.items():
+                        sl = self.eff_slices[limb]
+                        q_ = d.qpos[self.qadr[sl]]
+                        off_ = R.posture_step(q_, d.qvel[self.dof[sl]], ref_, steps.get(limb, 0.0), ank_, pit_, float(imu_last[10]), hip_, sup_)
+                        d.ctrl[self.aid[sl]] = np.clip(q_ + off_, self.lo[sl], self.hi[sl])
                 if rest_a is not None:
                     d.ctrl[rest_a] += alpha * (d.qpos[rest_q] - d.ctrl[rest_a])
                 d.qfrc_applied[self.dof] = self.passive_torque(d.qpos[self.qadr])   # A143: the passive end-range stiffness, the tissue's push
@@ -1009,6 +1033,11 @@ class G1World(SimWorld):
                 own_p += self._palm_own
                 sides += self._sides
                 imu[s] = self._imu_noisy(d.sensordata[self.imu_adr])
+                if self.posture:                                        # A195: the lean the reflex reads (kept at every step, standing or not): the pelvis gyro's turn about
+                    self._vest_pitch += float(imu[s, 10]) * m.opt.timestep   # the side-to-side axis summed (the canals), drawn slowly
+                    an_ = float(np.linalg.norm(imu[s, 6:9]))            # (R.VEST_TAU) toward the accelerometer's tilt when it reads
+                    if 0.8 * 9.81 < an_ < 1.2 * 9.81:                   # about one g (the otoliths): one sample of the accelerometer
+                        self._vest_pitch += (math.atan2(-float(imu[s, 6]), float(imu[s, 8])) - self._vest_pitch) * m.opt.timestep / R.VEST_TAU   # alone read 10 to 40 deg off a body swaying 2 deg
                 tq = d.qfrc_actuator[self.dof]
                 heat_in += (tq / self.tau_max) ** 2
                 imu_last, F_last = imu[s], F[s]
