@@ -477,7 +477,7 @@ STEP_HIP_PLACE = 0.8            # the hip's target while the foot is set down, a
 # stood the 30 s of the trial in two of three (16 ticks in the third; 1.2 s without). Constants ours, from that grid.
 POSTURE_UP_G, POSTURE_KNEE = 9.0, 0.5                         # the tone holds a body upright within about 23 deg (9.81 cos 23) on legs within 0.5 rad of straight (ours)
 SUPPORT_N = 5.0                                               # N felt on its trunk's touch zones (torso, pelvis): held (ours)
-STEP_YIELD, POSTURE_ROLL = float(__import__('os').environ.get('YIELD', '0.10')), float(__import__('os').environ.get('ROLLG', '2.0'))   # A196 (ours)
+STEP_YIELD, POSTURE_ROLL = 0.10, 2.0                                    # A196 (ours): the ankle's yield past its stance angle (rad); the sideways joints' gain
 POSTURE_HIP_EXT = 1.0                                         # x the distance, for a hip extended past its stance angle (ours)
 POSTURE_STIFF, POSTURE_DAMP, POSTURE_MAX = 8.0, 0.05, 1.0     # x the distance to the stance angle; x the joint's speed (s); the step's cap, rad
 STANCE = {"hip_pitch": -0.05, "knee": 0.10, "ankle_pitch": -0.10}   # the stance angles, rad (the rest 0): knees a little bent, leaning forward

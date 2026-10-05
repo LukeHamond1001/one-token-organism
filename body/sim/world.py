@@ -928,7 +928,7 @@ class G1World(SimWorld):
             st_, ev_ = R.stand({n_: q_[self.eff_slices[n_]] for n_ in R.STAND_LIMBS}, self._sensed["imu_torso"],
                                (float(tf_[self.sole_zones[0]].sum()), float(tf_[self.sole_zones[1]].sum())), self._stepping)
             posture_ = R.posture(ev_, {n_: q_[self.eff_slices[n_]] for n_ in R.STAND_LIMBS}, self._sensed["imu_torso"], getattr(self, "_tone_on", False)) if self.posture else {}
-            if posture_ and __import__("os").environ.get("HELDOFF") and float(np.asarray(self._sensed["touch_force"], float)[self._trunk_zones].sum()) > R.SUPPORT_N:
+            if posture_ and float(np.asarray(self._sensed["touch_force"], float)[self._trunk_zones].sum()) > R.SUPPORT_N:
                 posture_ = {}
             self._tone_on = bool(posture_)              # A195: the limbs under the postural tone this tick
 
