@@ -1896,14 +1896,15 @@ class Conduct:
         if getattr(p, "her_hold", False):
             self.touched.update(hands_on)                   # A111: her hold engaged in a hands-on act: from now to its end
         self.touched &= set(hands_on)                       # (an act ended: its span is over)
-        if self.touched:
+        guided = bool(self.touched)
+        if guided and not any(k in K.HELD_PAID for k, _o in p.events):
             self.book_log.append((t, None, None, "her hands on it: a guided act itself earns nothing (4.3)", 0)); del self.book_log[:-200]
             return                                          # A90: while she guides, turns or pulls it, nothing it does is its own;
                                                             # A111 (C95): her approach to it is not that: day 8's turn approaches ran
                                                             # 890 and 346 ticks and 29 of 105 acts of the child's fell in them unjudged
         for k, o in p.events:
             row = K.MOTOR_WORTH.get(k)
-            if row is None:
+            if row is None or (guided and k not in K.HELD_PAID):            # C285: in her hands only its stand and its step are its own
                 continue
             w, full = row
             key = self._book_key(k, o)                          # C261: a lesson toy's got (and its reach nearer) by the level it was set at

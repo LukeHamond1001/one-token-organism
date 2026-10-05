@@ -409,6 +409,11 @@ WORTH_SCAFFOLD_GIVE = 1               # a give after the give ask's scaffolding 
                                       # the ladders)
 
 # ------------------------------------------------------------------------- the motor worth rows (4.3; A89, the teacher's build 2b)
+HELD_PAID = ("stood", "stepped")      # C285 (2026-10-05): the acts of its own that she smiles at while her hands are on it. A guided act earns
+                                      # nothing (4.3, A90: turned, pulled or guided, nothing it does is its own), and C284's 'stood' and
+                                      # 'stepped' fell under it: every stand of the life is in her hands, so none paid (the day-92 copy's
+                                      # book: 'her hands on it: a guided act itself earns nothing'). Standing in her hands its own legs
+                                      # carry it and its own legs step (she steadies with 33 to 116 N of its 343): those two are its own
 MOTOR_WORTH = {                       # event kind -> (its worth, the full act it approximates or None); judged only outside a trial
     "got": (2, None),                 # its own reach and hold: a toy come into its hand after that hand moved or reached toward it,
                                       # never her hand-over (percept "got")
