@@ -84,7 +84,13 @@ LESSON_DIST0 = 0.10                    # the reach rung's first distance out fro
 LESSON_STEP = 0.05                     # farther each mastered level (teacher_of_reality.md 2c)
 LESSON_LEVELS = 7                      # up to 0.40 m (about the arm's reach)
 NO_PROGRESS = 1000                     # a level with no new "got" for this long steps back one (about a block)
-LESSON_SHARE = 0.4                     # floor play's offers that are lessons (the rest: shows, peekaboo, asks, the call)
+ASK_GAP = (120, 200)                   # C283: her asks' own cadence, ticks (18 to 30 s; ours): an ask is her words and her eyes, so it does not
+                                       # wait for her hands' play (one offer in about 220 ticks on the day-91 copy: her acts are long)
+ASK_SHARE = 0.55                       # C283: of floor play's other offers, this share are her asks ('where is the ball?', 'what is this?',
+                                       # 'give me the ball.'): the word tested and paid by her smile. Life day 90: none of her 1,062 lines was
+                                       # a where, what or give ask (five 'look at the X.'); the mix until then gave asks a quarter of what the
+                                       # lessons, shows and peekaboo left, about five a day. With LESSON_SHARE 0.25 (0.4 until then). Ours
+LESSON_SHARE = 0.25                    # floor play's offers that are lessons (the rest: shows, peekaboo, asks, the call)
 GREET_BY = 200                         # the greeting at the latest by this tick of the wake (ours)
 CALL_AFTER_GREET = 60                  # the wake's call this long after the greeting (ours)
 AWAY_CALL = 600                        # her calls from the hall (4.7: about every 600 ticks)
@@ -336,6 +342,18 @@ class DayPlan:
         if self.away:
             self._away_tick(t, t_day, lane, world, kind)
             return
+        if kind in ("floor", "motor", "show") and t >= getattr(self, "next_ask", 0) and c.pending is None and c.trial is None and \
+                c.fast.voice_free(t) and not pm.holds:
+            # C283: HER ASKS ON THEIR OWN CADENCE: of a toy the child sees (a focus toy first), 'where is the X?' twice in three,
+            # 'what is this?' once; asked over whatever her hands are doing, never while they hold the child
+            seen_ = {s_.id: s_ for s_ in p.seen}
+            sees_ = [o_ for o_, s_ in seen_.items() if s_.child_sees and o_ not in TP.OPEN_CONTAINERS and s_.on != "mama"]
+            first_ = [o_ for o_ in sees_ if o_ in self.focus] or sees_
+            if first_:
+                o_ = first_[int(self.rng.integers(len(first_)))]
+                c.request(["ask_where", "ask_where", "ask_what"][int(self.rng.integers(3))], o=o_)
+                self.log.append((t, "ask (C283)", o_))
+            self.next_ask = t + int(self.rng.integers(*ASK_GAP))
         busy = (c.pending is not None or c.trial is not None or not c.fast.voice_free(t)
                 or any(a[5] not in ("done", "refused", "cancelled") for a in c.acts_open))
         if kind == "wake":
@@ -567,19 +585,9 @@ class DayPlan:
             self._lesson(t, lane)
             return
         roll = (roll - LESSON_SHARE) / (1.0 - LESSON_SHARE) if can else roll
-        if focus and roll < 0.5:
-            free = [o for o in focus if o not in seen or seen[o].on != "hand"] or focus   # A117: never the toy in its hand (her fetch never takes a
-            free = self._at_hand(lane, free)                            # C272: the toys at her hand first
-            o = free[int(self.rng.integers(len(free)))]                 # toy from it, A4: life day 13's 4 shows refused for the car)
-            c.request("show", o=o)
-        elif kind == "floor" and roll < 0.65 and held:                  # C125: her peekaboo needs both her hands (refused "her hands
-            self._lesson(t, lane)                                       # are busy" 26 times on day 28, twice on day 29): with a toy in
-            return                                                      # her hand the toy's lesson instead (C122)
-        elif kind == "floor" and roll < 0.65:
-            c.request("peekaboo_hide"); c.routine = "peekaboo"
-        elif kind == "floor" and roll < 0.9 and focus:
+        if kind == "floor" and roll < ASK_SHARE and focus:                # C283: her asks first
             o = focus[int(self.rng.integers(len(focus)))]
-            ask = ["ask_where", "ask_give", "ask_what"][int(self.rng.integers(3))]
+            ask = ["ask_where", "ask_where", "ask_what", "ask_give"][int(self.rng.integers(4))]
             can = [x for x in focus if (_may_give(seen, x) if ask == "ask_give" else seen[x].child_sees)]
             if o not in can and can:                                    # C126: an ask is of a toy in the child's view (4.8), a give of
                 o = can[int(self.rng.integers(len(can)))]               # one in its reach too: the toy of her ask chosen among those
@@ -587,6 +595,16 @@ class DayPlan:
                 c.request(ask, o=o)
             else:                                                       # none: the toy shown (into its view), the ask another time
                 c.request("show", o=o)
+        elif focus and roll < 0.85:
+            free = [o for o in focus if o not in seen or seen[o].on != "hand"] or focus   # A117: never the toy in its hand (her fetch never takes a
+            free = self._at_hand(lane, free)                            # C272: the toys at her hand first
+            o = free[int(self.rng.integers(len(free)))]                 # toy from it, A4: life day 13's 4 shows refused for the car)
+            c.request("show", o=o)
+        elif kind == "floor" and roll < 0.95 and held:                  # C125: her peekaboo needs both her hands (refused "her hands
+            self._lesson(t, lane)                                       # are busy" 26 times on day 28, twice on day 29): with a toy in
+            return                                                      # her hand the toy's lesson instead (C122)
+        elif kind == "floor" and roll < 0.95:
+            c.request("peekaboo_hide"); c.routine = "peekaboo"
         else:
             c.request("call")
         self.next_play = t + int(self.rng.integers(*PLAY_GAP))
