@@ -5355,18 +5355,32 @@ class ParentMotion:
                 c["mode"] = "settle"; c["settle_t"] = 0; c["why"] = None   # still stands (the first walk: 0.40 m, then 8 s of
                                                                             # standing still, then it sank at her cap)
         elif mode == "settle":
-            # C287: BEFORE SHE LETS GO SHE STANDS IT STILL OVER ITS FEET (SETTLE_TICKS), her hold easing to nothing over the second half:
+            # C287: BEFORE SHE LETS GO SHE STANDS IT STILL OVER ITS FEET (STAND_SETTLE_TICKS), her hold easing to nothing over the second half:
             # let go as the walk ended, led ahead of its feet in mid-step, it went down in 1 to 3 ticks
-            lead = near(np.array([feet[0], feet[1], K.STAND_CHEST_M]))
+            # C291: SHE FEELS FOR ITS BALANCE: her hands move the way they are pushed back from (the net horizontal force they put on
+            # it), so the lean they carry comes to nothing over its feet; only then does her hold ease (it leaned 50 to 100 N on her
+            # hands, and eased from that it went down in 5 ticks)
+            F_ = np.sum([np.asarray(x.force, float)[:2] for x in self.holds if x.kind == "stand"], axis=0)
+            c["bal_f"] = _lst(np.asarray(c.get("bal_f", F_), float) * 0.7 + 0.3 * F_)
+            bal_ = np.asarray(c.get("bal", (0.0, 0.0)), float)
+            st_ = K.BALANCE_GAIN * F_; sn_ = float(np.linalg.norm(st_))
+            if sn_ > K.BALANCE_STEP_M:
+                st_ = st_ / sn_ * K.BALANCE_STEP_M
+            bal_ = bal_ + st_; bn_ = float(np.linalg.norm(bal_))
+            if bn_ > K.BALANCE_MAX_M:
+                bal_ = bal_ / bn_ * K.BALANCE_MAX_M
+            c["bal"] = _lst(bal_)
+            lead = near(np.array([feet[0] + bal_[0], feet[1] + bal_[1], K.STAND_CHEST_M]))
             c["lead"] = _lst(lead); h.next = lead + off
             c["settle_t"] = int(c.get("settle_t", 0)) + 1
-            q_ = K.SETTLE_TICKS // 4                                        # a quarter at her full hold, a quarter easing to a light
-            if c["settle_t"] > q_:                                          # touch (LIGHT_N a hand: under what its trunk feels as a
-                h.cap = max(K.LIGHT_N, h.cap * max(0.0, 1.0 - (c["settle_t"] - q_) / float(q_)))   # hold, so its own postural tone takes
-                                                                            # it, A195), then half with her fingertips on it
+            q_ = K.STAND_SETTLE_TICKS // 4
+            if "ease_t" not in c and (float(np.linalg.norm(c["bal_f"])) < K.BALANCE_N and c["settle_t"] > 5 or c["settle_t"] >= 2 * q_):
+                c["ease_t"] = int(c["settle_t"])                            # balanced (or half the settle gone): her hold eases over a
+            if "ease_t" in c:                                               # quarter to her fingertips (LIGHT_N a hand: under what its
+                h.cap = max(K.LIGHT_N, h.cap * max(0.0, 1.0 - (c["settle_t"] - c["ease_t"]) / float(q_)))   # trunk feels as a hold: its tone takes it, A195)
             if pz < K.STAND_FALL_M:
                 c["mode"] = "lower"
-            elif c["settle_t"] >= K.SETTLE_TICKS:
+            elif "ease_t" in c and c["settle_t"] >= c["ease_t"] + 2 * q_ or c["settle_t"] >= K.STAND_SETTLE_TICKS + 2 * q_:
                 c["mode"] = "wait"
         elif mode == "wait":
             # C281: THE WALK OVER, SHE CARRIES IT BACK TO ITS MAT AND LAYS IT DOWN. Sat down in her hands it fell: held upright its
