@@ -5275,7 +5275,7 @@ class ParentMotion:
             c["walk_t"] += 1
             c["walked"] = max(float(c.get("walked", 0.0)), float((feet[:2] - np.asarray(c["feet0"], float)[:2]) @ fwd_c))
             if float((lead[:2] - feet[:2]) @ fwd_c) < K.WALK_LEAD_M:        # her hands wait for its feet
-                lead[:2] = lead[:2] + fwd_c * K.WALK_MPS * TICK_S
+                lead[:2] = lead[:2] + fwd_c * K.STAND_WALK_MPS * TICK_S
             lead[2] = K.STAND_CHEST_M
             lead = near(lead)
             c["lead"] = _lst(lead); h.next = lead + off
