@@ -498,8 +498,16 @@ RAISE_MPS = 0.08                # m/s: her hands lead its chest up and over its 
                                 # in 9 s on 100 to 135 N with its own legs' thrust, A193)
 RAISE_MAX_TICKS = 260           # a raise that has not stood it in this long (24 s) is given up and it is laid back (ours)
 STAND_HOLD_TICKS = 40           # she steadies it standing this long (6 s) before the walk or the sitting down (ours)
-WALK_LEAD_M = 0.10              # m: her hands lead its chest this far ahead of its feet's middle, toward her (ours; the copy's grid)
+WALK_LEAD_M = 0.18              # m: her hands lead its chest this far ahead of its feet's middle (ours; C274: 0.10 until then, the stance hip then
+                                # extended only to about the swing's trigger and steps were rare)
 STAND_WALK_MPS = 0.04                 # m/s: and no faster than this (ours; the copy: 0.78 m in 45 s)
+STAND_FOLLOW_MPS = 0.30 # m/s: her hands go with its chest this fast once its feet are ahead of them (C274; ours)
+ROCK_M = 0.10 # m: its chest led this far to the side of its feet's middle, over one foot then the other (C274; ours: about half the distance between its feet)
+ROCK_TICKS = 10 # ticks a side (1.5 s; ours: a swing takes 7)
+ROCK_MPS = 0.15                 # m/s: the sway's pace (ours)
+WALK_TURN_M = 1.0               # m: farther than this from the mat's centre, the held walk turns toward it (C274; ours)
+STAND_TURN_DPS = 3.0            # deg/s: the walk's way turns this fast (ours: a quarter turn in half a minute; at 15 it swung out of her
+                                # hands, at 6 it turned on past the mat; the day-85 copy)
 WALK_STOP_M = 0.45              # m: its feet this near her knees, the walk is done (ours: her own reach's comfort)
 WALK_MAX_TICKS = 400            # a walk's longest (60 s; ours)
 STAND_FALL_M = 0.50             # m: its pelvis under this while she holds it standing: it has sunk; she lowers it (ours)

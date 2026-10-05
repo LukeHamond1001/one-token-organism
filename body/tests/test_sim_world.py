@@ -2667,9 +2667,11 @@ def test_the_standing_and_stepping_reflexes():
     assert ev == {"waist": "stand", "leg_l": "stand", "leg_r": "stand"}
     assert abs(out["leg_l"][iq["knee"]] + R.STAND_STEP) < 1e-9 and abs(out["waist"][0] + R.W.STEP_BIG) < 1e-9
     q = {n: list(v) for n, v in nq.items()}; q["leg_l"][iq["hip_pitch"]] = R.STEP_EXT + 0.05
+    out, ev = R.stand(q, up, (150.0, 150.0), st)                                            # A194: the hip extended but the leg loaded
+    assert ev["leg_l"] == "stand" and st["leg_l"][0] == "stance"                            # like the other: no swing
     seen = []
     for k in range(R.STEP_LIFT + R.STEP_PLACE + 1):
-        out, ev = R.stand(q, up, (150.0, 150.0), st)
+        out, ev = R.stand(q, up, (40.0, 260.0), st)                                         # its weight on the other foot: the swing
         seen.append((ev["leg_l"], ev["leg_r"], round(out["leg_l"][iq["hip_pitch"]], 3), round(out["leg_l"][iq["knee"]], 3)))
         q["leg_l"][iq["hip_pitch"]] = 0.0                                                   # (the hip no longer extended: no second swing)
     assert [s[0] for s in seen] == ["step"] * (R.STEP_LIFT + R.STEP_PLACE) + ["stand"] and all(s[1] == "stand" for s in seen)

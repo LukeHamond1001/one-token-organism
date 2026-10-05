@@ -452,6 +452,11 @@ STAND_GAIN, STAND_STEP = 1.0, W.STEP_BIG        # the supporting reaction is an 
                                                 # (p1/raise.py, the day-84 copy)
 STEP_EXT = 0.08                 # rad: the stance hip's extension that starts the swing (ours; 0.12 on the stand-in's grid, 0.08 for
                                 # her hands' slower lead: C268's copy walked 0.40 m at it)
+STEP_UNLOAD = 0.30 # A194: the swing begins only in a leg carrying no more than this share of the soles' load: the
+                                # stance-to-swing transition needs the hip extended AND the leg unloaded (the cat's and the infant's
+                                # stepping: Grillner and Rossignol 1978 the hip's extension, Duysens and Pearson 1980 the extensors'
+                                # unloading; recalled). A loaded leg that swung dragged its foot and pulled the pelvis back (the day-85
+                                # copy's held walk: 0.04 m in 125 ticks). The share: ours
 STEP_LIFT, STEP_PLACE = 4, 3    # ticks: hip and knee flexing (the foot lifted and brought forward), then the knee extending (set down)
 STEP_HIP, STEP_KNEE = -0.9, 1.3 # rad: the swing's hip flexion and knee flexion targets (ours)
 STEP_HIP_PLACE = 0.8            # the hip's target while the foot is set down, as a share of STEP_HIP
@@ -470,10 +475,12 @@ def stand(q, imu_torso, soles, state):
     out, ev = {}, {}
     out["waist"] = tuple(float(min(max(-float(x), -W.STEP_BIG), W.STEP_BIG)) for x in q["waist"])   # the trunk held over the pelvis
     ev["waist"] = "stand"
+    load = float(soles[0]) + float(soles[1])
     for leg, other in (("leg_l", "leg_r"), ("leg_r", "leg_l")):
+        mine = float(soles[0 if leg == "leg_l" else 1])
         js = _JOINTS[leg]; iq = {j.split("_", 1)[1].replace("_joint", ""): i for i, j in enumerate(js)}
         st = state[leg]; ql = q[leg]
-        if st[0] == "stance" and float(ql[iq["hip_pitch"]]) > STEP_EXT and state[other][0] == "stance":
+        if st[0] == "stance" and float(ql[iq["hip_pitch"]]) > STEP_EXT and state[other][0] == "stance" and mine <= STEP_UNLOAD * load:
             st[0], st[1] = "swing", 0
         tgt = {k: 0.0 for k in iq}; cap = {k: STAND_STEP for k in iq}; gain = {k: STAND_GAIN for k in iq}
         if float(ql[iq["hip_pitch"]]) > 0.0:                            # the thrust EXTENDS: a hip already extended (the leg trailing as

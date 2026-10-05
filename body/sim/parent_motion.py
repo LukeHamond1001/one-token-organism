@@ -5238,6 +5238,24 @@ class ParentMotion:
         now = self._chest_point()
         pz = float(ch.pelvis[2]); th = float(ch.trunk_deg)
         fwd_c = unit(self.d.xmat[h.body].reshape(3, 3)[:, 0] * [1, 1, 0])[:2]             # the way it faces
+        if mode == "walk" and "wdir" in c:
+            if h.side == "L":                                               # (once a tick)
+                # C274: SHE WALKS IT BACK TOWARD ITS MAT. Each stand moved it on the way it happened to face, and by day 88's evening
+                # it lay at the room's edge by the hall, where her kneeling spots are blocked ('no spot she can kneel at', 'no path on
+                # the floor'; A110 carries it back only at dawn). Farther than WALK_TURN_M from the mat's centre, the walk's way
+                # turns toward it at STAND_TURN_DPS; her two hands on either side of its chest turn its trunk, and its steps follow
+                to_ = np.asarray(self.m.geom_pos[self.m.geom("mat").id][:2], float) - feet[:2]
+                if float(np.linalg.norm(to_)) > K.WALK_TURN_M:
+                    w0_ = math.atan2(c["wdir"][1], c["wdir"][0])
+                    dw_ = _ang(math.atan2(to_[1], to_[0]) - w0_)
+                    w1_ = w0_ + float(np.clip(dw_, -math.radians(K.STAND_TURN_DPS) * TICK_S, math.radians(K.STAND_TURN_DPS) * TICK_S))
+                    c["wdir"] = [math.cos(w1_), math.sin(w1_)]
+                    for x_ in self.holds:
+                        if x_.kind == "stand" and x_ is not h:
+                            x_.ctl["wdir"] = list(c["wdir"])
+            fwd_c = np.asarray(c["wdir"], float)                            # the walk's way: the way it faced as the walk began (C274: led
+                                                                            # the way it faced each tick, it twisted 45 deg either way in
+                                                                            # her hands and her lead turned with it)
         if mode in ("steady", "walk"):                                      # standing, her hands hold its trunk UPRIGHT: each hand's point
             yw_ = math.atan2(fwd_c[1], fwd_c[0])                            # where it would be on a trunk standing straight, facing as it
             Rz_ = np.array([[math.cos(yw_), -math.sin(yw_), 0.0], [math.sin(yw_), math.cos(yw_), 0.0], [0.0, 0.0, 1.0]])   # faces (led
@@ -5292,12 +5310,21 @@ class ParentMotion:
             if pz < K.STAND_FALL_M:
                 c["mode"] = "lower"; c["why"] = "it sank from standing"
             elif c["steady"] >= K.STAND_HOLD_TICKS:
-                c["mode"] = "walk"; c["walk_t"] = 0; c["feet0"] = _lst(feet)
+                c["mode"] = "walk"; c["walk_t"] = 0; c["feet0"] = _lst(feet); c["wdir"] = _lst(fwd_c)
         elif mode == "walk":
             c["walk_t"] += 1
             c["walked"] = max(float(c.get("walked", 0.0)), float((feet[:2] - np.asarray(c["feet0"], float)[:2]) @ fwd_c))
-            if float((lead[:2] - feet[:2]) @ fwd_c) < K.WALK_LEAD_M:        # her hands wait for its feet
-                lead[:2] = lead[:2] + fwd_c * K.STAND_WALK_MPS * TICK_S
+            gap_ = K.WALK_LEAD_M - float((lead[:2] - feet[:2]) @ fwd_c)     # her hands wait for its feet, and GO WITH them: a foot
+            if gap_ > 0:                                                    # set down ahead puts its feet's middle ahead of her hands,
+                v_ = K.STAND_WALK_MPS if gap_ <= K.WALK_LEAD_M else K.STAND_FOLLOW_MPS   # and hands creeping on at the lead's pace held its
+                lead[:2] = lead[:2] + fwd_c * min(gap_, v_ * TICK_S)        # chest back behind the new foot (C274: steps without progress)
+            # C274: SHE SHIFTS ITS WEIGHT FROM FOOT TO FOOT. A leg swings only unloaded (A194), and a child held square over both feet
+            # unloads neither: its chest is led over one foot, then the other (ROCK_M to the side of its feet's middle, ROCK_TICKS a
+            # side), as a parent walking a baby sways it from foot to foot
+            lat_ = np.array([-fwd_c[1], fwd_c[0]])
+            sgn_ = 1.0 if (int(c["walk_t"]) // K.ROCK_TICKS) % 2 == 0 else -1.0
+            want_ = float(sgn_ * K.ROCK_M - (lead[:2] - feet[:2]) @ lat_)
+            lead[:2] = lead[:2] + lat_ * float(np.clip(want_, -K.ROCK_MPS * TICK_S, K.ROCK_MPS * TICK_S))
             lead[2] = K.STAND_CHEST_M
             lead = near(lead)
             c["lead"] = _lst(lead); h.next = lead + off
@@ -6437,7 +6464,10 @@ class ParentMotion:
         her = np.asarray(self.base["at"], float)
         Rt = self.d.xmat[torso].reshape(3, 3)
         sg_ = 1.0 if float((her - self.d.xpos[torso][:2]) @ (Rt[:, 1][:2])) > 0 else -1.0      # its left (+y) or its right toward her
-        sides = {"hi": dict(local=[0.07, sg_ * 0.11, 0.30], normal=[0.7071, sg_ * 0.7071, 0.0]),      # under its arm, and at its waist: a
+        hi_ = dict(local=[0.10, -sg_ * 0.09, 0.30], normal=[1.0, 0.0, 0.0])   # C274: on the FAR side of its chest's front: both grips on
+                                                                              # the side toward her left it free to turn about them (a
+                                                                              # full turn in her hands in the held walk)
+        sides = {"hi": hi_,      # under its arm, and at its waist: a
                  "lo": dict(local=[0.06, sg_ * 0.12, 0.02], normal=[0.7071, sg_ * 0.7071, 0.0])}      # hand's breadth apart they could not
                                                                                                        # keep it upright as it was led (it
                                                                                                        # pitched onto its front in the walk)
