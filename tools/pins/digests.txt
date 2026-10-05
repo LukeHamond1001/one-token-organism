@@ -335,6 +335,7 @@ A193 (2026-10-04 16:26, the standing and the stepping reflexes): the sim digests
 C269 (2026-10-04 18:35, the teacher's pace): the sim digests unchanged (A192's; the stub world has no parent); the language default kept 7c54199e3c72cf77d45a8e94.
 A190 (2026-10-04 19:34, an act weighed against not doing it): the sim digests RE-TAKEN (threaded 4c5b4e02f2e7930c5d2b4ca0, one-thread d883bf2c9bd7efd8d0e98116, consts b816e29a1660; before: A192's); the language default kept 7c54199e3c72cf77d45a8e94.
 C270 (2026-10-04 20:30, she names what it did): the sim digests unchanged (A190's; the stub world has no parent); the language default kept 7c54199e3c72cf77d45a8e94.
+C273 (2026-10-04 22:50, the stand in floor play, its spot tested): the sim digests unchanged (the stub world has no parent); the language default kept 7c54199e3c72cf77d45a8e94.
 C272 (2026-10-04 22:00, the toys at her hand first): the sim digests unchanged (the stub world has no parent); the language default kept 7c54199e3c72cf77d45a8e94.
 C271 (2026-10-04 21:45, her walking pace back): the sim digests unchanged (the stub world has no parent); the language default kept 7c54199e3c72cf77d45a8e94.
 C268 (2026-10-04 20:32, she stands it up and walks it): the sim digests unchanged (A190's: threaded 4c5b4e02f2e7930c5d2b4ca0; the stub world has no parent and no G1 cord); the language default kept 7c54199e3c72cf77d45a8e94.

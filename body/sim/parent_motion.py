@@ -4087,6 +4087,28 @@ class ParentMotion:
                 return self._pull_pairing() is not None or self._gather_reach()
             finally:
                 self.base = saved
+        if need == "stand":
+            # C273: THE STAND'S SPOT IS ONE BOTH HER HANDS REACH ITS GRIPS FROM. The stand's first live block (day 88) and the day-85
+            # copy: 'her left hand cannot reach it from here (25 to 71 cm short)' on three stands of six; the approach took any spot
+            # beside its hips (no need) and the reach was first tried with her hands. Both grips (under its arm, at its waist, on the
+            # side of its trunk toward the spot) are solved with ONE trunk from the tall kneel there, each for the hand that will
+            # take it, as the stand's holds reach them (C144's lesson: a trunk of its own for each grip passes spots the act fails at)
+            T_ = np.asarray(H, float) + fwd * HEELS_BACK
+            saved = self.base
+            self.base = dict(mode="tall", at=_lst(T_), yaw=float(yaw), lean=0.0, spine=0.0, twist=0.0)
+            try:
+                torso = self.m.body("torso_link").id
+                sides, order = self._stand_sides()
+                targets = {}
+                for sd, k in zip("LR", order):
+                    to, loc, nl, shape = self._hold_target(sd, torso, sides[k]["local"], sides[k]["normal"])
+                    g, R = self._resolve_hand(to, sd)
+                    if float(np.linalg.norm(g[:2] - T_)) > 1.0:
+                        return False
+                    targets[sd] = (g, R, shape)
+                return bool(self._solve_trunk(targets, None, step=10)[3])
+            finally:
+                self.base = saved
         if need.startswith("hand:"):                                       # C133: the child's palm (side cs) within her hand's reach from
             _h, cs, toy = need.split(":", 2)                                # there, as the hand-over reaches it (_plan_hand_over)
             pt = self.child.grasp[cs] + self.child.palm_n[cs] * 0.04
@@ -6406,14 +6428,11 @@ class ParentMotion:
     def _act_stand_up(self, a, t):
         if self.child.posture not in ("back", "sitting"):
             raise Refuse("she stands it up from its back or from sitting (C268)")
-        return self._near(a, where="side", offs=(0.70, 0.75), alongs=(0.22, 0.12, 0.32)) + [dict(type="plan", what="stand", args={})]   # beside its hips
+        return self._near(a, where="side", offs=(0.70, 0.75, 0.62), alongs=(0.22, 0.12, 0.32, 0.0, -0.12), need="stand") + [dict(type="plan", what="stand", args={})]   # beside its hips
 
-    def _plan_stand(self, a):
-        """she rises onto her knees, her hands go onto the corner of its chest that faces her (one under its arm, one at its ribs:
-        reached from above while it lies, from beside it once it stands, as it turns about its own side-to-side axis), then the
-        stand's holds"""
-        if any(v is not None for v in self.holding.values()):
-            raise Refuse("her hands are busy: standing it up takes both (C268)")
+    def _stand_sides(self):
+        """the stand's two grips on its trunk (in its torso's frame) on the side toward where she kneels, and which she takes with
+        her left hand (the one farther to her left)"""
         torso = self.m.body("torso_link").id
         her = np.asarray(self.base["at"], float)
         Rt = self.d.xmat[torso].reshape(3, 3)
@@ -6425,6 +6444,16 @@ class ParentMotion:
         pts = {k: self.d.xpos[torso] + Rt @ np.array(v["local"]) for k, v in sides.items()}
         yaw = self.base["yaw"]; left = np.array([-math.sin(yaw), math.cos(yaw)])
         order = sorted(sides, key=lambda k: -float((pts[k][:2] - her) @ left))
+        return sides, order
+
+    def _plan_stand(self, a):
+        """she rises onto her knees, her hands go onto the corner of its chest that faces her (one under its arm, one at its ribs:
+        reached from above while it lies, from beside it once it stands, as it turns about its own side-to-side axis), then the
+        stand's holds"""
+        if any(v is not None for v in self.holding.values()):
+            raise Refuse("her hands are busy: standing it up takes both (C268)")
+        torso = self.m.body("torso_link").id
+        sides, order = self._stand_sides()
         out = []
         if self.base["mode"] == "heels":                                    # its chest will stand a metre up: above her reach from her heels
             b = self.base

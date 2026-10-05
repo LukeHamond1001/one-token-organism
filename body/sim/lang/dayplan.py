@@ -59,6 +59,8 @@ PLAY_GAP = (30, 60)                    # ticks between her floor play's offers (
                                        # acted nor spoke on 33% of the day's ticks, 6,009 of them in stretches of 3 s or more
 SIT_TRIES_PER_BLOCK = 3         # C224: the pull-to-sit offered this many times a motor block when her reach or her hold refused it (ours)
 SIT_TURNS_PER_BLOCK = 1         # C254: a child on its front at the sit's offer is turned onto its back first, this many turns a block (ours)
+FLOOR_STAND_GAP = 500           # C273: in floor play she stands it up this often when it lies on its back (75 s; ours: a stand takes
+                                # about 250 ticks, so a third of her floor play is standing and stepping in her hands)
 STAND_AGAIN_GAP = 100           # C268: after a stand done, the next one this many ticks on (15 s of rest; ours)
 SIT_RETRY_GAP = 200             # C224: ... the next try this many ticks after the refusal (30 s: a parent tries again in a minute; ours)
 SIT_RETRY_WHY = ("cannot reach", "lost their hold", "slipped", "no spot she can kneel", "did not arrive",
@@ -483,6 +485,16 @@ class DayPlan:
 
     def _play(self, t, lane, kind):
         c, p = lane.conduct, lane._p
+        if kind == "floor" and t >= getattr(self, "next_floor_stand", 0) and self._lying_on_back(lane) and \
+                not [v for v in getattr(c.motion, "holding", {}).values() if v is not None]:
+            # C273: THE STAND IS PART OF HER FLOOR PLAY. Day 88: 8,000 ticks of floor play before the day's first motor block, the
+            # stand (C268) not offered once; standing and stepping are learned by doing them, and the owner's word is walking first.
+            # Every FLOOR_STAND_GAP, with the child on its back and her hands empty, her play's offer is the stand
+            self.next_floor_stand = t + FLOOR_STAND_GAP
+            c.request("motor_sit")
+            self.log.append((t, "floor play: the stand (C273)"))
+            self.next_play = t + int(self.rng.integers(*PLAY_GAP))
+            return
         seen = {s.id: s for s in p.seen}
         focus = [o for o in self.focus if o in seen and not c.left_where_it_lies(o)]   # A117: not a toy she could not get to
         held = [v for v in getattr(c.motion, "holding", {}).values() if v is not None and v not in TP.OPEN_CONTAINERS]
