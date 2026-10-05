@@ -60,6 +60,7 @@ PLAY_GAP = (30, 60)                    # ticks between her floor play's offers (
 SIT_TRIES_PER_BLOCK = 3         # C224: the pull-to-sit offered this many times a motor block when her reach or her hold refused it (ours)
 SIT_TURNS_PER_BLOCK = 1         # C254: a child on its front at the sit's offer is turned onto its back first, this many turns a block (ours)
 CARRY_AFTER, CARRY_WINDOW = 2, 1500   # C277: this many of her acts refused for want of a spot to kneel beside it within this many ticks, and
+PRONE_HURT_TICKS, PRONE_HURT_PAIN = 150, 3   # C278: on its front this long with this many pain ticks, it is laid on its back (the carry); ours
 CARRY_CLEAR_M = 1.0                   # she carries it back to its mat (her own place this far from the mat's centre); ours
 FLOOR_STAND_GAP = 500           # C273: in floor play she stands it up this often when it lies on its back (75 s; ours: a stand takes
                                 # about 250 ticks, so a third of her floor play is standing and stepping in her hands)
@@ -266,16 +267,27 @@ class DayPlan:
                 if "no spot" in why_ or "every side is blocked" in why_:
                     self.blocked_at.append(t)
         self.blocked_at = [x for x in self.blocked_at if x > t - CARRY_WINDOW]
-        if len(self.blocked_at) >= CARRY_AFTER and kind in ("floor", "motor", "show") and not self.away and not pm.holds and \
+        # C278: A CHILD HURTING ON ITS FRONT IS LAID ON ITS BACK. Day 89's last 4,000 ticks: on its front 1,084 of them after a slipped
+        # stand and a stand sat down, 42 pain ticks (its wrists under it), her turn refused twice ('no spot she can kneel at puts a
+        # far grip of the turn in her reach'). On its front PRONE_HURT_TICKS running with PRONE_HURT_PAIN pain ticks among them, the
+        # carry lays it on its back where it lies or on its mat (world.carry_to_mat, as C277: the world's act, disclosed); a prone
+        # child that does not hurt is left to its tummy time
+        if self._posture(lane) == "front":
+            self.prone_run = getattr(self, "prone_run", 0) + 1
+            self.prone_pain = getattr(self, "prone_pain", 0) + int(any(k == "pain" for k, _o in p.events))
+        else:
+            self.prone_run = self.prone_pain = 0
+        hurt_ = getattr(self, "prone_run", 0) >= PRONE_HURT_TICKS and getattr(self, "prone_pain", 0) >= PRONE_HURT_PAIN
+        if (len(self.blocked_at) >= CARRY_AFTER or hurt_) and kind in ("floor", "motor", "show") and not self.away and not pm.holds and \
                 not any(v is not None for v in pm.holding.values()) and \
                 not any(a[5] not in ("done", "refused", "cancelled") for a in c.acts_open):
             mat_ = world.m.geom_pos[world.m.geom("mat").id][:2]
             if float(np.hypot(pm.base["at"][0] - mat_[0], pm.base["at"][1] - mat_[1])) >= CARRY_CLEAR_M:
                 was_ = [round(float(x), 2) for x in world.d.qpos[:2]]
                 if world.carry_to_mat():
-                    self.log.append((t, "carried back to its mat (C277)", was_))
-                    print(f"carried back to its mat at tick {t} from {was_} (C277)", flush=True)
-                self.blocked_at = []
+                    self.log.append((t, "carried back to its mat (C277)" if not hurt_ else "laid on its back: hurting on its front (C278)", was_))
+                    print(f"{'laid on its back' if hurt_ else 'carried back to its mat'} at tick {t} from {was_} (C277, C278)", flush=True)
+                self.blocked_at = []; self.prone_run = self.prone_pain = 0
         if kind == "motor" and not self.sit_due and self.sit_tries < SIT_TRIES_PER_BLOCK:
             for mid, st in (getattr(c, "ended", None) or {}).items():
                 try:
