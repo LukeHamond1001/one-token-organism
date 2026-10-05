@@ -2160,7 +2160,7 @@ class ParentMotion:
         brief = any(h.brief for h in self.holds) and self.brief_s < K.BRIEF_S
         one = K.CAP_ONE_BRIEF if brief else K.CAP_ONE
         two = K.CAP_TWO_BRIEF if brief else K.CAP_TWO
-        if any(h.kind == "stand" and h.ctl.get("mode") in ("raise", "lower") for h in self.holds):   # C268: while she raises it to its feet
+        if any((h.kind == "stand" and h.ctl.get("mode") in ("raise", "lower")) or h.kind == "turn" for h in self.holds):   # C268: while she raises it to its feet (C275: or turns it over)
             wt_ = float(m.body_subtreemass[m.body("pelvis").id]) * 9.81                    # or sits it down her caps are a share of its
             two = max(two, K.STAND_CAP_SHARE * wt_); one = max(one, K.STAND_CAP_SHARE * wt_ / 2)   # weight (_ctl_stand)
         body = self.body_hist.max(axis=0)                                   # what her body already presses on the G1 (the most of the
@@ -5431,8 +5431,13 @@ class ParentMotion:
         dirv = unit(up + toward * 0.5) if chest_z < -K.TURN_SIDE_Z else unit(up * K.TURN_OVER_UP + toward)   # A101: the far side
                                                                             # up and toward her (about its near edge), then over
         h.next = p + dirv * K.TURN_LIFT_M
-        c["ramp"] = min(K.CAP_TWO_BRIEF, K.TURN_RAMP_NPS * c["go_t"] * TICK_S)   # A101: the roll's force built within half a second
-        h.cap = min(c["ramp"] / 2, K.CAP_ONE_BRIEF)
+        # C275: THE TURN AT A SHARE OF ITS WEIGHT, as the stand's raise (C268: her handling caps are a woman's for a human infant, and
+        # this child weighs three). Day 89's first stand slipped, it fell onto its front, and her turn was refused twice ('not turned
+        # within her caps in 4.2 s, 8.7 s') while it lay prone with its wrists hurting, 41 pain ticks in 1,900
+        wt_ = float(self.m.body_subtreemass[self.m.body("pelvis").id]) * 9.81
+        top_ = max(K.CAP_TWO_BRIEF, K.STAND_CAP_SHARE * wt_)
+        c["ramp"] = min(top_, K.TURN_RAMP_NPS * c["go_t"] * TICK_S)   # A101: the roll's force built within half a second
+        h.cap = min(c["ramp"] / 2, top_ / 2)
         c["posture"] = ch.posture
         deg = math.degrees(math.acos(float(np.clip(-chest_z, -1.0, 1.0))))
         if deg > c.get("best_deg", -1e9) + K.TURN_RISE_DEG:
