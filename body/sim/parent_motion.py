@@ -5361,9 +5361,9 @@ class ParentMotion:
             # it), so the lean they carry comes to nothing over its feet; only then does her hold ease (it leaned 50 to 100 N on her
             # hands, and eased from that it went down in 5 ticks)
             F_ = np.sum([np.asarray(x.force, float)[:2] for x in self.holds if x.kind == "stand"], axis=0)
-            c["bal_f"] = _lst(np.asarray(c.get("bal_f", F_), float) * 0.7 + 0.3 * F_)
+            c["bal_f"] = _lst(np.asarray(c.get("bal_f", F_), float) * 0.85 + 0.15 * F_)   # (smoothed: it sways 100 N either way in her hands tick to tick)
             bal_ = np.asarray(c.get("bal", (0.0, 0.0)), float)
-            st_ = K.BALANCE_GAIN * F_; sn_ = float(np.linalg.norm(st_))
+            st_ = K.BALANCE_GAIN * np.asarray(c["bal_f"], float); sn_ = float(np.linalg.norm(st_))
             if sn_ > K.BALANCE_STEP_M:
                 st_ = st_ / sn_ * K.BALANCE_STEP_M
             bal_ = bal_ + st_; bn_ = float(np.linalg.norm(bal_))
@@ -5374,13 +5374,13 @@ class ParentMotion:
             c["lead"] = _lst(lead); h.next = lead + off
             c["settle_t"] = int(c.get("settle_t", 0)) + 1
             q_ = K.STAND_SETTLE_TICKS // 4
-            if "ease_t" not in c and (float(np.linalg.norm(c["bal_f"])) < K.BALANCE_N and c["settle_t"] > 5 or c["settle_t"] >= 2 * q_):
+            if "ease_t" not in c and (float(np.linalg.norm(c["bal_f"])) < K.BALANCE_N and c["settle_t"] > 5 or c["settle_t"] >= q_):
                 c["ease_t"] = int(c["settle_t"])                            # balanced (or half the settle gone): her hold eases over a
             if "ease_t" in c:                                               # quarter to her fingertips (LIGHT_N a hand: under what its
-                h.cap = max(K.LIGHT_N, h.cap * max(0.0, 1.0 - (c["settle_t"] - c["ease_t"]) / float(q_)))   # trunk feels as a hold: its tone takes it, A195)
+                h.cap = max(K.LIGHT_N, h.cap * max(0.0, 1.0 - (c["settle_t"] - c["ease_t"]) / float(2 * q_)))   # trunk feels as a hold: its tone takes it, A195)
             if pz < K.STAND_FALL_M:
                 c["mode"] = "lower"
-            elif "ease_t" in c and c["settle_t"] >= c["ease_t"] + 2 * q_ or c["settle_t"] >= K.STAND_SETTLE_TICKS + 2 * q_:
+            elif "ease_t" in c and c["settle_t"] >= c["ease_t"] + 3 * q_ or c["settle_t"] >= K.STAND_SETTLE_TICKS + 2 * q_:
                 c["mode"] = "wait"
         elif mode == "wait":
             # C281: THE WALK OVER, SHE CARRIES IT BACK TO ITS MAT AND LAYS IT DOWN. Sat down in her hands it fell: held upright its
