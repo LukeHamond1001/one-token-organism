@@ -4106,7 +4106,7 @@ class ParentMotion:
                     if float(np.linalg.norm(g[:2] - T_)) > 1.0:
                         return False
                     targets[sd] = (g, R, shape)
-                return bool(self._solve_trunk(targets, None, step=10)[3])
+                return bool(self._solve_trunk(targets, None, step=10)[3]) and bool(self._solve_trunk(targets, None)[3])   # C276: and by the reach's own fine solve
             finally:
                 self.base = saved
         if need.startswith("hand:"):                                       # C133: the child's palm (side cs) within her hand's reach from
@@ -5264,7 +5264,9 @@ class ParentMotion:
         if mode in ("raise", "lower"):
             wt_ = float(self.m.body_subtreemass[self.m.body("pelvis").id]) * 9.81
             h.cap = max(h.cap, K.STAND_CAP_SHARE * wt_ / 2)
-        if h.side == "L" and mode in ("raise", "steady", "walk", "lower"):                 # SHE MOVES WITH IT ON HER KNEES (once a tick)
+        if h.side == "L" and mode in ("raise", "steady", "walk", "lower") and (c.get("both") or sum(1 for x in self.holds if x.kind == "stand") >= 2):   # SHE MOVES WITH IT ON HER KNEES (once a tick),
+            # once both her hands are on it (C276: with her first hand on she shuffled after its chest, 11 cm in ten ticks, and her
+            # second hand's reach, planned from where she had knelt, fell 36 cm short)
             b = self.base; yaw = float(b["yaw"]); fwd_ = np.array([math.cos(yaw), math.sin(yaw)])
             at = np.asarray(b["at"], float)
             if "reach0" not in c:
@@ -6460,7 +6462,7 @@ class ParentMotion:
     def _act_stand_up(self, a, t):
         if self.child.posture not in ("back", "sitting"):
             raise Refuse("she stands it up from its back or from sitting (C268)")
-        return self._near(a, where="side", offs=(0.70, 0.75, 0.62), alongs=(0.22, 0.12, 0.32, 0.0, -0.12), need="stand") + [dict(type="plan", what="stand", args={})]   # beside its hips
+        return self._near(a, where="side", offs=(0.88, 0.80, 0.96), alongs=(-0.15, -0.05, -0.25, 0.05, -0.35), need="stand") + [dict(type="plan", what="stand", args={})]   # beside its hips
 
     def _stand_sides(self):
         """the stand's two grips on its trunk (in its torso's frame) on the side toward where she kneels, and which she takes with
