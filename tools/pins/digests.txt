@@ -340,6 +340,7 @@ C289 (2026-10-05 16:55, her asks while she holds it standing): the sim digests u
 C288 (2026-10-05 16:25, the ask after a show; her own name wears): the sim digests unchanged; the language default kept 7c54199e3c72cf77d45a8e94.
 A195 (2026-10-05 14:50, the postural tone and the vestibulospinal reflex when it stands alone): the sim digests re-run and unchanged (threaded 4c5b4e02f2e7930c5d2b4ca0, consts b816e29a1660; the stub world has no G1 cord); the language default kept 7c54199e3c72cf77d45a8e94.
 A196 (2026-10-05 17:45, the ankles' yield and the soft roll joints in the tone alone): the sim digests re-run and unchanged (threaded 4c5b4e02f2e7930c5d2b4ca0, consts b816e29a1660; the stub world has no G1 cord); the language default kept 7c54199e3c72cf77d45a8e94.
+A197/C291 (2026-10-05 18:35, the tone by degrees in her hands; her release once it is balanced): the sim digests re-run and unchanged (threaded 4c5b4e02f2e7930c5d2b4ca0, consts b816e29a1660; the stub world has no parent and no G1 cord); the language default kept 7c54199e3c72cf77d45a8e94.
 C286 (2026-10-05 14:20, her ask waits for a toy in view; the carry brings its toys): the sim digests unchanged; the language default kept 7c54199e3c72cf77d45a8e94.
 C285 (2026-10-05 14:00, its stand and its step pay in her hands): the sim digests unchanged; the language default kept 7c54199e3c72cf77d45a8e94.
 C284 (2026-10-05 12:40, she sees it stand and step): the sim digests unchanged (the stub world has no parent); the language default kept 7c54199e3c72cf77d45a8e94.
