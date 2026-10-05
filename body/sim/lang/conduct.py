@@ -1996,6 +1996,8 @@ class Conduct:
                 if label in ("echo", "right_name"):                    # C85 (2026-09-26): her smile at a word said again habituates as
                     n = self.vocal_book.get(w, 0)                      # at a motor act (A2's fall with mastery, HABIT_TAU, HABIT_FLOOR):
                     worth = K.WORTH_RIGHT_NAME * math.exp(-n / K.HABIT_TAU)   # the n-th right name or echo of the same word is worth
+                    if label == "right_name":                          # C282: a RIGHT NAME's smile wears no lower than RIGHT_NAME_FLOOR
+                        worth = max(worth, K.RIGHT_NAME_FLOOR)         # (the thing named while it attends it is answered every time)
                     if worth < K.HABIT_FLOOR:                          # 2 e^(-n/10), none under 0.05 (life day 2: 205 echoes of "oh"
                         worth = None                                   # paid 2 each, the body's 8 acts beside them); a met ask pays
                     else:                                              # in full (her test, spaced by her plan); a new word starts at 0
@@ -2016,7 +2018,8 @@ class Conduct:
                     self.ledger.exact_count(w, cw.channel) < K.EXACT_UNTIL:
                 out.judgments.append((K.WORTH_APPROX, "approximation", w))
                 kind = "recast"
-            elif cw.exact and not hold and self.stage >= 2 and pd is None:
+            elif cw.exact and not hold and self.stage >= 2 and pd is None and w not in TP.FUNCTION and w not in TP.INTERJECTIONS:
+                # (C282: a word that names nothing, 'the', 'you', 'oh', is echoed without a smile)
                 # C145 (2026-09-30): stage 2's rung between babble and a right name. A word her ear accepts, said where it names nothing
                 # she reads it attending to, is echoed WITH a smile of WORTH_WORD, worn per word by the vocal book (as a right name's,
                 # C85): the response follows the word-like sound (Goldstein and Schwade 2008; Gros-Louis, West and King 2014), and a

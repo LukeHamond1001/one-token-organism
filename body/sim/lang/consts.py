@@ -389,6 +389,12 @@ PREFIX_MIN = 2                        # or a prefix of at least 2 letters of wha
 
 # ------------------------------------------------------------------------------------------------ the worth table (4.3)
 WORTH_RIGHT_NAME = 2                  # a met ask; a right name (exact); the call answered, until the name is understood
+RIGHT_NAME_FLOOR = 0.5                # C282 (2026-10-05): a right name's smile wears no lower than this. Life day 90: her smiles for a
+                                      # word said anywhere 612, for a right name 24, each of those worn to 0.05-0.33 (block, ball, mama
+                                      # said right a few dozen times); its ten most frequent words were her frames' ('the', 'you', 'oh',
+                                      # 'see', 'a', 'is'). Saying the thing's name while attending it paid no more than any word said
+                                      # anywhere: nothing in her face taught naming. A parent answers the right word every time
+                                      # (contingent responding: Goldstein and Schwade 2008; recalled). Ours: a quarter of the fresh smile
 WORTH_MET_ASK = 2
 WORTH_APPROX = 1                      # stage 2: an approximation of a word, until the exact word has been said 3 times, and only
                                       # where the exact word would be a right name (its referent where she reads it looking, in
