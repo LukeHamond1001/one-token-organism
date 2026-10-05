@@ -264,7 +264,7 @@ class DayPlan:
                     why_ = str(c.motion._act(mid).get("why", ""))
                 except Exception:
                     why_ = ""
-                if "no spot" in why_ or "every side is blocked" in why_:
+                if "no spot" in why_ or "every side is blocked" in why_ or "cannot get up without touching the child" in why_:   # (C280)
                     self.blocked_at.append(t)
         self.blocked_at = [x for x in self.blocked_at if x > t - CARRY_WINDOW]
         # C278: A CHILD HURTING ON ITS FRONT IS LAID ON ITS BACK. Day 89's last 4,000 ticks: on its front 1,084 of them after a slipped

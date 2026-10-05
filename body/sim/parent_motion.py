@@ -275,6 +275,7 @@ KNEE_ROUTE_M = 0.9                          # A96: a new kneeling spot this near
 KNEE_ROUTE_DEG = 100                        # her knees (up onto the tall kneel, a turn on them, the shuffle) rather than by standing up
                                             # and walking (0.6 m and 25 deg before: the way round a lying child, its side to its head,
                                             # is about 0.8 m and a quarter turn, and a walk there took 70 s of re-planned trips)
+PLAN_BUDGET = 12                            # C280: her plans' reach tests a tick (ours: a few seconds of this machine's time at most)
 MAX_NEED_TRIES = 36                         # the spots on which an act's need (a trunk solve, a face search) is tried before she   # C260: 36, the place's own 24 spots added before the sides'
                                             # C170 (2026-09-30): 6 until the table left the mat's north (C169): the spots north of a child on
                                             # the mat, no longer behind furniture, were tried first for a put's reach and spent the six on the
@@ -1532,6 +1533,7 @@ class ParentMotion:
     def _tick_begin(self):
         m, d = self.m, self.d
         self.tick = int(self.w.tick)
+        self._plan_budget = PLAN_BUDGET                                     # C280: her reach tests this tick (_spent)
         if self.cancels:                                                    # cancels for this tick (P3's cancel(id, tick))
             due = [c for c in self.cancels if c[1] <= self.tick + 1]
             self.cancels = [c for c in self.cancels if c[1] > self.tick + 1]
@@ -4031,6 +4033,8 @@ class ParentMotion:
         LEAN_DIST_M (face_reach); None anything"""
         if need is None:
             return True
+        if self._spent():                                                   # C280
+            return False
         fwd = np.array([math.cos(yaw), math.sin(yaw)])
         if need == "lean":
             return self.face_reach(at=H, yaw=yaw, base_mode="heels") is not None
@@ -4474,6 +4478,8 @@ class ParentMotion:
 
     def _reachable_at(self, sd, grip, at, yaw, mode, palm=(0, 0, -1.0), bend=True):
         """whether her hand reaches a point (palm down) kneeling at a spot, with some trunk inside human ranges"""
+        if self._spent():                                                   # C280
+            return False
         grip = np.asarray(grip, float)
         R = NatR(palm, bend=bend)
         if float(np.linalg.norm(grip[:2] - np.asarray(at, float)[:2])) > 1.0:
@@ -5280,7 +5286,10 @@ class ParentMotion:
             want = now[:2] - fwd_ * float(c["reach0"])
             dv_ = want - at; dn_ = float(np.linalg.norm(dv_))
             if dn_ > 0.03:
-                b["at"] = _lst(at + dv_ / dn_ * min(dn_, K.STAND_SHUFFLE_MPS * TICK_S))
+                new_ = at + dv_ / dn_ * min(dn_, K.STAND_SHUFFLE_MPS * TICK_S)
+                if self._in_plan(new_) and self.plan.dist[self.plan.cell(new_)] >= K.BODY_R_M:   # C280: on the floor she can stand on
+                    b["at"] = _lst(new_)                                    # (day 91: following a stand she shuffled through the room's
+                                                                            # wall to (0.82, -2.68) and could not get up again)
         n_on = sum(1 for x in self.holds if x.kind == "stand")
         if n_on >= 2:
             c["both"] = True
@@ -5550,7 +5559,22 @@ class ParentMotion:
     def _hold_on(self, sd):
         return any(h.side == sd for h in self.holds)
 
+    def _spent(self):
+        """C280 (2026-10-05): HER PLANNING IS BOUNDED A TICK. Day 91 from tick 4,380,000: the child lay against the room's wall, no
+        spot beside it passed, and a hand-over's plan tried every spot of nine kneel plans by its reach tests (489 need tests, 848
+        reach tests, 1,490 trunk solves): single ticks of 150 to 270 s; the runner died before its next checkpoint and the watchdog
+        resumed it from the same pair five times, five hours of the life lost. Each reach test of a plan (_need_ok, _reachable,
+        _reachable_at) spends one of PLAN_BUDGET a tick; past it a test answers no without solving, the search ends 'no spot', and
+        the act is refused (C277 then carries the child back to its mat). A person does not try sixty kneeling places in her
+        head before she gives up. -> whether this tick's budget is spent"""
+        self._plan_budget = getattr(self, "_plan_budget", PLAN_BUDGET) - 1
+        if self._plan_budget == -1:
+            self.stats["plan_budget_spent"] = self.stats.get("plan_budget_spent", 0) + 1
+        return self._plan_budget < 0
+
     def _reachable(self, sd, to, step=5):
+        if self._spent():
+            return False
         if self.base["mode"] not in ("heels", "tall"):                      # C252 (2026-10-03): a kneeling reach is asked of a kneeling base; from
             return False                                                    # her feet or the sofa nothing is within a kneel's reach (the life
         g, R = self._resolve_hand(to, sd)                                   # stopped at 3,468,000: C251's set-down planned while she stood,
