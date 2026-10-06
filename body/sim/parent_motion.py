@@ -3827,17 +3827,35 @@ class ParentMotion:
         self.bm.write_qpos(sd.qpos, self.bm.targets(fk))
         mujoco.mj_kinematics(m, sd)
         chains = set(segs)
-        mine = [g for g in np.nonzero(self.geom_seg >= 0)[0] if SEG_CHAIN[kin.SEGS[self.geom_seg[g]]] in chains
-                and not (skip_off and not (m.geom_contype[g] or m.geom_conaffinity[g]))
-                and (only is None or kin.SEGS[self.geom_seg[g]].startswith(only))]
+        # S1 (2026-10-06): THE CLEARANCE'S SHAPES AND BOUNDS IN ONE PASS. The 400-tick profile of day 103 put a fifth of a tick in this
+        # test (21,100 calls, 3.7 million one-row norms: a kneel plan 0.9 s): her shapes of the chains gathered geom by geom each call,
+        # and each shape's bounding distance to the child's shapes taken in a row of its own. The chains' shapes are gathered once per
+        # (chains, only) and kept (skip_off reads the collision switches of the moment: gathered each call as before); the bounding
+        # distances come in one array, the same differences in the same order, and mj_geomDistance runs on the same pairs in the same
+        # order, so `best` is the number it was. The clock's change only: the plans are unchanged.
+        if skip_off:
+            mine = [g for g in np.nonzero(self.geom_seg >= 0)[0] if SEG_CHAIN[kin.SEGS[self.geom_seg[g]]] in chains
+                    and (m.geom_contype[g] or m.geom_conaffinity[g])
+                    and (only is None or kin.SEGS[self.geom_seg[g]].startswith(only))]
+        else:
+            ck = (tuple(sorted(chains)), only)
+            cache = self.__dict__.setdefault("_clear_mine", {})
+            mine = cache.get(ck)
+            if mine is None:
+                mine = [int(g) for g in np.nonzero(self.geom_seg >= 0)[0] if SEG_CHAIN[kin.SEGS[self.geom_seg[g]]] in chains
+                        and (only is None or kin.SEGS[self.geom_seg[g]].startswith(only))]
+                cache[ck] = mine
         best = 0.2
         ft = np.zeros(6)
         gp = sd.geom_xpos
         g1 = self.g1_geoms if child is None else child
         rb = m.geom_rbound
-        for g in mine:
-            dc = np.linalg.norm(gp[g1] - gp[g], axis=1) - rb[g1] - rb[g]
-            for j in np.nonzero(dc < best)[0]:
+        if not len(mine):
+            return best
+        mi = np.asarray(mine, dtype=int)
+        D = np.linalg.norm(gp[g1][None, :, :] - gp[mi][:, None, :], axis=2) - rb[g1][None, :] - rb[mi][:, None]
+        for a, g in enumerate(mine):
+            for j in np.nonzero(D[a] < best)[0]:
                 r = mujoco.mj_geomDistance(m, sd, int(g), int(g1[j]), best, ft)
                 best = min(best, float(r))
         return best
