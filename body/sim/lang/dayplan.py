@@ -316,10 +316,19 @@ class DayPlan:
             mat_ = np.asarray(world.m.geom_pos[world.m.geom("mat").id][:2], float)
             if getattr(world, "door_open", False):                          # the door stage: laid down where the walk ended (the way
                 here_ = np.asarray(world.d.qpos[:2], float)                 # to the door is walked in several stands; carried back to
-                if pm._in_plan(here_) and float(pm.plan.dist[pm.plan.cell(here_)]) >= 0.6:   # its mat each time it never got there),
-                    mat_ = here_                                            # or on the rug once it is through
-                elif float(here_[0]) > 2.75:
+                P_ = pm.plan                                                # its mat each time it never got there): the nearest clear
+                cx_, cy_ = P_.cell(here_)                                   # floor (0.6 m from any wall or thing) within a metre, or
+                best_, bd_ = None, 9.0                                      # on the rug once it is through
+                for ix_ in range(max(0, cx_ - 20), min(P_.nx, cx_ + 21)):
+                    for iy_ in range(max(0, cy_ - 20), min(P_.ny, cy_ + 21)):
+                        if P_.dist[ix_, iy_] >= 0.6:
+                            q_ = P_.point((ix_, iy_)); dq_ = float(np.linalg.norm(q_ - here_))
+                            if dq_ < bd_:
+                                best_, bd_ = q_, dq_
+                if float(here_[0]) > 2.75:
                     mat_ = np.asarray(DOOR_RUG_XY, float)
+                elif best_ is not None:
+                    mat_ = np.asarray(best_, float)
             her_ = np.asarray(pm.base["at"], float)[:2]
             spot_ = next((mat_ + np.array(o_) for o_ in ((0.0, 0.0), (0.0, 0.5), (0.0, -0.5), (0.5, 0.0), (-0.5, 0.0), (0.5, 0.5), (-0.5, -0.5), (0.5, -0.5), (-0.5, 0.5))
                           if float(np.linalg.norm(mat_ + np.array(o_) - her_)) >= CARRY_LAY_CLEAR_M), None)
