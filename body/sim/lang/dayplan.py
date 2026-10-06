@@ -266,6 +266,21 @@ class DayPlan:
         # none of her hands on it, no act of hers under way, and her own place clear of the mat. An environment's act, disclosed
         # C281: THE HELD WALK OVER, IT IS CARRIED FROM HER HANDS BACK TO ITS MAT (parent_motion._ctl_stand's carry_due): laid on its
         # back at the mat's centre, or beside the centre where that is clear of where she kneels (CARRY_LAY_CLEAR_M)
+        # C294: FALLEN FROM HER HANDS, IT IS PICKED UP AT ONCE: a stand that ended with her hold lost leaves it on the floor where it
+        # fell (day 94: twice in 4,000 ticks, 1.5 m from its mat on its front, 50 pain ticks); the carry that follows a walk (C281)
+        # follows that too
+        if not hasattr(self, "fell_seen"):
+            self.fell_seen = set(getattr(c, "ended", None) or ())
+        for mid_, st_ in (getattr(c, "ended", None) or {}).items():
+            if mid_ in self.fell_seen:
+                continue
+            self.fell_seen.add(mid_)
+            try:
+                a_ = c.motion._act(mid_)
+            except Exception:
+                continue
+            if a_.get("kind") == "stand_up" and st_ == "refused" and "lost" in str(a_.get("why", "")) and getattr(pm, "carry_pending", None) is None:
+                pm.carry_pending = int(t)
         cp_ = getattr(pm, "carry_pending", None)
         on_ = any(h_.kind == "stand" for h_ in pm.holds) or any(pm.arms[sd_].get("mode") == "hold" for sd_ in "LR")
         if cp_ is not None and on_ and t - int(cp_) > CARRY_WAIT_TICKS:
