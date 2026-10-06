@@ -5259,8 +5259,9 @@ class ParentMotion:
                 # it lay at the room's edge by the hall, where her kneeling spots are blocked ('no spot she can kneel at', 'no path on
                 # the floor'; A110 carries it back only at dawn). Farther than WALK_TURN_M from the mat's centre, the walk's way
                 # turns toward it at STAND_TURN_DPS; her two hands on either side of its chest turn its trunk, and its steps follow
-                to_ = np.asarray(self.m.geom_pos[self.m.geom("mat").id][:2], float) - feet[:2]
-                if float(np.linalg.norm(to_)) > K.WALK_TURN_M:
+                goal_ = getattr(self, "walk_goal", None)                    # the door stage: the day plan's destination (the doorway,
+                to_ = (np.asarray(goal_, float) if goal_ is not None else np.asarray(self.m.geom_pos[self.m.geom("mat").id][:2], float)) - feet[:2]   # then the second room's rug)
+                if float(np.linalg.norm(to_)) > (0.3 if goal_ is not None else K.WALK_TURN_M):
                     w0_ = math.atan2(c["wdir"][1], c["wdir"][0])
                     dw_ = _ang(math.atan2(to_[1], to_[0]) - w0_)
                     w1_ = w0_ + float(np.clip(dw_, -math.radians(K.STAND_TURN_DPS) * TICK_S, math.radians(K.STAND_TURN_DPS) * TICK_S))
@@ -5353,7 +5354,8 @@ class ParentMotion:
             c["lead"] = _lst(lead); h.next = lead + off
             if pz < K.STAND_FALL_M:
                 c["mode"] = "lower"; c["why"] = "it sank while walking"
-            elif c["walked"] >= K.WALK_FAR_M or c["walk_t"] >= K.WALK_MAX_TICKS:
+            elif (getattr(self, "walk_goal", None) is None and c["walked"] >= K.WALK_FAR_M) or c["walk_t"] >= K.WALK_MAX_TICKS \
+                    or (getattr(self, "walk_goal", None) is not None and float(np.linalg.norm(np.asarray(self.walk_goal, float) - feet[:2])) < 0.5):   # (the door stage: to its destination)
                 c["mode"] = "settle"; c["settle_t"] = 0; c["why"] = None
             elif c["walked"] >= float(c.get("far", 0.0)) + 0.02:            # still going: 2 cm more since she last looked
                 c["far"] = float(c["walked"]); c["far_t"] = int(c["walk_t"])

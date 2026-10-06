@@ -62,6 +62,8 @@ SIT_TURNS_PER_BLOCK = 1         # C254: a child on its front at the sit's offer 
 CARRY_AFTER, CARRY_WINDOW = 2, 1500   # C277: this many of her acts refused for want of a spot to kneel beside it within this many ticks, and
 PRONE_HURT_TICKS, PRONE_HURT_PAIN = 150, 3   # C278: on its front this long with this many pain ticks, it is laid on its back (the carry); ours
 CARRY_WAIT_TICKS = 40                  # C281: the carry waits this long at most for her hands to come off it (ours)
+DOOR_OPEN_DAY = 96                     # the door stage: the day its door first stands open (ours; the owner's stage after walking and talking)
+DOOR_XY, DOOR_RUG_XY = (2.9, -1.5), (4.1, -1.5)   # the doorway's far side and the second room's rug (make_g1room.ROOM2)
 FREE_PELVIS_M, FREE_DEG, FREE_STAND_MAX = 0.62, 35.0, 400   # C287: let go, it stands alone while its pelvis is this high and its trunk within this of upright, this many ticks at most (60 s); ours
 CARRY_LAY_CLEAR_M = 1.3                # C281: it is laid this far from where she kneels at the least (its body is 1.3 m long); ours
 CARRY_CLEAR_M = 1.0                   # she carries it back to its mat (her own place this far from the mat's centre); ours
@@ -281,6 +283,16 @@ class DayPlan:
                 continue
             if a_.get("kind") == "stand_up" and st_ == "refused" and "lost" in str(a_.get("why", "")) and getattr(pm, "carry_pending", None) is None:
                 pm.carry_pending = int(t)
+        # THE DOOR STAGE (the owner's word, 2026-10-04: a door in its room opens onto a new room it enters itself; after walking and
+        # talking). From DOOR_OPEN_DAY the door stands open (world.door_open) and every held walk's destination is the doorway and
+        # then the second room's rug (parent_motion.walk_goal); the carry after a walk lays it on the rug when it is through. Ours
+        if getattr(world, "_door", None) is not None:
+            if not world.door_open and self.day >= DOOR_OPEN_DAY:
+                world.door_open = True
+                self.log.append((t, "the door opened (the door stage)", int(self.day)))
+                print(f"the door opened at tick {t} (the door stage, day {self.day})", flush=True)
+            ch_xy_ = np.asarray(world.d.qpos[:2], float)
+            pm.walk_goal = None if not world.door_open else (list(DOOR_RUG_XY) if ch_xy_[0] > 2.75 else list(DOOR_XY))
         cp_ = getattr(pm, "carry_pending", None)
         on_ = any(h_.kind == "stand" for h_ in pm.holds) or any(pm.arms[sd_].get("mode") == "hold" for sd_ in "LR")
         if cp_ is not None and on_ and t - int(cp_) > CARRY_WAIT_TICKS:
@@ -302,6 +314,8 @@ class DayPlan:
             print(f"it stood alone {int(t - (self.free_from if self.free_from is not None else t))} ticks after she let go (C287)", flush=True)
             self.free_from = None
             mat_ = np.asarray(world.m.geom_pos[world.m.geom("mat").id][:2], float)
+            if getattr(world, "door_open", False) and float(world.d.qpos[0]) > 2.75:
+                mat_ = np.asarray(DOOR_RUG_XY, float)                       # (the door stage: through the door, its rug is its mat)
             her_ = np.asarray(pm.base["at"], float)[:2]
             spot_ = next((mat_ + np.array(o_) for o_ in ((0.0, 0.0), (0.0, 0.5), (0.0, -0.5), (0.5, 0.0), (-0.5, 0.0), (0.5, 0.5), (-0.5, -0.5), (0.5, -0.5), (-0.5, 0.5))
                           if float(np.linalg.norm(mat_ + np.array(o_) - her_)) >= CARRY_LAY_CLEAR_M), None)
