@@ -290,6 +290,11 @@ class DayPlan:
             her_ = np.asarray(pm.base["at"], float)[:2]
             spot_ = next((mat_ + np.array(o_) for o_ in ((0.0, 0.0), (0.0, 0.5), (0.0, -0.5), (0.5, 0.0), (-0.5, 0.0), (0.5, 0.5), (-0.5, -0.5), (0.5, -0.5), (-0.5, 0.5))
                           if float(np.linalg.norm(mat_ + np.array(o_) - her_)) >= CARRY_LAY_CLEAR_M), None)
+            if spot_ is None:                                               # C292: no spot of the mat clear of her: the one farthest from
+                spot_ = max((mat_ + np.array(o_) for o_ in ((0.0, 0.5), (0.0, -0.5), (0.5, 0.0), (-0.5, 0.0), (0.5, 0.5), (-0.5, -0.5), (0.5, -0.5), (-0.5, 0.5))),
+                            key=lambda q_: float(np.linalg.norm(q_ - her_)))   # her (day 94: she knelt 0.47 m from the mat's centre as it fell
+                                                                            # from its first stand alone; not carried, it lay on its front
+                                                                            # 1.6 m off, hurting, for 1,100 ticks)
             pm.carry_pending = None
             if spot_ is not None:
                 was_ = [round(float(x), 2) for x in world.d.qpos[:2]]
