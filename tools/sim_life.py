@@ -339,6 +339,7 @@ def main():
                        events=[e[0] for e in ls.get("events", ())], ev_lv=(ls.get("levels") or None),   # (C262: a personal best's rung, [kind, object, rung])
                        face_test=bool(ls.get("face_test")),
                        sib=[getattr(world, "_sib_state", None), getattr(world, "_sib_toy", None)],   # D2: the sibling's state and toy this tick (an instrument)
+                       sib_said=ls.get("sib_said"),                                        # D2 step 4: the sibling's word this tick [tick, toy, lift] (the lane's)
                        ground=L.ground_report(),                                     # A202: the grounding organ's bindings, cues and names so far, the words with a look
                        gsay=(None if getattr(L, "_ground_say_now", None) is None else [INV.get(int(L._ground_say_now[0])), round(float(L._ground_say_now[1]), 2)]),   # A202: the word the fovea's look primed this tick
                        gcue=(None if not getattr(L, "_ground_now", None) or not L._ground_now[0] else [INV.get(int(L._ground_trace[0])), round(float(L._ground_now[1]), 2), round(float(L._ground_now[2]), 2)]),   # A202: the heard word whose look the eyes are drawn to, and where (yaw, pitch)
