@@ -688,8 +688,13 @@ class DayPlan:
                     hp_, ax_ = lane._head(world.d); to_ = np.asarray(world.m.geom_pos[sib_["sib_torso"]], float) - hp_
                     dn_ = float(np.linalg.norm(to_))
                     if 0.3 < dn_ < SIB_M and float(np.degrees(np.arccos(np.clip(float(to_ @ ax_[0]) / dn_, -1.0, 1.0)))) < SIB_DEG:
-                        c.request("narrate_sib"); self.next_sib = t + SIB_NARRATE_GAP
-                        self.log.append((t, "the sibling walks where it looks: named (D2)"))
+                        st_ = getattr(world, "_sib_state", "walk"); toy_ = getattr(world, "_sib_toy", None)
+                        if st_ == "lift" and toy_ and p.obj(toy_) is not None:
+                            c.request("narrate_sib_get", o=toy_)        # D2 step 3: the getting named ('look. get the ball.')
+                        else:
+                            c.request("narrate_sib")
+                        self.next_sib = t + SIB_NARRATE_GAP
+                        self.log.append((t, "the sibling where it looks: named (D2)", st_))
                 except Exception as e_:
                     self.next_sib = t + SIB_NARRATE_GAP; self.log.append((t, "D2 narrate_sib failed", str(e_)[:60]))
         if kind == "floor" and t >= getattr(self, "next_demo", 0) and p.seen_by_child and not c.motion.holds and \

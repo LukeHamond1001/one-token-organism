@@ -546,6 +546,7 @@ INTENTS = {
     "narrate_walk": Intent("plain", False, None, (EYES,)),              # C300: her walk itself is her motion's act (the day plan's _Plain)
     "narrate_get": Intent("plain", False, None, (LOOK_O,)),             # C300: said before her show of the toy
     "narrate_sib": Intent("plain", False, None, (EYES,)),               # D2: the sibling walking where the child looks
+    "narrate_sib_get": Intent("plain", False, None, (LOOK_O,)),         # D2: the sibling getting a toy
     "body": Intent("plain", False, None, (Act("touch", "{b}"),)),
     "motor_sit": Intent("plain", False, None, (Act("stand_up", "child"),)),   # C268: the motor block's offer is her stand_up (it sits the
                                                                               # child up on the way, stands it, walks it, sits it down);

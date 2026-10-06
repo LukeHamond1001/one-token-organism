@@ -1228,36 +1228,92 @@ class G1World(SimWorld):
         self.m.geom_pos[self._door] = pos; self.m.geom_quat[self._door] = quat
         return op
 
+    SIB_TOY_GAP, SIB_TOY_FROM_CHILD, SIB_KNEEL_S, SIB_LIFT_S = 600, 1.2, 1.5, 3.0   # D2 step 3: how often it gets a toy, how far from the child the toy must lie, its kneel and its lift (ours)
+
     def sibling_tick(self):
-        """D2: THE SIBLING WALKS. By day the figure (g1scene._add_sibling: torso, head, two legs, two arms) goes to and fro along the
-        first room's back side (SIB x0 to x1 at y, SIB speed), its legs and arms swinging in a gait (SIB swing rad, the arms against
-        the legs), its body bobbing; at night it stands still. Kinematic (the world's act, as the door's); its parts are geoms in the
-        model's mutable fields, so a save holds it where it was"""
-        m = self.m
+        """D2: THE SIBLING WALKS, AND GETS A TOY. By day the figure (g1scene._add_sibling: torso, head, two legs, two arms) goes to and fro
+        along the first room's back side (SIB x0 to x1 at y, SIB speed), its legs and arms swinging in a gait (SIB swing rad, the arms
+        against the legs), its body bobbing; at night it stands still. Step 3: once in SIB_TOY_GAP ticks it walks to a toy that lies at
+        least SIB_TOY_FROM_CHILD from the child and in no one's hand, kneels (its body lowered, SIB_KNEEL_S), lifts the toy to its hand
+        (the toy set there each tick, SIB_LIFT_S: an example of getting), sets it back where it lay and returns to its line. Kinematic
+        (the world's act, as the door's); its parts are geoms in the model's mutable fields, so a save holds it where it was. The
+        state (`_sib_state`: walk | go | kneel | lift | put | back, the toy) is the parent's to name (dayplan narrate_sib_get)"""
+        m, d = self.m, self.d
         sib = getattr(self, "_sib", None)
         if sib is None:
             g_ = int(mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_GEOM, "sib_torso"))
             self._sib = sib = None if g_ < 0 else {n_: int(mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_GEOM, n_)) for n_ in ("sib_torso", "sib_head", "sib_leg_l", "sib_leg_r", "sib_arm_l", "sib_arm_r")}
-            self._sib_s = 0.0; self._sib_dir = 1.0; self._sib_t = 0.0
+            self._sib_s = 0.0; self._sib_dir = 1.0; self._sib_t = 0.0; self._sib_state = "walk"; self._sib_toy = None; self._sib_at = None
+            self._sib_next_toy = int(self.tick) + self.SIB_TOY_GAP; self._sib_phase_t = 0.0; self._sib_home = None
             if sib is None:
                 return
         if sib is None or getattr(self, "night", False):
             return
-        S = G.SIB; dt = TICK_S if "TICK_S" in globals() else 0.15
-        self._sib_s += self._sib_dir * S["speed"] * dt; self._sib_t += dt
-        if self._sib_s > S["x1"] - S["x0"]:
-            self._sib_s = S["x1"] - S["x0"]; self._sib_dir = -1.0
-        elif self._sib_s < 0.0:
-            self._sib_s = 0.0; self._sib_dir = 1.0
-        x = S["x0"] + self._sib_s; y = S["y"]
-        ph = 2.0 * math.pi * self._sib_t * 1.6                              # the gait's phase (1.6 strides a second)
-        bob = 0.015 * math.cos(2.0 * ph)
-        m.geom_pos[sib["sib_torso"]] = (x, y, S["torso_z"] + bob)
-        m.geom_pos[sib["sib_head"]] = (x, y, S["head_z"] + bob)
+        S = G.SIB; dt = TICK_S
+        self._sib_t += dt
+        st = getattr(self, "_sib_state", "walk")
+        if self._sib_at is None:
+            self._sib_at = np.array([S["x0"] + self._sib_s, S["y"]])
+        at = np.asarray(self._sib_at, float)
+        par = self.parent
+        if st == "walk":
+            self._sib_s += self._sib_dir * S["speed"] * dt
+            if self._sib_s > S["x1"] - S["x0"]:
+                self._sib_s = S["x1"] - S["x0"]; self._sib_dir = -1.0
+            elif self._sib_s < 0.0:
+                self._sib_s = 0.0; self._sib_dir = 1.0
+            at = np.array([S["x0"] + self._sib_s, S["y"]]); face = self._sib_dir
+            if par is not None and int(self.tick) >= self._sib_next_toy:
+                ch = np.asarray(d.qpos[:2], float); her = np.asarray(par.base["at"], float)[:2]
+                held = set(v for v in par.holding.values() if v is not None) | set(getattr(getattr(getattr(self, "lane", None), "_p", None), "child_holds", None) or ())
+                cands = [(float(np.linalg.norm(d.xpos[b][:2] - at)), k) for k, b in par.toys.items()
+                         if k not in held and k != "bucket" and float(np.linalg.norm(d.xpos[b][:2] - ch)) >= self.SIB_TOY_FROM_CHILD
+                         and float(np.linalg.norm(d.xpos[b][:2] - her)) >= 0.6 and float(d.xpos[b][0]) < 2.4 and abs(float(d.xpos[b][1])) < 2.1]
+                if cands:
+                    self._sib_toy = min(cands)[1]; self._sib_state = "go"
+        elif st == "go":
+            b = par.toys[self._sib_toy]; goal = d.xpos[b][:2].copy(); v = goal - at; n = float(np.linalg.norm(v))
+            face = 1.0 if v[0] >= 0 else -1.0
+            if n > 0.35:
+                at = at + v / n * min(n - 0.3, S["speed"] * dt)
+            else:
+                self._sib_state = "kneel"; self._sib_phase_t = 0.0; self._sib_home = d.qpos[m.jnt_qposadr[m.body_jntadr[b]]:m.jnt_qposadr[m.body_jntadr[b]] + 7].copy()
+        elif st in ("kneel", "lift", "put"):
+            self._sib_phase_t += dt; face = 1.0
+            b = par.toys[self._sib_toy]; j = m.body_jntadr[b]; adr = m.jnt_qposadr[j]; dof = m.jnt_dofadr[j]
+            if st == "kneel" and self._sib_phase_t >= self.SIB_KNEEL_S:
+                self._sib_state, self._sib_phase_t = "lift", 0.0
+            elif st == "lift":
+                hand = np.array([at[0] + 0.12, at[1] - 0.14, S["sho_z"] - 0.30 - S["torso_h"] * 0.0 + 0.25 * min(1.0, self._sib_phase_t / 0.6)])
+                d.qpos[adr:adr + 3] = hand; d.qvel[dof:dof + 6] = 0.0
+                if self._sib_phase_t >= self.SIB_LIFT_S:
+                    self._sib_state, self._sib_phase_t = "put", 0.0
+            elif st == "put":
+                home = self._sib_home
+                d.qpos[adr:adr + 7] = home; d.qvel[dof:dof + 6] = 0.0
+                self._sib_state = "back"; self._sib_toy = None; self._sib_next_toy = int(self.tick) + self.SIB_TOY_GAP
+            mujoco.mj_forward(m, d)
+        elif st == "back":
+            goal = np.array([S["x0"] + self._sib_s, S["y"]]); v = goal - at; n = float(np.linalg.norm(v)); face = 1.0 if v[0] >= 0 else -1.0
+            if n > 0.05:
+                at = at + v / n * min(n, S["speed"] * dt)
+            else:
+                self._sib_state = "walk"
+        else:
+            face = 1.0
+        self._sib_at = at
+        x, y = float(at[0]), float(at[1])
+        moving = st in ("walk", "go", "back")
+        ph = 2.0 * math.pi * self._sib_t * 1.6 if moving else 0.0           # the gait's phase (1.6 strides a second)
+        kneel = 0.28 if st in ("kneel", "lift", "put") else 0.0            # its body lowered at the toy
+        bob = 0.015 * math.cos(2.0 * ph) if moving else 0.0
+        m.geom_pos[sib["sib_torso"]] = (x, y, S["torso_z"] + bob - kneel)
+        m.geom_pos[sib["sib_head"]] = (x, y, S["head_z"] + bob - kneel)
         for sd, sg, sign in (("l", 1, 1.0), ("r", -1, -1.0)):
-            a_ = sign * S["swing"] * math.sin(ph)                            # the leg's swing about the hip, fore and aft (about y)
-            self._sib_limb(sib[f"sib_leg_{sd}"], (x, y + sg * 0.07, S["hip_z"] + bob), S["leg_h"], a_ * self._sib_dir)
-            self._sib_limb(sib[f"sib_arm_{sd}"], (x, y + sg * 0.14, S["sho_z"] + bob), S["arm_h"], -0.7 * a_ * self._sib_dir)
+            a_ = sign * S["swing"] * math.sin(ph) if moving else 0.0        # the leg's swing about the hip, fore and aft (about y)
+            self._sib_limb(sib[f"sib_leg_{sd}"], (x, y + sg * 0.07, S["hip_z"] + bob - kneel), S["leg_h"], a_ * face)
+            arm_ = -0.7 * a_ * face if moving else (-1.2 if (st == "lift" and sd == "r") else 0.0)   # the right arm reaches down to the toy
+            self._sib_limb(sib[f"sib_arm_{sd}"], (x, y + sg * 0.14, S["sho_z"] + bob - kneel), S["arm_h"], arm_)
 
     def _sib_limb(self, g, top, half, ang):
         """a limb capsule hung from `top`, swung `ang` rad about the sideways axis (forward = +x)"""

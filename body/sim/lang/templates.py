@@ -191,6 +191,7 @@ FRAMES = {
                                                                                 # five times as often; the toy-in-view reply stands)
     "narrate_walk": [F("mama walks. walk, walk, walk.", "walk"), F("walk. walk. walk.", "walk"), F("mama goes to you. walk.", "walk")],   # C300: she shows walking
     "narrate_sib": [F("look. walk, walk, walk.", "walk"), F("see? walk. walk.", "walk"), F("walk. walk. walk.", "walk")],   # D2: the sibling walking in its view
+    "narrate_sib_get": [F("look. get the {o}.", "{o}"), F("up. the {o}.", "{o}"), F("see? the {o}.", "{o}")],   # D2: the sibling getting a toy
     "narrate_get": [F("mama gets the {o}.", "{o}"), F("up. mama has the {o}.", "{o}"), F("look. mama gets the {o}.", "{o}")],   # C300: she shows getting
     "narrate_fell": [F("uh oh. the {o} is down.", "down"), F("oh! the {o} is down.", "down")],
     "narrate_on": [F("the {o} is on the {p}.", "{p}")],
