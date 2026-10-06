@@ -317,11 +317,11 @@ class DayPlan:
             if getattr(world, "door_open", False):                          # the door stage: laid down where the walk ended (the way
                 here_ = np.asarray(world.d.qpos[:2], float)                 # to the door is walked in several stands; carried back to
                 P_ = pm.plan                                                # its mat each time it never got there): the nearest clear
-                cx_, cy_ = P_.cell(here_)                                   # floor (0.6 m from any wall or thing) within a metre, or
+                cx_, cy_ = P_.cell(here_)                                   # floor (0.35 m from any wall or thing) within a metre, or
                 best_, bd_ = None, 9.0                                      # on the rug once it is through
                 for ix_ in range(max(0, cx_ - 20), min(P_.nx, cx_ + 21)):
                     for iy_ in range(max(0, cy_ - 20), min(P_.ny, cy_ + 21)):
-                        if P_.dist[ix_, iy_] >= 0.6:
+                        if P_.dist[ix_, iy_] >= 0.35:
                             q_ = P_.point((ix_, iy_)); dq_ = float(np.linalg.norm(q_ - here_))
                             if dq_ < bd_:
                                 best_, bd_ = q_, dq_

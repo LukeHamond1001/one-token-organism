@@ -1179,6 +1179,7 @@ class G1World(SimWorld):
 
     # ---------------------------------------------------------------- the door stage
     DOOR_XY = (2.65, -1.5)                                                  # the doorway's middle (make_g1room: ROOM_X, the door's y)
+    DOOR_W = 1.3                                                            # m: the doorway's width in the door stage (the XML's 0.9; ours)
     DOOR_NEAR_M = 1.3                                                       # she opens it from this near and it closes behind her (ours)
 
     def _door_setup(self):
@@ -1195,10 +1196,18 @@ class G1World(SimWorld):
             m.geom_pos[g][:2] = pos; m.geom_size[g][:2] = size
             m.geom_rgba[g] = (.96, .86, .62, 1.0)                           # the second room's yellow
             m.geom_rbound[g] = float(np.linalg.norm(m.geom_size[g])); m.geom_aabb[g][3:] = m.geom_size[g]
+        # the doorway widened to DOOR_W (1.3 m; the XML's 0.9): she walks it through side by side, on her knees beside it
+        D_ = 2.3; y0_, y1_ = self.DOOR_XY[1] - self.DOOR_W / 2, self.DOOR_XY[1] + self.DOOR_W / 2
+        for nm, yc_, hy_ in (("wall_right_a", (y1_ + D_) / 2, (D_ - y1_) / 2), ("wall_right_b", (y0_ - D_) / 2, (y0_ + D_) / 2)):
+            g = m.geom(nm).id
+            m.geom_pos[g][1] = yc_; m.geom_size[g][1] = hy_
+            m.geom_rbound[g] = float(np.linalg.norm(m.geom_size[g])); m.geom_aabb[g][3:] = m.geom_size[g]
+        g = self._door
+        m.geom_size[g][1] = self.DOOR_W / 2 - .005; m.geom_rbound[g] = float(np.linalg.norm(m.geom_size[g])); m.geom_aabb[g][3:] = m.geom_size[g]
         if not hasattr(self, "_door_closed"):
             g = self._door
             self._door_closed = (np.array([2.65, -1.5, m.geom_pos[g][2]]), np.array([1.0, 0.0, 0.0, 0.0]))
-            self._door_swung = (np.array([2.74, -0.58, m.geom_pos[g][2]]), np.array([1.0, 0.0, 0.0, 0.0]))   # beside the doorway, flat on the second room's near wall
+            self._door_swung = (np.array([2.74, self.DOOR_XY[1] + self.DOOR_W + .02, m.geom_pos[g][2]]), np.array([1.0, 0.0, 0.0, 0.0]))   # beside the doorway, flat on the second room's near wall
         self.door_tick()
 
     def door_tick(self):
