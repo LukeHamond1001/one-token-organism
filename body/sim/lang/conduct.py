@@ -2448,6 +2448,10 @@ class Conduct:
         if r["kind"] == "confirm":
             ln = f.compose("confirm", t, p, o=o) if o is not None else None
             return ln or f.compose("confirm_act", t, p)
+        if r["kind"] == "label":                                            # C296: her own answer to the question it did not answer
+            ln = f.compose("label", t, p, o=o) if o is not None else None
+            if ln is not None:
+                return ln
         worn = w is not None and int(self.vocal_book.get(w, 0)) >= int(K.HABIT_TAU)   # C198: a word her smile has worn (C85's book)
         if r["kind"] in ("recast", "echo") and w is not None and w not in TP.INTERJECTIONS and w not in TP.FUNCTION and not worn:
             # C172 (2026-09-30): AN INTERJECTION IS NOT ECHOED. Life day 44: the child said "oh" 2,655 times (42% of its tokens) and she
