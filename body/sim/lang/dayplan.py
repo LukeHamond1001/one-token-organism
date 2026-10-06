@@ -314,8 +314,12 @@ class DayPlan:
             print(f"it stood alone {int(t - (self.free_from if self.free_from is not None else t))} ticks after she let go (C287)", flush=True)
             self.free_from = None
             mat_ = np.asarray(world.m.geom_pos[world.m.geom("mat").id][:2], float)
-            if getattr(world, "door_open", False) and float(world.d.qpos[0]) > 2.75:
-                mat_ = np.asarray(DOOR_RUG_XY, float)                       # (the door stage: through the door, its rug is its mat)
+            if getattr(world, "door_open", False):                          # the door stage: laid down where the walk ended (the way
+                here_ = np.asarray(world.d.qpos[:2], float)                 # to the door is walked in several stands; carried back to
+                if pm._in_plan(here_) and float(pm.plan.dist[pm.plan.cell(here_)]) >= 0.6:   # its mat each time it never got there),
+                    mat_ = here_                                            # or on the rug once it is through
+                elif float(here_[0]) > 2.75:
+                    mat_ = np.asarray(DOOR_RUG_XY, float)
             her_ = np.asarray(pm.base["at"], float)[:2]
             spot_ = next((mat_ + np.array(o_) for o_ in ((0.0, 0.0), (0.0, 0.5), (0.0, -0.5), (0.5, 0.0), (-0.5, 0.0), (0.5, 0.5), (-0.5, -0.5), (0.5, -0.5), (-0.5, 0.5))
                           if float(np.linalg.norm(mat_ + np.array(o_) - her_)) >= CARRY_LAY_CLEAR_M), None)
