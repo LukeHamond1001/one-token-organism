@@ -1200,7 +1200,8 @@ class G1World(SimWorld):
         D_ = 2.3; y0_, y1_ = self.DOOR_XY[1] - self.DOOR_W / 2, self.DOOR_XY[1] + self.DOOR_W / 2
         for nm, yc_, hy_ in (("wall_right_a", (y1_ + D_) / 2, (D_ - y1_) / 2), ("wall_right_b", (y0_ - D_) / 2, (y0_ + D_) / 2)):
             g = m.geom(nm).id
-            m.geom_pos[g][1] = yc_; m.geom_size[g][1] = hy_
+            m.geom_pos[g][1] = yc_; m.geom_size[g][1] = max(0.01, hy_)      # (the 2.0 m door reaches the room's front corner: the
+                                                                        # lower segment is a sliver, never a negative size)
             m.geom_rbound[g] = float(np.linalg.norm(m.geom_size[g])); m.geom_aabb[g][3:] = m.geom_size[g]
         g = self._door
         m.geom_size[g][1] = self.DOOR_W / 2 - .005; m.geom_rbound[g] = float(np.linalg.norm(m.geom_size[g])); m.geom_aabb[g][3:] = m.geom_size[g]
