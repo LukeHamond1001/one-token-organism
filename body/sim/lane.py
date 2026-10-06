@@ -774,7 +774,7 @@ class ParentLane:
         if sib_ and not world.night:
             sib_pos = np.asarray(m.geom_pos[sib_["sib_head"]], float).copy()
             st_, toy_ = getattr(world, "_sib_state", None), getattr(world, "_sib_toy", None)
-            if st_ in SIB_SAY_STATES and toy_ and (st_, toy_) != self.sib_last and self.conduct.voice is not None and p.obj(toy_) is not None:
+            if st_ in SIB_SAY_STATES and toy_ and (st_, toy_) != self.sib_last and self.conduct.voice is not None and str(toy_) in LX.BIRTH_WORDS:
                 self.sib_last = (st_, toy_)
                 try:
                     clip_ = self.conduct.voice.clip(f"{toy_}.", "plain", prosody=SIB_PROSODY)

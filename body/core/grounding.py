@@ -65,8 +65,9 @@ class GroundingMixin:
             self._ground_s = torch.zeros(int(self.m.vocab), dtype=torch.float64)   # A202b: the sum of its hearings' look sizes
             self._ground_trace = [-1, 0]
             self._ground_stats = {"bind": 0, "cue": 0, "say": 0}
-        if getattr(self, "_ground_s", None) is None or int(self._ground_s.shape[0]) != int(self.m.vocab):   # (a save from before A202b)
-            self._ground_s = torch.zeros(int(self.m.vocab), dtype=torch.float64)
+        if getattr(self, "_ground_s", None) is None or int(self._ground_s.shape[0]) != int(self.m.vocab):   # (a save from before A202b: each
+            self._ground_s = torch.from_numpy(_norm(self._ground_A.numpy(), axis=1) * self._ground_n.numpy().astype(np.float64)).clone()   # row read as
+                                                                                                  # consistent so far; its next hearings tell)
         return self._ground_A.numpy(), self._ground_n.numpy(), self._ground_trace
 
     def _ground_consist(self, w=None):
