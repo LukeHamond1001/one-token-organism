@@ -92,12 +92,21 @@ def test_the_word_heard_on_a_thing_draws_the_eyes_to_its_look():
     assert say is not None and say[0] == ball and say[1] > GR.GROUND_MARGIN, say
     assert b._ground_say(_frame(ep, _eye_f(FLOOR, FLOOR))) is None
     assert b._ground_say(_frame(ep, _eye_f(BLUE, FLOOR)))[0] == block
+    # A202b: a word heard over everything ("is": red, blue, red, blue ...) averages to no look (the running mean), its consistency falls,
+    # and it neither draws the eyes nor is primed, while "ball" (red every time) keeps a consistent look
+    is_ = 13
+    for k in range(8):
+        b._ground_learn(is_, _frame(_eye_p((1, 2), FLOOR, FLOOR), _eye_f(RED if k % 2 == 0 else BLUE, FLOOR)))
+    assert n[is_] == 8 and b._ground_consist(is_) < GR.GROUND_CONSIST < b._ground_consist(ball), (b._ground_consist(is_), b._ground_consist(ball))
+    f6 = _frame(ep, _eye_f(FLOOR, FLOOR)); b._ground_sense(f6)
+    assert f6.obs["named_periph"][0] == 0.0, f6.obs["named_periph"]
+    assert b._ground_say(_frame(ep, _eye_f(RED, FLOOR)))[0] == ball
     # the night: no eyes, no look, nothing bound, the cue quiet
     nf = types.SimpleNamespace(obs={"body": np.zeros(250)}, truth={})
     b._ground_learn(ball, nf); b._ground_sense(nf)
     assert n[ball] == 3 and nf.obs["named_periph"][0] == 0.0
     r = b.ground_report()
-    assert r["words"] == 3 and r["bind"] == 10 and r["cue"] >= 3, r
+    assert r["words"] == 3 and r["bind"] == 18 and r["cue"] >= 3, r
     print("A202 ok", r)
 
 

@@ -33,7 +33,11 @@ and the first naming on the film."""
 import numpy as np
 import torch
 
-GROUND_RATE = 0.15      # the Hebbian step of a row toward this hearing's look (ours: a word's look settles in about seven hearings)
+GROUND_RATE = 0.05      # A202b: the least step of a row toward this hearing's look; a row moves by max(1/n, this), the running mean of
+                        # its hearings (cross-situational: a word heard over many things averages to no look, Yu and Smith 2007),
+                        # drifting at this rate once it has many (ours). 0.15 at first: 'is' then tracked whatever was shown last
+GROUND_CONSIST = 0.75   # A202b: the least consistency of a word's look (its mean's size over its hearings' mean size: 1 for one look
+                        # always, 0.7 for two colours by turns, near 0 for a word heard over everything) for the cue and the name (ours)
 GROUND_MIN_N = 3        # hearings before a word's look is trusted for the cue and the name (ours: fast mapping's few)
 GROUND_TRACE = 20       # ticks (3 s) a heard word keeps drawing the eyes toward its look (ours: the orienting response's span)
 GROUND_FLOOR = 0.02     # the least contrast (opponent units) that counts as a look at a thing, in the fovea or a cell (ours)
@@ -58,9 +62,19 @@ class GroundingMixin:
             k = int(self.anatomy.grounding.size)
             self._ground_A = torch.zeros((int(self.m.vocab), k), dtype=torch.float64)
             self._ground_n = torch.zeros(int(self.m.vocab), dtype=torch.int64)
+            self._ground_s = torch.zeros(int(self.m.vocab), dtype=torch.float64)   # A202b: the sum of its hearings' look sizes
             self._ground_trace = [-1, 0]
             self._ground_stats = {"bind": 0, "cue": 0, "say": 0}
+        if getattr(self, "_ground_s", None) is None or int(self._ground_s.shape[0]) != int(self.m.vocab):   # (a save from before A202b)
+            self._ground_s = torch.zeros(int(self.m.vocab), dtype=torch.float64)
         return self._ground_A.numpy(), self._ground_n.numpy(), self._ground_trace
+
+    def _ground_consist(self, w=None):
+        """A202b: a word's look's consistency, |mean| / (the mean of its hearings' |look|), 0 with no hearing (for every word when w is None)"""
+        A, n, _ = self._ground_state(); s_ = self._ground_s.numpy()
+        if w is None:
+            return np.where(n > 0, _norm(A, axis=1) * n / np.maximum(s_, 1e-12), 0.0)
+        return float(_norm(A[w]) * n[w] / max(float(s_[w]), 1e-12)) if n[w] > 0 else 0.0
 
     def _ground_skip(self, u):
         g = self.anatomy.grounding
@@ -74,7 +88,7 @@ class GroundingMixin:
         A, n, tr = self._ground_state()
         out = np.zeros(3)
         w, left = int(tr[0]), int(tr[1])
-        if left > 0 and w >= 0 and int(n[w]) >= GROUND_MIN_N:
+        if left > 0 and w >= 0 and int(n[w]) >= GROUND_MIN_N and self._ground_consist(w) >= GROUND_CONSIST:
             T = A[w]; nt = _norm(T)
             if nt > GROUND_FLOOR:
                 feats, dirs = g.periphery(frame)
@@ -101,9 +115,10 @@ class GroundingMixin:
         u = int(u)
         if self._ground_skip(u):
             return
-        T = np.asarray(g.appearance(frame), dtype=np.float64)
-        if _norm(T) > GROUND_FLOOR:
-            A[u] += GROUND_RATE * (T - A[u]); n[u] += 1
+        T = np.asarray(g.appearance(frame), dtype=np.float64); nT = _norm(T)
+        if nT > GROUND_FLOOR:
+            n[u] += 1; rate = max(1.0 / float(n[u]), GROUND_RATE)             # A202b: the running mean of its hearings' looks
+            A[u] += rate * (T - A[u]); self._ground_s.numpy()[u] += nT
             self._ground_stats["bind"] += 1
         tr[0] = u; tr[1] = GROUND_TRACE
 
@@ -116,13 +131,14 @@ class GroundingMixin:
         T = np.asarray(g.appearance(frame), dtype=np.float64); nt = _norm(T)
         if nt <= GROUND_FLOOR:
             return None
-        ok = n >= GROUND_MIN_N
+        cons = self._ground_consist()
+        ok = (n >= GROUND_MIN_N) & (cons >= GROUND_CONSIST)
         if int(ok.sum()) < 1:
             return None
         na = _norm(A, axis=1)
         cos = (A @ (T / nt)) / np.maximum(na, 1e-9)
-        cos = np.where(ok & (na > GROUND_FLOOR), cos, -1.0)
-        order = np.argsort(-cos, kind="stable")
+        cos = np.where(ok & (na > GROUND_FLOOR), cos * cons, -1.0)         # A202b: weighed by the word's consistency: the word that
+        order = np.argsort(-cos, kind="stable")                             # always came with this look over one that sometimes did
         b = int(order[0]); second = float(cos[order[1]]) if cos.size >= 2 else -1.0
         if cos[b] >= GROUND_MATCH and cos[b] - second >= GROUND_MARGIN and not self._ground_skip(b):
             self._ground_stats["say"] += 1
@@ -134,5 +150,5 @@ class GroundingMixin:
         if not self._ground_on():
             return None
         A, n, tr = self._ground_state()
-        return {**{k_: int(v_) for k_, v_ in self._ground_stats.items()}, "words": int(np.sum(n >= GROUND_MIN_N)),
+        return {**{k_: int(v_) for k_, v_ in self._ground_stats.items()}, "words": int(np.sum((n >= GROUND_MIN_N) & (self._ground_consist() >= GROUND_CONSIST))),
                 "trace": [int(tr[0]), int(tr[1])]}
