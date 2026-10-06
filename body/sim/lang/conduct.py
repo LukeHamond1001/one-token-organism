@@ -1861,6 +1861,9 @@ class Conduct:
                 if kind != "call" or not self.ledger.understood(NAME):     # the call answered, until the name is understood
                     out.judgments.append((K.WORTH_MET_ASK, "met_ask", word))
                 self.reply_due = dict(tick=t, kind="confirm", word=word, obj=self.pending.get("obj"))
+            elif result == "nearer":                                        # C299: a look toward X: her smile at the approximation, and
+                out.judgments.append((K.WORTH_APPROX, "approximation", word))   # the thing named where it looked ('there. the ball.')
+                self.reply_due = dict(tick=t, kind="label", word=word, obj=self.pending.get("obj"))
             self.pending = None
         if self.pending is not None and t > self.pending["until"]:
             pd_ = self.pending

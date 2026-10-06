@@ -469,6 +469,8 @@ class Ledger:
                 if tr["kind"] == "gaze":
                     tr["run"] = tr["run"] + 1 if tr["word"] in att else 0
                     ok = tr["run"] >= K.HOLD or None
+                    if tr["run"] >= 1 or any(getattr(p.obj(i_), "name", None) == tr["word"] for o_ in p.attended() for i_ in (o_.near or ())):
+                        tr["nearer"] = True                             # C299: a glance at X, or a look within NEAR_DEG of it
                 elif tr["kind"] == "call":
                     tr["run"] = tr["run"] + 1 if p.child_target == "mama" else 0
                     ok = tr["run"] >= K.HOLD or None
@@ -508,9 +510,13 @@ class Ledger:
     def _outcome(self, t, tr, ok):
         """an ask's result -> "met" | "missed" | "void": her teaching's record (asks), counted toward nothing."""
         st = self._w(tr["word"])
-        res = "void" if tr["void"] is not None else ("met" if ok else "missed")
+        res = "void" if tr["void"] is not None else ("met" if ok else ("nearer" if tr.get("nearer") and tr["kind"] == "gaze" else "missed"))
+        # C299 (2026-10-06): A LOOK TOWARD X IS AN APPROXIMATION. 177 asks on day 102 and one met: a gaze ask is met only by HOLD ticks on
+        # X, so her asks taught nothing (an all-or-nothing reward the child met by chance once a day). As the reach nearer is paid toward
+        # the got (C261's ladder), a glance at X, or a look within NEAR_DEG of it, inside the window is 'nearer': paid WORTH_APPROX by
+        # the conduct, counted as a miss in the record of her teaching (shaping by successive approximations, Skinner 1953)
         if res != "void":
-            st["asks"].append(int(bool(ok)))
+            st["asks"].append(int(bool(ok)))                                # (a 'nearer' is a miss here)
             st["asks"] = st["asks"][-K.ASKS_KEEP:]
         self._rec(dict(ev="outcome", t=int(t), trial=tr["id"], word=tr["word"], kind=tr["kind"], result=res, why=tr["void"],
                        teaching=True))

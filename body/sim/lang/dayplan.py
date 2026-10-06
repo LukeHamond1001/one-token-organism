@@ -689,7 +689,7 @@ class DayPlan:
         roll = (roll - LESSON_SHARE) / (1.0 - LESSON_SHARE) if can else roll
         if kind == "floor" and roll < ASK_SHARE and focus:                # C283: her asks first
             o = focus[int(self.rng.integers(len(focus)))]
-            ask = ["ask_where", "ask_where", "ask_what", "ask_give"][int(self.rng.integers(4))]
+            ask = ["ask_where", "ask_where", "ask_what", "ask_what", "ask_give"][int(self.rng.integers(5))]   # C299: 'what is it?' two of five (one of four: four a day on day 102)
             can = [x for x in focus if (_may_give(seen, x) if ask == "ask_give" else seen[x].child_sees)]
             if o not in can and can:                                    # C126: an ask is of a toy in the child's view (4.8), a give of
                 o = can[int(self.rng.integers(len(can)))]               # one in its reach too: the toy of her ask chosen among those
