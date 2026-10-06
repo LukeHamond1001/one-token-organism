@@ -64,6 +64,7 @@ PRONE_HURT_TICKS, PRONE_HURT_PAIN = 150, 3   # C278: on its front this long with
 CARRY_WAIT_TICKS = 40                  # C281: the carry waits this long at most for her hands to come off it (ours)
 DOOR_OPEN_DAY = 96                     # the door stage: the day its door first stands open (ours; the owner's stage after walking and talking)
 DOOR_THROUGH_XY, DOOR_RUG_XY, DOOR_ARCH_XY = (2.9, -1.5), (4.1, -1.5), (5.0, -2.4)   # the door stage: the doorway's far side and the second room's rug (make_g1room.ROOM2)
+DEMO_GAP, DEMO_M = 900, 1.6             # C300: in floor play she shows walking this often (135 s), a walk this far in its view and back; ours
 FREE_PELVIS_M, FREE_DEG, FREE_STAND_MAX = 0.62, 35.0, 400   # C287: let go, it stands alone while its pelvis is this high and its trunk within this of upright, this many ticks at most (60 s); ours
 CARRY_LAY_CLEAR_M = 1.3                # C281: it is laid this far from where she kneels at the least (its body is 1.3 m long); ours
 CARRY_CLEAR_M = 1.0                   # she carries it back to its mat (her own place this far from the mat's centre); ours
@@ -677,6 +678,24 @@ class DayPlan:
             self.log.append((t, "floor play: the stand (C273)"))
             self.next_play = t + int(self.rng.integers(*PLAY_GAP))
             return
+        if kind == "floor" and t >= getattr(self, "next_demo", 0) and p.seen_by_child and not c.motion.holds and \
+                not [v for v in getattr(c.motion, "holding", {}).values() if v is not None]:
+            # C300 (2026-10-06, the owner's word: the teacher models walking, talking, grabbing): SHE SHOWS WALKING. Every DEMO_GAP in
+            # floor play, with the child seeing her, she names what she does and walks DEMO_M across its view and back to it ("mama
+            # walks. walk, walk, walk."): the act and its word paired before its eyes, as a parent plays for a baby to copy
+            self.next_demo = t + DEMO_GAP
+            ch_ = np.asarray(world.d.qpos[:2], float); her_ = np.asarray(pm.base["at"], float)[:2]
+            d_ = ch_ - her_; n_ = float(np.linalg.norm(d_)); d_ = d_ / n_ if n_ > 1e-6 else np.array([1.0, 0.0])
+            side_ = np.array([-d_[1], d_[0]])
+            for sgn_ in (1.0, -1.0):
+                q_ = her_ + side_ * sgn_ * DEMO_M
+                if pm._in_plan(q_) and float(pm.plan.dist[pm.plan.cell(q_)]) >= 0.5:
+                    c.request("narrate_walk")
+                    c.motion.request(_Plain("walk", [float(q_[0]), float(q_[1]), 0.0]))
+                    c.motion.request(_Plain("walk", "child"))
+                    self.log.append((t, "floor play: she shows walking (C300)", [round(float(x), 2) for x in q_]))
+                    self.next_play = t + int(self.rng.integers(*PLAY_GAP))
+                    return
         seen = {s.id: s for s in p.seen}
         focus = [o for o in self.focus if o in seen and not c.left_where_it_lies(o)]   # A117: not a toy she could not get to
         held = [v for v in getattr(c.motion, "holding", {}).values() if v is not None and v not in TP.OPEN_CONTAINERS]
@@ -701,6 +720,8 @@ class DayPlan:
             free = [o for o in focus if o not in seen or seen[o].on != "hand"] or focus   # A117: never the toy in its hand (her fetch never takes a
             free = self._at_hand(lane, free)                            # C272: the toys at her hand first
             o = free[int(self.rng.integers(len(free)))]                 # toy from it, A4: life day 13's 4 shows refused for the car)
+            if self.rng.random() < 0.5:
+                c.request("narrate_get", o=o)                           # C300: she names the getting she shows ("mama gets the ball. up!")
             c.request("show", o=o)
         elif kind == "floor" and roll < 0.95 and held:                  # C125: her peekaboo needs both her hands (refused "her hands
             self._lesson(t, lane)                                       # are busy" 26 times on day 28, twice on day 29): with a toy in

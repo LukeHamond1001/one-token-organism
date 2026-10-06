@@ -543,6 +543,8 @@ INTENTS = {
     "narrate_on": Intent("plain", False, None, (LOOK_O,)),
     "narrate_rolled": Intent("plain", False, None, (EYES,)),
     "narrate_sat": Intent("plain", False, None, (EYES,)),
+    "narrate_walk": Intent("plain", False, None, (EYES,)),              # C300: her walk itself is her motion's act (the day plan's _Plain)
+    "narrate_get": Intent("plain", False, None, (LOOK_O,)),             # C300: said before her show of the toy
     "body": Intent("plain", False, None, (Act("touch", "{b}"),)),
     "motor_sit": Intent("plain", False, None, (Act("stand_up", "child"),)),   # C268: the motor block's offer is her stand_up (it sits the
                                                                               # child up on the way, stands it, walks it, sits it down);
