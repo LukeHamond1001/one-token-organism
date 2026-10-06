@@ -292,7 +292,7 @@ class DayPlan:
                 self.log.append((t, "the door opened (the door stage)", int(self.day)))
                 print(f"the door opened at tick {t} (the door stage, day {self.day})", flush=True)
             ch_xy_ = np.asarray(world.d.qpos[:2], float)
-            pm.walk_goal = None if not world.door_open else (list(DOOR_RUG_XY) if ch_xy_[0] > 1.5 and abs(ch_xy_[1] + 1.5) < 0.8 else list(DOOR_THROUGH_XY))   # lined up with the door, the rug itself
+            pm.walk_goal = None if not world.door_open else (list(DOOR_RUG_XY) if ch_xy_[0] > 2.75 or (ch_xy_[0] > 1.5 and abs(ch_xy_[1] + 1.5) < 0.8) else list(DOOR_THROUGH_XY))   # through, or lined up with the door: the rug itself
         cp_ = getattr(pm, "carry_pending", None)
         on_ = any(h_.kind == "stand" for h_ in pm.holds) or any(pm.arms[sd_].get("mode") == "hold" for sd_ in "LR")
         if cp_ is not None and on_ and t - int(cp_) > CARRY_WAIT_TICKS:
