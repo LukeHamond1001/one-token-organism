@@ -468,7 +468,7 @@ class DayPlan:
         elif kind == "motor" and t >= self.next_play and not busy:
             self._sit_or_lesson(t, lane)
         elif kind == "floor" and t >= self.next_play and not busy:
-            self._play(t, lane, kind)
+            self._play(t, lane, kind, world)
         elif kind == "show" and t >= self.next_play and not busy:
             self._show(t, lane)
         elif kind == "goodnight" and not self.night_said and not (c.pending is not None or c.trial is not None or not c.fast.voice_free(t)):
@@ -667,7 +667,7 @@ class DayPlan:
             return near
         return toys
 
-    def _play(self, t, lane, kind):
+    def _play(self, t, lane, kind, world=None):
         c, p = lane.conduct, lane._p
         if kind == "floor" and t >= getattr(self, "next_floor_stand", 0) and self._lying_on_back(lane) and \
                 not [v for v in getattr(c.motion, "holding", {}).values() if v is not None]:
@@ -682,7 +682,8 @@ class DayPlan:
         if kind in ("floor", "motor", "show") and t >= getattr(self, "next_sib", 0) and c.pending is None and not self.away:
             # D2 (2026-10-06): THE SIBLING NAMED AS IT WALKS. When the child's head camera is on the walking figure (within SIB_DEG, SIB_M)
             # she says what it does ('look. walk, walk, walk.'): the example and its word together, once in SIB_NARRATE_GAP
-            sib_ = getattr(world, "_sib", None)
+            pm = c.motion
+            sib_ = getattr(world, "_sib", None) if world is not None else None
             if sib_ and not getattr(world, "night", False):
                 try:
                     hp_, ax_ = lane._head(world.d); to_ = np.asarray(world.m.geom_pos[sib_["sib_torso"]], float) - hp_
@@ -703,7 +704,8 @@ class DayPlan:
             # floor play, with the child seeing her, she names what she does and walks DEMO_M across its view and back to it ("mama
             # walks. walk, walk, walk."): the act and its word paired before its eyes, as a parent plays for a baby to copy
             self.next_demo = t + DEMO_GAP
-            ch_ = np.asarray(world.d.qpos[:2], float); her_ = np.asarray(pm.base["at"], float)[:2]
+            pm = c.motion
+            ch_ = np.asarray(pm.child.pelvis[:2], float); her_ = np.asarray(pm.base["at"], float)[:2]
             d_ = ch_ - her_; n_ = float(np.linalg.norm(d_)); d_ = d_ / n_ if n_ > 1e-6 else np.array([1.0, 0.0])
             side_ = np.array([-d_[1], d_[0]])
             for sgn_ in (1.0, -1.0):
