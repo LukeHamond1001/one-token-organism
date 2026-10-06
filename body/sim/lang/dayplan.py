@@ -63,7 +63,7 @@ CARRY_AFTER, CARRY_WINDOW = 2, 1500   # C277: this many of her acts refused for 
 PRONE_HURT_TICKS, PRONE_HURT_PAIN = 150, 3   # C278: on its front this long with this many pain ticks, it is laid on its back (the carry); ours
 CARRY_WAIT_TICKS = 40                  # C281: the carry waits this long at most for her hands to come off it (ours)
 DOOR_OPEN_DAY = 96                     # the door stage: the day its door first stands open (ours; the owner's stage after walking and talking)
-DOOR_THROUGH_XY, DOOR_RUG_XY = (2.9, -1.5), (4.1, -1.5)   # the door stage: the doorway's far side and the second room's rug (make_g1room.ROOM2)
+DOOR_THROUGH_XY, DOOR_RUG_XY, DOOR_ARCH_XY = (2.9, -1.5), (4.1, -1.5), (5.0, -2.4)   # the door stage: the doorway's far side and the second room's rug (make_g1room.ROOM2)
 FREE_PELVIS_M, FREE_DEG, FREE_STAND_MAX = 0.62, 35.0, 400   # C287: let go, it stands alone while its pelvis is this high and its trunk within this of upright, this many ticks at most (60 s); ours
 CARRY_LAY_CLEAR_M = 1.3                # C281: it is laid this far from where she kneels at the least (its body is 1.3 m long); ours
 CARRY_CLEAR_M = 1.0                   # she carries it back to its mat (her own place this far from the mat's centre); ours
@@ -293,7 +293,13 @@ class DayPlan:
                 self.log.append((t, "the door opened (the door stage)", int(self.day)))
                 print(f"the door opened at tick {t} (the door stage, day {self.day})", flush=True)
             ch_xy_ = np.asarray(world.d.qpos[:2], float)
-            pm.walk_goal = None if not world.door_open else (list(DOOR_RUG_XY) if ch_xy_[0] > 2.75 or (ch_xy_[0] > 1.5 and abs(ch_xy_[1] + 1.5) < 0.8) else list(DOOR_THROUGH_XY))   # through, or lined up with the door: the rug itself
+            if not world.door_open:
+                pm.walk_goal = None
+            elif ch_xy_[0] > 2.75:                                          # D1e: in the second room the walk goes between the rug and the
+                near_rug_ = float(np.linalg.norm(ch_xy_ - np.asarray(DOOR_RUG_XY, float))) < 0.8   # arch (1.6 m apart): with the rug alone as
+                pm.walk_goal = list(DOOR_ARCH_XY) if near_rug_ else list(DOOR_RUG_XY)   # its goal a walk begun on the rug ended at once (day
+            else:                                                           # 101: 20 steps paid, 10 stands done, no walk of 0.7 m)
+                pm.walk_goal = list(DOOR_RUG_XY) if (ch_xy_[0] > 1.5 and abs(ch_xy_[1] + 1.5) < 0.8) else list(DOOR_THROUGH_XY)   # lined up with the door: the rug
         cp_ = getattr(pm, "carry_pending", None)
         on_ = any(h_.kind == "stand" for h_ in pm.holds) or any(pm.arms[sd_].get("mode") == "hold" for sd_ in "LR")
         if cp_ is not None and on_ and t - int(cp_) > CARRY_WAIT_TICKS:
