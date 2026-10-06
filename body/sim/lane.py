@@ -78,6 +78,10 @@ from body.sim.voice import synth as V
 from body.sim.voice.playback import TICK, Utterance
 
 SOURCE = "parent"                      # her voice's name among the ears' sources
+SIB_SOURCE = "sibling"                 # D2 step 4: the sibling's voice's name among the ears' sources
+SIB_PROSODY = (1.45, 0.25)             # D2 step 4: the sibling's voice: her synthesizer at the child pitch (lang/consts.EAR_VOICES' "child_pitch";
+                                       # ours: a second speaker of the same words, higher, from where the figure stands)
+SIB_SAY_STATES = ("lift", "put")       # D2 step 4: the sibling names its toy as it lifts it and as it puts it down (a child's "ball!")
 ROOM_EDGE_X = 2.6                      # the room's wall with the door to the hall (make_g1room: ROOM_X)
 FALL_MPS = 0.5                         # a toy falling faster than this, not in a hand: "fell" (once a drop; ours)
 REST_MPS = 0.05                        # a toy slower than this has come to rest: its next drop is a new one (ours)
@@ -202,6 +206,8 @@ class ParentLane:
         self.feel = PF.Feelings(seed)
         self.words = LX.Words()
         self.utt = None                                   # her line under way (playback.Utterance)
+        self.sib_utt = None                               # D2 step 4: the sibling's word under way (playback.Utterance), its last (state, toy)
+        self.sib_last = None
         self.voice_done = None                            # the tick a cut line's sound stopped, for the conduct's next tick
         self.word_now = AN_REST
         self.face_seen = np.zeros(2)
@@ -758,6 +764,36 @@ class ParentLane:
                     self.voice_done = self.utt.start + (max(self.utt.stop_at, 1) - 1) // TICK
             if self.utt.done:
                 self.utt = None
+        # D2 step 4 (2026-10-06): THE SIBLING SPEAKS. As the figure lifts a toy and as it puts it down it says the toy's word once
+        # ("ball."), in her synthesizer at the child pitch, from its head: a second speaker of the same words beside the parent (the
+        # owner's word: other children showing examples; a word heard from two mouths over the one thing). Its word reaches the ears as
+        # hers does and the words channel as hers does (its symbol handed while it is audible at the nearer ear, A29). No act, no
+        # face, no judgment: the figure is not the teacher
+        pa_s = np.zeros(TICK, np.float32); sib_pos = None
+        sib_ = getattr(world, "_sib", None)
+        if sib_ and not world.night:
+            sib_pos = np.asarray(m.geom_pos[sib_["sib_head"]], float).copy()
+            st_, toy_ = getattr(world, "_sib_state", None), getattr(world, "_sib_toy", None)
+            if st_ in SIB_SAY_STATES and toy_ and (st_, toy_) != self.sib_last and self.conduct.voice is not None and p.obj(toy_) is not None:
+                self.sib_last = (st_, toy_)
+                try:
+                    clip_ = self.conduct.voice.clip(f"{toy_}.", "plain", prosody=SIB_PROSODY)
+                    if self.sib_utt is not None and not self.sib_utt.done:
+                        self.sib_utt.cut(words)
+                    self.sib_utt = Utterance(clip_, t)
+                    self.sib_said = (t, toy_, st_)
+                except Exception as e_:                                # the voice down: the figure stays quiet this time
+                    print(f"D2 sibling voice: {type(e_).__name__}: {str(e_)[:80]}", flush=True)
+        if self.sib_utt is not None:
+            if self.sib_utt.start + self.sib_utt.pos // TICK == t:
+                sw_ = None
+                if words is not None and sib_pos is not None:
+                    sp_ = EA.paths(sib_pos, ear_l, ear_r)[0]
+                    if LX.audible(SPEECH_DB, [-20.0 * math.log10(max(float(x), 1e-6)) for x in sp_]):
+                        sw_ = words
+                pa_s = self.sib_utt.tick(t, sw_)
+            if self.sib_utt.done:
+                self.sib_utt = None
         # her feelings and her face (4.3): her judgments, frowns and concern; the face test's two ticks (A1)
         for w, kind, _word in out.judgments:
             self.feel.judge(w, kind)
@@ -787,6 +823,9 @@ class ParentLane:
         # the words channel: a symbol only while she is audible at its nearer ear and the scaffold is on (A29)
         path = EA.paths(mouth, ear_l, ear_r)[0]
         audible = LX.audible(SPEECH_DB, [-20.0 * math.log10(max(float(x), 1e-6)) for x in path])
+        if self.sib_utt is not None and sib_pos is not None and np.any(pa_s):   # D2 step 4: the sibling's word audible at its own distance
+            sp_ = EA.paths(sib_pos, ear_l, ear_r)[0]
+            audible = audible or LX.audible(SPEECH_DB, [-20.0 * math.log10(max(float(x), 1e-6)) for x in sp_])
         sym = self.words.tick(t, audible) if scaffold else LX.ID[LX.REST]
         self.word_now = int(LX_TO_AN[int(sym)])
         self.last = dict(posture=self.last.get("posture"), target=p.child_target, holds=p.child_holds, seen=len(p.seen), in_bucket=sorted(getattr(self, "_in_bucket", ())),
@@ -797,8 +836,12 @@ class ParentLane:
                          seen_by_child=p.seen_by_child, present=p.present,
                          found=[[o_, s_] for tk_, o_, s_ in self.found_log if tk_ == int(t)],   # C158: this tick's finds, each with whether the hide was in its view
                          bucket_hand=getattr(self, "_bucket_hand", None), hidden=sorted(self.hidden),   # C174: the nearer hand at the bucket [above the rim, in from its edge]; the toys hidden now
+                         sib_said=(list(self.sib_said) if getattr(self, "sib_said", None) is not None and self.sib_said[0] == int(t) else None),   # D2 step 4: [tick, toy, lift|put]
                          child_xy=[float(world.d.qpos[0]), float(world.d.qpos[1])])   # C131: its pelvis on the floor plan (her plan reads it)
-        return {SOURCE: (pa.astype(np.float64), mouth)}
+        out_ = {SOURCE: (pa.astype(np.float64), mouth)}
+        if sib_pos is not None and np.any(pa_s):
+            out_[SIB_SOURCE] = (pa_s.astype(np.float64), sib_pos)             # D2 step 4: the sibling's word from its head
+        return out_
 
     def _read_face(self, t, with_it):
         """the born reading (A1, A2, A49; A158): 2 x (smile - frown) of the face she shows while she is with the child (awake, in the
@@ -825,6 +868,9 @@ class ParentLane:
         if self.utt is not None and not self.utt.done:
             self.utt.cut(self.words if self.conduct.scaffold else None)
         self.utt = None
+        if self.sib_utt is not None and not self.sib_utt.done:          # D2 step 4: the sibling's word ends where it is too
+            self.sib_utt.cut(self.words if self.conduct.scaffold else None)
+        self.sib_utt = None
         self.words.queue = []
         self.conduct.night()
         self.feel.set_engagement(0.0)
@@ -859,9 +905,16 @@ class ParentLane:
             utt = dict(clip=dict(key=c.key, text=c.text, register=c.register, pcm=np.asarray(c.pcm).copy(),
                                  words=[list(w) for w in c.words], digest=c.digest, gain_db=float(c.gain_db), meta=_pl(dict(c.meta))),
                        play=_pl(self.utt.state()))
+        sib_utt = None
+        if self.sib_utt is not None:                                   # D2 step 4: the sibling's word under way, as hers is kept
+            c = self.sib_utt.clip
+            sib_utt = dict(clip=dict(key=c.key, text=c.text, register=c.register, pcm=np.asarray(c.pcm).copy(),
+                                     words=[list(w) for w in c.words], digest=c.digest, gain_db=float(c.gain_db), meta=_pl(dict(c.meta))),
+                           play=_pl(self.sib_utt.state()))
         return dict(conduct=self.conduct.state(), feel=feel, words=dict(queue=[[q.tick, q.order, q.sym, q.word] for q in self.words.queue],
                     order=self.words.order, dropped=self.words.dropped, withdrawn=self.words.withdrawn),
-                    utt=utt, voice_done=self.voice_done, word_now=self.word_now, face_seen=self.face_seen.copy(),
+                    utt=utt, sib_utt=sib_utt, sib_last=(None if self.sib_last is None else list(self.sib_last)),
+                    voice_done=self.voice_done, word_now=self.word_now, face_seen=self.face_seen.copy(),
                     reading=self.reading, reading_t=self.reading_t, test_prev=self.test_prev, fp=_pl(self.fp),
                     toy_z=dict(self.toy_z), falling=sorted(self.falling), child_had=list(self.child_had), held_run=dict(self.held_run),
                     child_held_at=dict(self.child_held_at), her_had=dict(self.her_had), released=dict(self.released), hidden=dict(self.hidden), hidden_seen=dict(self.hidden_seen), found_ticks={k: list(v) for k, v in self.found_ticks.items()},
@@ -913,6 +966,15 @@ class ParentLane:
             pl = dict(s["utt"]["play"])
             pl["last"] = np.asarray(pl["last"], np.float32)
             self.utt = Utterance.restore(clip, pl)
+        self.sib_utt = None                                            # D2 step 4 (a save from before it holds no such keys)
+        self.sib_last = None if s.get("sib_last") is None else tuple(s["sib_last"])
+        if s.get("sib_utt") is not None:
+            c = s["sib_utt"]["clip"]
+            clip = V.Clip(c["key"], c["text"], c["register"], np.asarray(c["pcm"], np.int16).copy(),
+                          [(str(a), int(b), int(e)) for a, b, e in c["words"]], c["digest"], float(c["gain_db"]), dict(c["meta"]))
+            pl = dict(s["sib_utt"]["play"])
+            pl["last"] = np.asarray(pl["last"], np.float32)
+            self.sib_utt = Utterance.restore(clip, pl)
         self.voice_done, self.word_now = s["voice_done"], int(s["word_now"])
         self.face_seen = np.asarray(s["face_seen"], float).copy()
         self.reading, self.reading_t, self.test_prev = float(s["reading"]), int(s["reading_t"]), bool(s["test_prev"])
