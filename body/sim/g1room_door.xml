@@ -882,17 +882,6 @@
         </body>
       </body>
     </body>
-    <body name="room2">
-      <geom name="door_leaf" type="box" pos="2.65 -1.5 1.025" size=".02 0.445 1.02" material="door" contype="17" conaffinity="0" priority="2"/>
-      <geom name="room2_floor" type="box" pos="4.3 -1.5 0" size="1.6 1.8 .001" material="floor2" contype="0" conaffinity="0"/>
-      <geom name="room2_ceiling" type="box" pos="4.3 -1.5 2.63" size="1.6 1.8 .03" material="ceiling" contype="0" conaffinity="0"/>
-      <geom name="room2_rug" type="cylinder" pos="4.1 -1.5 .003" size=".7 .003" material="rug2" contype="0" conaffinity="0"/>
-      <geom name="room2_bench" type="box" pos="5.65 -0.6 .20" size=".20 .60 .20" material="bench2" contype="17" conaffinity="0" priority="2"/>
-      <geom name="room2_arch_a" type="box" pos="5.4 -2.75 .55" size=".05 .05 .55" material="arch2" contype="17" conaffinity="0" priority="2"/>
-      <geom name="room2_arch_b" type="box" pos="5.4 -2.05 .55" size=".05 .05 .55" material="arch2" contype="17" conaffinity="0" priority="2"/>
-      <geom name="room2_arch_top" type="box" pos="5.4 -2.4 1.15" size=".05 .40 .05" material="arch2" contype="17" conaffinity="0" priority="2"/>
-      <light name="room2_lamp" pos="4.3 -1.5 2.4" dir="0 0 -1" diffuse=".55 .52 .46" specular="0 0 0" castshadow="false"/>
-    </body>
   </worldbody>
   <actuator>
     <!-- HER MUSCLES: one per axis of each of her joints, their force ranges her strength (parent_consts.STRENGTH; A25b) -->

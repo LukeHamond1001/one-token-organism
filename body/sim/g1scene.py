@@ -134,6 +134,40 @@ for _sd in ("left", "right"):
         DEX3[f"{_sd}_hand_{_j}_joint"] = DEX3_214 if _j == "thumb_0" else DEX3_108
 
 
+# THE DOOR STAGE (the owner's word, 2026-10-04: generalization is a door in its one room opening onto a new room it enters itself):
+# a leaf closes the doorway the hall had, and where the hall was a SECOND ROOM, 3.2 m by 3.6 m (x 2.7 to 5.9, y -3.3 to 0.3): its
+# floor blue-green, its walls yellow, a round red rug, a low bench, an arch to pass under. Fixed geoms in a body added LAST, after
+# the runner's extra toys (every body, geom, light and material of the saved life keeps its index: the saved state and model fields
+# load as this model's first rows; world.load_state). The hall's three walls stay where the XML put them and the world moves them
+# out to the second room's bounds (G1World._door_setup). An environment's change, disclosed. Sizes as make_g1room's room (ROOM_X 2.6,
+# ROOM_H 2.6, the door y -1.95 to -1.05, 2.05 high); WORLD contact flags as make_g1room.WORLD
+ROOM2 = dict(x0=2.70, x1=5.90, yc=-1.5, hy=1.8, door_h=2.05)
+_W, _Hh = 2.6, 2.6
+
+
+def _add_room2(spec):
+    r = ROOM2; yc, X0, X1, hy, dh = r["yc"], r["x0"], r["x1"], r["hy"], r["door_h"]
+    B = mujoco.mjtGeom.mjGEOM_BOX
+    b = spec.worldbody.add_body(name="room2")
+    def geom(name, type_, pos, size, material, world=True):
+        g = b.add_geom(name=name, type=type_, pos=list(map(float, pos)), size=list(map(float, size)), material=material)
+        if world:
+            g.contype, g.conaffinity, g.priority = 17, 0, 2
+        else:
+            g.contype, g.conaffinity = 0, 0
+        return g
+    geom("door_leaf", B, (_W + .05, yc, dh / 2), (.02, .45 - .005, dh / 2 - .005), "door")
+    geom("room2_floor", B, ((X0 + X1) / 2, yc, 0.0), ((X1 - X0) / 2, hy, .001), "floor2", world=False)
+    geom("room2_ceiling", B, ((X0 + X1) / 2, yc, _Hh + .03), ((X1 - X0) / 2, hy, .03), "ceiling", world=False)
+    geom("room2_rug", mujoco.mjtGeom.mjGEOM_CYLINDER, (_W + 1.5, yc, .003), (.7, .003, 0), "rug2", world=False)
+    geom("room2_bench", B, (X1 - .25, yc + .9, .20), (.20, .60, .20), "bench2")
+    for k_, yy in (("a", yc - 1.25), ("b", yc - .55)):                      # the arch: two posts and a beam, 0.7 m apart, by the far wall
+        geom(f"room2_arch_{k_}", B, (X1 - .5, yy, .55), (.05, .05, .55), "arch2")
+    geom("room2_arch_top", B, (X1 - .5, yc - .9, 1.15), (.05, .40, .05), "arch2")
+    lt = b.add_light(name="room2_lamp", pos=[_W + 1.7, yc, 2.4], dir=[0, 0, -1])
+    lt.diffuse[:] = (.55, .52, .46); lt.specular[:] = (0, 0, 0); lt.castshadow = False
+
+
 def load_model(xml=XML, extra=None):
     """The world with the G1's senses added; extra(spec), if given, adds a test rig before compiling (instruments only,
     never the body)."""
@@ -145,6 +179,8 @@ def load_model(xml=XML, extra=None):
         torso.add_site(name=f"ear_{sd}", pos=[EAR_XZ[0], sg * EAR_Y, EAR_XZ[1]], size=[.006, 0, 0], group=5)
     if extra is not None:
         extra(spec)
+    if any(mt.name == "door" for mt in spec.materials):                    # THE DOOR STAGE's scene (make_g1room --door=1: its
+        _add_room2(spec)                                                    # materials only): the second room's body, last of all
     # A187 (2026-10-04, speed only): THE EYE'S OWN MESHES. Unitree's visual meshes carry 630,000 triangles (a finger link 30,000) and
     # the eyes drew them six times a tick (three views, each with the sun's shadow pass): 119 of a 436 ms tick on the day-78 copy.
     # Each visual geom (no contact, group 2) whose mesh has a decimated copy in assets_vis (tools/make_vis_meshes.py: 12% of the
