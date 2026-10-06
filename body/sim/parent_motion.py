@@ -5001,6 +5001,20 @@ class ParentMotion:
             i = self.phases.index(ph)
             self.phases[i:] = [dict(type="plan", what="pull_regather", args={})]   # the rest of the direct take gives way
             return "next"
+        if ph["kind"] == "stand" and int(c_.get("stand_tries", 0)) < K.STAND_RETRIES and ph in self.phases:
+            # C302 (2026-10-06): THE STAND'S GRIP REACHES AGAIN WHERE ITS TRUNK IS NOW. The day-104 pair's probes (p1_tools/standup.py,
+            # ten stands): three refused 'her hand cannot reach it from here (16 to 60 cm short)': C273's spot reaches both grips where
+            # the child LAY, and a live child rolls or sits up in the seconds her reach takes (C235's lesson for the pull). The hand
+            # that came up short reaches again for its grip on the trunk as it lies now, STAND_RETRIES times; the other hand's phases
+            # stand. Every stand lost is a walking lesson lost
+            if a is not None:
+                a["info"]["stand_retries"] = a["info"].get("stand_retries", 0) + 1
+            self.stats["stand_retries"] = self.stats.get("stand_retries", 0) + 1
+            new = self._hold_phases(a, ph["side"], int(ph["body"]), "stand", cap=float(ph["cap"]), local=ph["local"], normal=ph["normal"],
+                                    ctl=dict(c_, stand_tries=int(c_.get("stand_tries", 0)) + 1), tall_if_needed=False)
+            i = self.phases.index(ph)
+            self.phases[i:i + 1] = new[:-1] + [dict(new[-1], wait=bool(ph.get("wait", True)))]
+            return "next"
         return why
 
     # ------------------------------------------------------------------ the holds' controllers (every tick)
