@@ -110,7 +110,7 @@ def read_event_lines(events, obs):
 
 
 FERR_FAST_TAU = 512.0            # C147: the fast forecast-error mean's horizon (ours, an instrument's)
-COMP_RECORD_RELAX = 0.001           # A200: at each event's end the competence record moves this share of the way back toward the long-run error (a thousand events, about half a day; ours: the day-101 copy's records lay at a quarter of the errors of late, face 0.0 against 0.0016, vestibular 0.29 against 0.92, set in some quiet stretch long ago)
+COMP_RECORD_RELAX = 0.02            # A200: at each event's end a record under the error of late moves this share of the way up to it (fifty events, some minutes): the record is the error's recent floor, and a fall below it pays over those events in proportion to the fall. (A200 first relaxed it toward the long-run error at 0.001: live, 109 payments in 8,600 ticks worth 0.04 in all, the record a hair under the error; and a record drawn to the long-run mean would pay a quiet stretch as A181 did. Ours)
 
 
 class FramesMixin:
@@ -307,8 +307,8 @@ class FramesMixin:
             vals.append(max(0.0, min(1.0, (bc - eh) / bc)) if bc > 0.0 else 0.0)
             if commit and eh < bc:
                 best[c_] = eh
-            elif commit and em > bc:                                        # A200 (2026-10-06): THE RECORD FORGETS. Held for ever, the record
-                best[c_] = bc + (em - bc) * COMP_RECORD_RELAX               # was beaten almost never after a hundred days (the competence
+            elif commit and eh > bc:                                        # A200 (2026-10-06): THE RECORD FORGETS. Held for ever, the record
+                best[c_] = bc + (eh - bc) * COMP_RECORD_RELAX               # was beaten almost never after a hundred days (the competence
                                                                             # drive paid nothing on nine days of eleven, 26 to 33 on the
                                                                             # others); it relaxes toward the channel's long-run error, so
                                                                             # progress is 'better than I have been of late', paid afresh
