@@ -110,6 +110,7 @@ def read_event_lines(events, obs):
 
 
 FERR_FAST_TAU = 512.0            # C147: the fast forecast-error mean's horizon (ours, an instrument's)
+COMP_RECORD_RELAX = 0.0004          # A200: at each event's end the competence record moves this share of the way back toward the long-run error (about a day's events, 2,500; ours)
 
 
 class FramesMixin:
@@ -306,6 +307,13 @@ class FramesMixin:
             vals.append(max(0.0, min(1.0, (bc - eh) / bc)) if bc > 0.0 else 0.0)
             if commit and eh < bc:
                 best[c_] = eh
+            elif commit and em > bc:                                        # A200 (2026-10-06): THE RECORD FORGETS. Held for ever, the record
+                best[c_] = bc + (em - bc) * COMP_RECORD_RELAX               # was beaten almost never after a hundred days (the competence
+                                                                            # drive paid nothing on nine days of eleven, 26 to 33 on the
+                                                                            # others); it relaxes toward the channel's long-run error, so
+                                                                            # progress is 'better than I have been of late', paid afresh
+                                                                            # as a skill is practised (the forgetting that habituation's
+                                                                            # recovery is, Rankin et al. 2009, for the record)
         return (sum(vals) / len(vals)) if vals else 0.0
 
     def _frame_settle(self, s):

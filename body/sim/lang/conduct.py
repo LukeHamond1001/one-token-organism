@@ -1863,6 +1863,14 @@ class Conduct:
                 self.reply_due = dict(tick=t, kind="confirm", word=word, obj=self.pending.get("obj"))
             self.pending = None
         if self.pending is not None and t > self.pending["until"]:
+            pd_ = self.pending
+            if pd_.get("kind") == "name" and pd_.get("obj") and pd_.get("word") and self.stage >= 2 and self.reply_due is None:
+                # C296 (2026-10-06): THE QUESTION IT DID NOT ANSWER, SHE ANSWERS. Her 'what is it?' met no answer 0 to 2 times a day in a
+                # hundred days (120 to 360 asks a day): the conditional 'her question, then the name of what I attend' is never shown.
+                # A parent asks and answers ("what is it? ... a block!"), and the child's echo of the answer is its first answering:
+                # paid as an approximation (MODEL_ECHO_TICKS after). The answer is her label line (templates "label"), no trial
+                self.reply_due = dict(tick=t + K.MODEL_ANSWER_AFTER, kind="label", word=pd_["word"], obj=pd_["obj"])
+                self.modelled = (int(t) + K.MODEL_ANSWER_AFTER, str(pd_["word"]))
             self.pending = None
         for cw in heard:                                    # the child's turn ended (or its tokens were read): judge, reply
             if cw.channel == "tract" or cw.word is not None:
@@ -2009,6 +2017,10 @@ class Conduct:
                     worth = K.WORTH_RIGHT_NAME * math.exp(-n / K.HABIT_TAU)   # the n-th right name or echo of the same word is worth
                     if label == "right_name" and w != PARENT_NAME:     # C282: a RIGHT NAME's smile wears no lower than RIGHT_NAME_FLOOR (C288: a thing's name; her own name wears as before)
                         worth = max(worth, K.RIGHT_NAME_FLOOR)         # (the thing named while it attends it is answered every time)
+                    md_ = getattr(self, "modelled", None)
+                    if label == "echo" and md_ is not None and md_[1] == w and 0 <= t - md_[0] <= K.MODEL_ECHO_TICKS:
+                        worth = max(worth, K.WORTH_APPROX)             # C296: the echo of her modelled answer is its first answering
+                        self.modelled = None
                     if worth < K.HABIT_FLOOR:                          # 2 e^(-n/10), none under 0.05 (life day 2: 205 echoes of "oh"
                         worth = None                                   # paid 2 each, the body's 8 acts beside them); a met ask pays
                     else:                                              # in full (her test, spaced by her plan); a new word starts at 0

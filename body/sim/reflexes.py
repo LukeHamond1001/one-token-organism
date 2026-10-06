@@ -479,6 +479,7 @@ POSTURE_UP_G, POSTURE_KNEE = 9.0, 0.5                         # the tone holds a
 SUPPORT_LP = 0.10                                             # the felt hold's smoothing a tick (ours)
 SUPPORT_FULL_N = 150.0                                        # N felt on its trunk at which the tone is gone (ours: above her steadying, 33 to 116 N, so part of the tone stays in her hands)
 SUPPORT_N = 5.0                                               # N felt on its trunk's touch zones (torso, pelvis): held (ours)
+VEST_RP, VEST_RD, VEST_ROLL_SIGN = float(__import__('os').environ.get('VRP', '2.0')), float(__import__('os').environ.get('VRD', '0.4')), float(__import__('os').environ.get('VRS', '1'))   #TMP A201 (ours; the sign to find)
 STEP_YIELD, POSTURE_ROLL = 0.10, 2.0                                    # A196 (ours): the ankle's yield past its stance angle (rad); the sideways joints' gain
 POSTURE_HIP_EXT = 1.0                                         # x the distance, for a hip extended past its stance angle (ours)
 POSTURE_STIFF, POSTURE_DAMP, POSTURE_MAX = 8.0, 0.05, 1.0     # x the distance to the stance angle; x the joint's speed (s); the step's cap, rad
@@ -505,7 +506,7 @@ def posture(ev, q=None, imu_torso=None, on=False):
     return out
 
 
-def posture_step(q, qd, ref, own, ankle, pitch, pitch_rate, hip=None, supported=False, roll=(), share=1.0):
+def posture_step(q, qd, ref, own, ankle, pitch, pitch_rate, hip=None, supported=False, roll=(), share=1.0, lean_roll=0.0, roll_rate=0.0):
     """one limb's targets' offsets from its measured angles for the next 10 ms: the tone toward the stance angles, the own act's step on
     top, and at the ankle the vestibular push"""
     g = np.full(len(q), 1.0 + (POSTURE_STIFF - 1.0) * float(share))  # (`share`: the tone's share as a hold on its trunk eases)
@@ -522,6 +523,10 @@ def posture_step(q, qd, ref, own, ankle, pitch, pitch_rate, hip=None, supported=
     off = np.clip(g * (np.asarray(ref, float) - q) - POSTURE_DAMP * qd, -POSTURE_MAX, POSTURE_MAX) + own
     if ankle is not None and not yielded and not supported:
         off[ankle] += float(share) * float(np.clip(VEST_P * pitch + VEST_D * pitch_rate, -VEST_MAX, VEST_MAX))
+    if roll and not supported and VEST_RP:                                   # A201: THE SIDEWAYS VESTIBULOSPINAL REFLEX: the pelvis's roll and
+        push_ = float(share) * float(np.clip(VEST_RP * lean_roll + VEST_RD * roll_rate, -VEST_MAX, VEST_MAX))   # its rate push the hips' and
+        for r_ in roll:                                                     # ankles' roll joints against the lean (alone it fell sideways-
+            off[r_] += push_ * VEST_ROLL_SIGN                               # and-forward within 1.5 s with no sideways answer: A195 had pitch only)
     return off
 
 

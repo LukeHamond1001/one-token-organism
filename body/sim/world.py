@@ -628,6 +628,7 @@ class G1World(SimWorld):
         self.standing = bool(standing)                                  # A193: the standing and stepping reflexes (off: an instrument's switch)
         self.posture = bool(posture)                                    # A195: the postural tone and the vestibulospinal reflex below the tick (off: an instrument's switch)
         self._vest_pitch, self._vest_on = 0.0, False
+        self._vest_roll = 0.0                                               # A201
         self._stepping = {"leg_l": ["stance", 0], "leg_r": ["stance", 0]}
         self.righting = bool(righting)                                  # the prone pattern at the cord (A92; off: an instrument's switch)
         self.tone = bool(tone)                                          # the arms' resting tone at the cord (A185; off: an instrument's switch)
@@ -1017,7 +1018,8 @@ class G1World(SimWorld):
                     for limb, (ref_, ank_, hip_, roll_) in posture_.items():
                         sl = self.eff_slices[limb]
                         q_ = d.qpos[self.qadr[sl]]
-                        off_ = R.posture_step(q_, d.qvel[self.dof[sl]], ref_, steps.get(limb, 0.0), ank_, pit_, float(imu_last[10]), hip_, sup_, roll_, tw_)
+                        off_ = R.posture_step(q_, d.qvel[self.dof[sl]], ref_, steps.get(limb, 0.0), ank_, pit_, float(imu_last[10]), hip_, sup_, roll_, tw_,
+                                              getattr(self, "_vest_roll", 0.0), float(imu_last[9]))   # A201: the roll and its rate
                         d.ctrl[self.aid[sl]] = np.clip(q_ + off_, self.lo[sl], self.hi[sl])
                 if rest_a is not None:
                     d.ctrl[rest_a] += alpha * (d.qpos[rest_q] - d.ctrl[rest_a])
@@ -1042,9 +1044,11 @@ class G1World(SimWorld):
                 imu[s] = self._imu_noisy(d.sensordata[self.imu_adr])
                 if self.posture:                                        # A195: the lean the reflex reads (kept at every step, standing or not): the pelvis gyro's turn about
                     self._vest_pitch += float(imu[s, 10]) * m.opt.timestep   # the side-to-side axis summed (the canals), drawn slowly
+                    self._vest_roll = getattr(self, "_vest_roll", 0.0) + float(imu[s, 9]) * m.opt.timestep   # A201: the fore-aft axis: the roll
                     an_ = float(np.linalg.norm(imu[s, 6:9]))            # (R.VEST_TAU) toward the accelerometer's tilt when it reads
                     if 0.8 * 9.81 < an_ < 1.2 * 9.81:                   # about one g (the otoliths): one sample of the accelerometer
                         self._vest_pitch += (math.atan2(-float(imu[s, 6]), float(imu[s, 8])) - self._vest_pitch) * m.opt.timestep / R.VEST_TAU   # alone read 10 to 40 deg off a body swaying 2 deg
+                        self._vest_roll += (math.atan2(float(imu[s, 7]), float(imu[s, 8])) - self._vest_roll) * m.opt.timestep / R.VEST_TAU   # A201: the sideways lean the same way
                 tq = d.qfrc_actuator[self.dof]
                 heat_in += (tq / self.tau_max) ** 2
                 imu_last, F_last = imu[s], F[s]

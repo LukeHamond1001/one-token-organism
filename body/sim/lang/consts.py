@@ -397,6 +397,7 @@ RIGHT_NAME_FLOOR = 0.5                # C282 (2026-10-05): a right name's smile 
                                       # anywhere: nothing in her face taught naming. A parent answers the right word every time
                                       # (contingent responding: Goldstein and Schwade 2008; recalled). Ours: a quarter of the fresh smile
 WORTH_MET_ASK = 2
+MODEL_ANSWER_AFTER, MODEL_ECHO_TICKS = 8, 60   # C296: her unanswered 'what is it?' is answered by her this long after its window (1.2 s), and its echo within this is paid (ours)
 WORTH_APPROX = 1                      # stage 2: an approximation of a word, until the exact word has been said 3 times, and only
                                       # where the exact word would be a right name (its referent where she reads it looking, in
                                       # its hand or reached toward, A40; her face for "mama"; or the answer to her name ask):
