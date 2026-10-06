@@ -93,7 +93,8 @@ ASK_SHARE = 0.55                       # C283: of floor play's other offers, thi
                                        # 'give me the ball.'): the word tested and paid by her smile. Life day 90: none of her 1,062 lines was
                                        # a where, what or give ask (five 'look at the X.'); the mix until then gave asks a quarter of what the
                                        # lessons, shows and peekaboo left, about five a day. With LESSON_SHARE 0.25 (0.4 until then). Ours
-LESSON_SHARE = 0.25                    # floor play's offers that are lessons (the rest: shows, peekaboo, asks, the call)
+LESSON_SHARE = 0.45                    # floor play's offers that are lessons (the rest: shows, peekaboo, asks, the call). C297 (2026-10-06): 0.25 -> 0.45:
+                                       # day 101 gave the reach ladder 326 of 13,600 ticks (2.4%; two lessons by noon) and got stayed 2 to 24 a day for ten days; ours
 GREET_BY = 200                         # the greeting at the latest by this tick of the wake (ours)
 CALL_AFTER_GREET = 60                  # the wake's call this long after the greeting (ours)
 AWAY_CALL = 600                        # her calls from the hall (4.7: about every 600 ticks)
