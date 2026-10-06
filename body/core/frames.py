@@ -110,7 +110,7 @@ def read_event_lines(events, obs):
 
 
 FERR_FAST_TAU = 512.0            # C147: the fast forecast-error mean's horizon (ours, an instrument's)
-COMP_RECORD_RELAX = 0.0004          # A200: at each event's end the competence record moves this share of the way back toward the long-run error (about a day's events, 2,500; ours)
+COMP_RECORD_RELAX = 0.001           # A200: at each event's end the competence record moves this share of the way back toward the long-run error (a thousand events, about half a day; ours: the day-101 copy's records lay at a quarter of the errors of late, face 0.0 against 0.0016, vestibular 0.29 against 0.92, set in some quiet stretch long ago)
 
 
 class FramesMixin:

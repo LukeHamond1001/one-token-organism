@@ -479,7 +479,10 @@ POSTURE_UP_G, POSTURE_KNEE = 9.0, 0.5                         # the tone holds a
 SUPPORT_LP = 0.10                                             # the felt hold's smoothing a tick (ours)
 SUPPORT_FULL_N = 150.0                                        # N felt on its trunk at which the tone is gone (ours: above her steadying, 33 to 116 N, so part of the tone stays in her hands)
 SUPPORT_N = 5.0                                               # N felt on its trunk's touch zones (torso, pelvis): held (ours)
-VEST_RP, VEST_RD, VEST_ROLL_SIGN = float(__import__('os').environ.get('VRP', '2.0')), float(__import__('os').environ.get('VRD', '0.4')), float(__import__('os').environ.get('VRS', '1'))   #TMP A201 (ours; the sign to find)
+VEST_RP, VEST_RD, VEST_ROLL_SIGN = 0.0, 0.4, 1.0                         # A201 (2026-10-06, PARKED at 0: the sideways vestibulospinal reflex, the pelvis's roll
+                                # and its rate to the hips' and ankles' roll joints; at 2.0 and 0.4 it stood alone LESS with either sign
+                                # (5.8, 1.9, 1.5, 1.3, 1.9 s and 3.1, 1.2, 1.6, 0.6, 2.1 s against 6.3, 6.3, 8.8, 3.4, 1.8 s): the roll's
+                                # estimate or its joints are wrong, to be read before it is on; ours)
 STEP_YIELD, POSTURE_ROLL = 0.10, 2.0                                    # A196 (ours): the ankle's yield past its stance angle (rad); the sideways joints' gain
 POSTURE_HIP_EXT = 1.0                                         # x the distance, for a hip extended past its stance angle (ours)
 POSTURE_STIFF, POSTURE_DAMP, POSTURE_MAX = 8.0, 0.05, 1.0     # x the distance to the stance angle; x the joint's speed (s); the step's cap, rad
