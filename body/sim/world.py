@@ -1299,7 +1299,7 @@ class G1World(SimWorld):
     def dawn(self):
         """THE MORNING (5.4, A46): the light returns over the wake's first DAWN_TICKS ticks, the eyes and ears on, the parent awake;
         the world goes on from wherever the night left it, the child carried back onto the mat if it rolled off (A110)"""
-        self.carry_to_mat()
+        self.carry_to_mat(to=((4.1, -1.5) if getattr(self, "door_open", False) and float(self.d.qpos[0]) > 2.75 else None))   # (the door stage: a child in the second room sleeps on its rug)
         self.tidy_toys()
         self.bucket_beside()
         self.night = False

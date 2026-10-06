@@ -373,7 +373,7 @@ class DayPlan:
             mat_ = world.m.geom_pos[world.m.geom("mat").id][:2]
             if float(np.hypot(pm.base["at"][0] - mat_[0], pm.base["at"][1] - mat_[1])) >= CARRY_CLEAR_M:
                 was_ = [round(float(x), 2) for x in world.d.qpos[:2]]
-                if world.carry_to_mat():
+                if world.carry_to_mat(to=(np.asarray(DOOR_RUG_XY, float) if getattr(world, "door_open", False) and float(world.d.qpos[0]) > 2.75 else None)):   # (the door stage: in the second room, its rug)
                     world.toys_beside(list(self.focus))                     # C286: its toys with it
                     self.log.append((t, "carried back to its mat (C277)" if not hurt_ else "laid on its back: hurting on its front (C278)", was_))
                     print(f"{'laid on its back' if hurt_ else 'carried back to its mat'} at tick {t} from {was_} (C277, C278)", flush=True)
