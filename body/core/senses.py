@@ -105,6 +105,8 @@ class SensesMixin:
         if frame is None:
             frame = self.world.frame()
         self.world.now = frame
+        if getattr(self.anatomy, "grounding", None) is not None:
+            self._ground_sense(frame)                                  # A202: the heard word's look found in the periphery, a cue into the frame (body/core/grounding.py)
         if int(self.cfg.get("recall", 0)):
             self._heading_step(frame)                                  # step R7f: the heading integrated from this tick's gyro (body/core/frames.py)
         u = frame.obs.get(self.anatomy.words.name)

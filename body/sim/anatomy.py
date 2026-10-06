@@ -88,9 +88,31 @@ VOR's axes)."""
 import math
 from dataclasses import dataclass
 
+import numpy as np
+
 from tokenizers import Tokenizer, models
 
-from body.core.anatomy import Cerebellar, Channel, EarChannel, Effector, EventLine, Heading, LanguageAnatomy, OrientCue, RewardSource, VoiceEffector
+from body.core.anatomy import Cerebellar, Channel, EarChannel, Effector, EventLine, Grounding, Heading, LanguageAnatomy, OrientCue, RewardSource, VoiceEffector
+
+
+def _ground_appearance(frame):
+    """A202: the look of what the fovea holds this tick (body/sim/eyes.py: ground_appearance over the frame's eye_f) -> [4]"""
+    from body.sim import eyes as _eyes                                         # (eyes imports the world; the anatomy is imported first)
+    ef = frame.obs.get("eye_f")
+    if ef is None or len(ef) < 4:                                              # the eyes off (the night): no look
+        return np.zeros(4)
+    return _eyes.ground_appearance(ef)
+
+
+def _ground_periphery(frame):
+    """A202: every colour periphery cell's look and its direction from the fovea's centre (eyes.ground_periphery over the frame's eye_p,
+    the gaze from the body channel) -> (feats [15, 4], dirs [15, 2])"""
+    from body.sim import eyes as _eyes
+    ep = frame.obs.get("eye_p")
+    if ep is None or len(ep) < 4:                                              # the eyes off (the night): no cells
+        return np.zeros((0, 4)), np.zeros((0, 2))
+    g = frame.obs["body"][GAZE_AT:GAZE_AT + 3]
+    return _eyes.ground_periphery(ep, g)
 
 # ---------------------------------------------------------------- the G1's joints, in the order the world writes them (3.2, 3.5)
 WAIST = ("waist_yaw_joint", "waist_roll_joint", "waist_pitch_joint")
@@ -452,7 +474,15 @@ class SimAnatomy(LanguageAnatomy):
         self.channels, self.effectors, self.rewards, self.inner_at = chans, [tract, voice, gaze] + limbs, rewards, 2
         self.orienting = [OrientCue("face", "face_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF),
                           OrientCue("sound", "sound_side", fired=0, yaw=1, sense=-1.0, side_only=True, onset=True),
-                          OrientCue("onset", "onset_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF, onset=True)]
+                          OrientCue("onset", "onset_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF, onset=True),
+                          # A202: the heard word's look found in the periphery (body/core/grounding.py): a standing cue, as her face is,
+                          # so the born saccade turns the eyes to it and the orienting bias pulls while it stands
+                          OrientCue("named", "named_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF)]
+        # A202: THE GROUNDING OF WORDS IN JOINT ATTENTION: the G1's look is its colour (the colour window's and the colour periphery's
+        # opponent code, body/sim/eyes.py: ground_appearance, ground_periphery; the gaze from the body channel, GAZE_AT); the end the
+        # offset teaches and the space are never bound
+        self.grounding = Grounding("named_periph", 4, _ground_appearance, _ground_periphery,
+                                   skip=tuple(int(x_) for x_ in (self.end_id, self.space_id) if x_ is not None))
         # THE CEREBELLUM'S INTERFACE (7.5, A44; the module's doc): the mossy numbers in their order, each named and declared by its
         # middle and half-range; the readouts on the waist's, the arms' and the legs' joints; the flocculus on the gaze's yaw and pitch
         mossy, off, half = [], [], []

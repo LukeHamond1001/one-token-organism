@@ -494,6 +494,21 @@ class EffortReward(RewardSource):
         return None
 
 
+@dataclass(eq=False)
+class Grounding:
+    """THE GROUNDING OF WORDS IN JOINT ATTENTION, as a body declares it (A202; body/core/grounding.py holds the organ): `obs` the frame's
+    observation the organ writes its cue into ([fired, yaw, pitch] from the fovea's centre, read by an OrientCue of the same name as the
+    born cues are), `size` the look's numbers, `appearance(frame)` the look of what the fovea holds now, contrast-coded (k numbers; near
+    zero when it holds no thing), `periphery(frame)` every periphery cell's look in the same numbers and its direction from the fovea's
+    centre, (feats [cells, k], dirs [cells, 2]), `skip` the symbols never bound (the end the offset teaches, the space). The anatomy
+    names them and holds no state."""
+    obs: str
+    size: int
+    appearance: object
+    periphery: object
+    skip: tuple = ()
+
+
 class Anatomy:
     """a body's senses, effectors and reward sources, each list in its order: the channels' order is the float order of the cortex's
     input sum (the ladder's bundle and the efference copy of its own acts joining after the first `inner_at` channels; by default
@@ -508,6 +523,7 @@ class Anatomy:
                                                       # velocities, efforts), the striatum's sense line; none by default (the diary)
     events = None                                     # step R7a: the born event lines (a list of EventLine), none by default (the diary's)
     heading = None                                    # step R7f: the heading's source (a Heading), none by default (the diary's)
+    grounding = None                                  # A202: the grounding of words in joint attention (a Grounding), none by default (the diary's)
 
     def __init__(self, channels, effectors, rewards, inner_at=None):
         self.channels = list(channels)

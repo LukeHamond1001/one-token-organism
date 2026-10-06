@@ -330,6 +330,40 @@ def window_centre(side, gaze):
     return G.EYE_W / 2 + W.EYE_F_PX * math.tan(yaw), G.EYE_H / 2 - W.EYE_F_PX * math.tan(gaze[1])
 
 
+# THE LOOKS FOR THE GROUNDING ORGAN (A202; body/core/grounding.py): the G1's appearance is its colour, as the colour window and the
+# colour periphery code it (the two opponent axes, ON and OFF: 4 numbers), contrast-coded against its surround
+GROUND_CENTRE = 2       # the fovea's colour cells counted as the thing looked at: the central 4 x 4 of 8 x 8 (ours: the fovea's inner
+                        # 10 deg, where a toy at arm's length fills it)
+GROUND_K = 4            # the look's numbers: red-green ON, OFF, blue-yellow ON, OFF
+
+
+def ground_appearance(eye_f):
+    """the look of what the fovea holds: the colour window's central cells' mean opponent code less its outer cells' (the figure against
+    its ground; near zero on the empty floor) -> [4]"""
+    n = W.FOVEA_PX // CELL_F
+    c = np.asarray(eye_f, dtype=np.float64)[-n * n * GROUND_K:].reshape(n, n, GROUND_K)
+    a, b = GROUND_CENTRE, n - GROUND_CENTRE
+    inner = c[a:b, a:b].reshape(-1, GROUND_K).mean(axis=0)
+    mask = np.ones((n, n), dtype=bool); mask[a:b, a:b] = False
+    outer = c[mask].mean(axis=0)
+    return inner - outer
+
+
+def ground_periphery(eye_p, gaze):
+    """every colour periphery cell's look (its opponent code less the cells' mean) and its direction from the fovea's centre (yaw,
+    pitch, rad, + right / + up: the cell's centre in the colour camera's image, whose axis is the head's, less the gaze) ->
+    (feats [15, 4], dirs [15, 2])"""
+    rows, cols = COL_CELLS                                               # (3, 5): retina_colour(imgs["C"], *COL_CELLS)'s rows and columns
+    c = np.asarray(eye_p, dtype=np.float64)[-rows * cols * GROUND_K:].reshape(rows, cols, GROUND_K)
+    feats = (c - c.reshape(-1, GROUND_K).mean(axis=0)).reshape(-1, GROUND_K)
+    dirs = np.zeros((rows * cols, 2))
+    for r in range(rows):
+        for k in range(cols):
+            x, y = (k + 0.5) * G.COL_W / cols, (r + 0.5) * G.COL_H / rows
+            dirs[r * cols + k] = (math.atan((x - G.COL_W / 2) / COL_F_PX) - float(gaze[0]), math.atan((G.COL_H / 2 - y) / COL_F_PX) - float(gaze[1]))
+    return feats, dirs
+
+
 def window_corner(side, gaze):
     """the window's top-left pixel (column, row), inside the image"""
     cx, cy = window_centre(side, gaze)

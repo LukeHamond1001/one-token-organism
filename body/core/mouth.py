@@ -449,6 +449,12 @@ class MouthMixin:
             # decisively, an unsure one as before. The readouts of the probes, the gauge and the dreams are untouched.
             sc_ = float(self.cfg.get("sharp_conf", 0.0)); self._sharp_eff = float(m.read_sharp) * (1.0 + sc_ * float(pred1.norm()))
             logits = m.readout(pred1).clone() * (1.0 + sc_ * float(pred1.norm()))
+            if getattr(self.anatomy, "grounding", None) is not None:
+                gs_ = self._ground_say(self.world.now)                  # A202: the word whose look fills the fovea, a prior on its logit
+                self._ground_say_now = None if gs_ is None else [int(gs_[0]), float(gs_[1])]   # (body/core/grounding.py: GROUND_SAY x the margin)
+                if gs_ is not None:
+                    from body.core.grounding import GROUND_SAY
+                    logits[int(gs_[0])] = logits[int(gs_[0])] + GROUND_SAY * float(gs_[1])
             act_on = bool(int(self.cfg.get("actor", 0)) and stri and getattr(self, "_z_now", None) is not None)
             self._cands_now = None
             if int(self.cfg.get("actor", 0)) and str(self.cfg.get("actor_form", "add")) == "softmax":
