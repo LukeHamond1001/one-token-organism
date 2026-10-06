@@ -64,6 +64,7 @@ PRONE_HURT_TICKS, PRONE_HURT_PAIN = 150, 3   # C278: on its front this long with
 CARRY_WAIT_TICKS = 40                  # C281: the carry waits this long at most for her hands to come off it (ours)
 DOOR_OPEN_DAY = 96                     # the door stage: the day its door first stands open (ours; the owner's stage after walking and talking)
 DOOR_THROUGH_XY, DOOR_RUG_XY, DOOR_ARCH_XY = (2.9, -1.5), (4.1, -1.5), (5.0, -2.4)   # the door stage: the doorway's far side and the second room's rug (make_g1room.ROOM2)
+SIB_NARRATE_GAP, SIB_DEG, SIB_M = 300, 30.0, 4.0   # D2: she names the sibling's walking when the child's head camera is on it (within this many degrees, this near), this often; ours
 DEMO_GAP, DEMO_M = 900, 1.6             # C300: in floor play she shows walking this often (135 s), a walk this far in its view and back; ours
 FREE_PELVIS_M, FREE_DEG, FREE_STAND_MAX = 0.62, 35.0, 400   # C287: let go, it stands alone while its pelvis is this high and its trunk within this of upright, this many ticks at most (60 s); ours
 CARRY_LAY_CLEAR_M = 1.3                # C281: it is laid this far from where she kneels at the least (its body is 1.3 m long); ours
@@ -678,6 +679,19 @@ class DayPlan:
             self.log.append((t, "floor play: the stand (C273)"))
             self.next_play = t + int(self.rng.integers(*PLAY_GAP))
             return
+        if kind in ("floor", "motor", "show") and t >= getattr(self, "next_sib", 0) and c.pending is None and not self.away:
+            # D2 (2026-10-06): THE SIBLING NAMED AS IT WALKS. When the child's head camera is on the walking figure (within SIB_DEG, SIB_M)
+            # she says what it does ('look. walk, walk, walk.'): the example and its word together, once in SIB_NARRATE_GAP
+            sib_ = getattr(world, "_sib", None)
+            if sib_ and not getattr(world, "night", False):
+                try:
+                    hp_, ax_ = lane._head(world.d); to_ = np.asarray(world.m.geom_pos[sib_["sib_torso"]], float) - hp_
+                    dn_ = float(np.linalg.norm(to_))
+                    if 0.3 < dn_ < SIB_M and float(np.degrees(np.arccos(np.clip(float(to_ @ ax_[0]) / dn_, -1.0, 1.0)))) < SIB_DEG:
+                        c.request("narrate_sib"); self.next_sib = t + SIB_NARRATE_GAP
+                        self.log.append((t, "the sibling walks where it looks: named (D2)"))
+                except Exception as e_:
+                    self.next_sib = t + SIB_NARRATE_GAP; self.log.append((t, "D2 narrate_sib failed", str(e_)[:60]))
         if kind == "floor" and t >= getattr(self, "next_demo", 0) and p.seen_by_child and not c.motion.holds and \
                 not [v for v in getattr(c.motion, "holding", {}).values() if v is not None]:
             # C300 (2026-10-06, the owner's word: the teacher models walking, talking, grabbing): SHE SHOWS WALKING. Every DEMO_GAP in
