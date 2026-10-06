@@ -71,6 +71,7 @@ STEP R7f, RECALL INTO ACTION (7.6, A45; the switch `recall`, and `wm_frames`; ph
   night's report at dusk and in `insides`: reported, never corrected."""
 import math
 
+import math
 import torch
 import torch.nn.functional as F
 from .memory import GOAL_TAU, INNER_P                               # A130: the held word's time constant; A137: the inner word's sureness
@@ -225,13 +226,17 @@ class FramesMixin:
                     sk = getattr(self, "_fskill_own", None)
                     if sk is None:
                         sk = {}; self._fskill_own = sk
-                    ns_, em, pm, emf, pmf, pp, epm = sk.get(c_.name, [0, 0.0, 0.0, None, None, 0.0, 0.0])
+                    row_ = list(sk.get(c_.name, [0, 0.0, 0.0, None, None, 0.0, 0.0, 0.0]))
+                    if len(row_) == 7:
+                        row_.append(float(row_[1]) ** 2)                    # (A200c: a save from before the error's square: its mean's)
+                    ns_, em, pm, emf, pmf, pp, epm, ee = row_
                     ns_ += 1; ks_ = 1.0 / min(float(ns_), tau); kf_ = 1.0 / min(float(ns_), FERR_FAST_TAU)
                     em = em + (float(e) - em) * ks_; pm = pm + (ep - pm) * ks_          # the long run: the two means,
+                    ee = ee + (float(e) * float(e) - ee) * ks_                          # A200c: and the error's square (its spread)
                     pp = pp + (ep * ep - pp) * ks_; epm = epm + (float(e) * ep - epm) * ks_   # the naive error's square and their product
                     emf = em if emf is None else emf; pmf = pm if pmf is None else pmf
                     emf = emf + (float(e) - emf) * kf_; pmf = pmf + (ep - pmf) * kf_      # of late: the two means
-                    sk[c_.name] = [ns_, em, pm, emf, pmf, pp, epm]
+                    sk[c_.name] = [ns_, em, pm, emf, pmf, pp, epm, ee]
             fn = getattr(self, "_ferr_now", None)                       # C171 (2026-09-30), an instrument: this tick's error itself, by
             if fn is None:                                              # channel (the novelty drive's payments read against it: which
                 fn = {}; self._ferr_now = fn                            # channel's surprise the new frame carried)
@@ -291,7 +296,8 @@ class FramesMixin:
             if commit:
                 self._fbest_own = best
         vals = []
-        for c_, (n_, em, pm, emf, pmf, pp, epm) in sk.items():
+        for c_, row_ in sk.items():
+            n_, em, pm, emf, pmf, pp, epm = row_[:7]; ee = row_[7] if len(row_) > 7 else em * em
             if int(n_) < 2 or em <= 0.0 or emf is None:
                 continue
             if int(n_) < FERR_FAST_TAU:                                     # its mean of late not yet formed: no record, no payment
@@ -304,7 +310,11 @@ class FramesMixin:
                 if commit:
                     best[c_] = eh
                 vals.append(0.0); continue
-            vals.append(max(0.0, min(1.0, (bc - eh) / bc)) if bc > 0.0 else 0.0)
+            sd_ = math.sqrt(max(0.0, ee - em * em))                        # A200c (2026-10-06): THE FALL IS READ AGAINST THE ERROR'S SPREAD,
+            vals.append(max(0.0, min(1.0, (bc - eh) / sd_)) if sd_ > 0.0 else 0.0)   # not the record: a fall of one long-run standard deviation
+                                                                            # below the recent floor is full progress (a difference a watcher
+                                                                            # sees: Weber). Read against the record (A184, A200b) the live
+                                                                            # payments were a hair each (439 in 6,000 ticks worth 0.35 in all)
             if commit and eh < bc:
                 best[c_] = eh
             elif commit and eh > bc:                                        # A200 (2026-10-06): THE RECORD FORGETS. Held for ever, the record

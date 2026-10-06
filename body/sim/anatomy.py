@@ -267,7 +267,7 @@ class Competence(RewardSource):
         return v
 
 
-COMPETENCE_GAIN = 0.5                  # an event's competence dopamine at full effort and full progress (A181): the novelty drive's magnitude,
+COMPETENCE_GAIN = 0.25                  # an event's competence dopamine at full effort and full progress (A181; A200c: 0.5 -> 0.25 with the fall read against the error's spread): the novelty drive's magnitude,
                                        # a quarter of her smile's rise (ours, disclosed; the magnitude the day copy reads)
 NOVELTY_GAIN = 0.5                     # a new frame's dopamine: a quarter of her smile's rise (+2), half of pain's -1 (ours, disclosed; the
                                        # magnitude the day copy reads)
