@@ -5366,6 +5366,10 @@ class ParentMotion:
             st_ = -K.BALANCE_GAIN * np.asarray(c["bal_f"], float); sn_ = float(np.linalg.norm(st_))
             if sn_ > K.BALANCE_STEP_M:
                 st_ = st_ / sn_ * K.BALANCE_STEP_M
+            if th > K.BALANCE_TILT_DEG:                                     # C294: only a body standing straight is followed: a trunk
+                st_ = -0.2 * bal_                                           # tilting is a lean, not a stance, and she brings it back over
+                                                                            # its feet (day 94: followed 15 cm into a lean it toppled and
+                                                                            # ran 1.4 m onto its front)
             bal_ = bal_ + st_; bn_ = float(np.linalg.norm(bal_))
             if bn_ > K.BALANCE_MAX_M:
                 bal_ = bal_ / bn_ * K.BALANCE_MAX_M
@@ -5374,7 +5378,7 @@ class ParentMotion:
             c["lead"] = _lst(lead); h.next = lead + off
             c["settle_t"] = int(c.get("settle_t", 0)) + 1
             q_ = K.STAND_SETTLE_TICKS // 4
-            if "ease_t" not in c and (float(np.linalg.norm(c["bal_f"])) < K.BALANCE_N and c["settle_t"] > 10 or c["settle_t"] >= 4 * q_):
+            if "ease_t" not in c and (float(np.linalg.norm(c["bal_f"])) < K.BALANCE_N and th <= K.BALANCE_TILT_DEG and c["settle_t"] > 10 or c["settle_t"] >= 4 * q_):
                 c["ease_t"] = int(c["settle_t"])                            # balanced (or half the settle gone): her hold eases over a
             if "ease_t" in c:                                               # quarter to her fingertips (LIGHT_N a hand: under what its
                 h.cap = max(K.LIGHT_N, h.cap * max(0.0, 1.0 - (c["settle_t"] - c["ease_t"]) / float(2 * q_)))   # trunk feels as a hold: its tone takes it, A195)
