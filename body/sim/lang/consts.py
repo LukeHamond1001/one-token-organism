@@ -439,6 +439,8 @@ MOTOR_WORTH = {                       # event kind -> (its worth, the full act i
                                       # BOOK_LAST, worth 1 until "got" is mastered on that toy
     "half_roll": (1, "rolled"),       # onto its side, worth 1 until the whole roll is mastered
 }
+RECOVER_MOTOR = ("stood", "stepped")  # C295: the motor acts whose smiles recover over the night, as words do (C159)
+RECOVER_KEEP = 0.25                   # C295: ... to this share of their count (ours: at 30 steps a day the morning pays about 25 of them; at HABIT_KEEP, 7)
 HABIT_TAU = 10.0                      # the n-th smile for the same act and object is worth w e^(-n/10): A2's fall with mastery, its floor
                                       # of 1 removed (the positive circuits of Knox and Stone 2015: a smile that never ends is farmed)
 HABIT_FLOOR = 0.05                    # under it, no smile (logged)

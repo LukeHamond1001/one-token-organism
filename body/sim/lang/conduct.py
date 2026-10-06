@@ -1073,6 +1073,14 @@ class Conduct:
         if self.stage >= 2:
             for w_ in list(self.vocal_book):
                 self.vocal_book[w_] = int(self.vocal_book[w_] * K.HABIT_KEEP)
+        for k_ in K.RECOVER_MOTOR:                                           # C295 (2026-10-06): her smile at its standing and its stepping
+            for key_ in list(self.book.get(k_, {})):                        # recovers over the night (to RECOVER_KEEP of its count; Rankin et al. 2009): the
+                self.book[k_][key_] = int(self.book[k_][key_] * K.RECOVER_KEEP)   # stepped count passed 90 by day 97 and every rung but the metre
+                                                                            # was worn out; unpaid, with every fall still hurting, it stopped
+                                                                            # stepping in her hands (nine walks of a metre on day 92; five
+                                                                            # walks of 0.00 m on day 97). These have no 'full act' whose
+                                                                            # mastery the book must record (C159's reason to keep the motor
+                                                                            # book): a parent praises first steps for weeks
         self.social_n = int(self.social_n * K.HABIT_KEEP); self.social_calls = int(self.social_calls * K.HABIT_KEEP)   # C239
         return moved
 
