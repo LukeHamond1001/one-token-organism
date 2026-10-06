@@ -1048,7 +1048,7 @@ class G1World(SimWorld):
                     an_ = float(np.linalg.norm(imu[s, 6:9]))            # (R.VEST_TAU) toward the accelerometer's tilt when it reads
                     if 0.8 * 9.81 < an_ < 1.2 * 9.81:                   # about one g (the otoliths): one sample of the accelerometer
                         self._vest_pitch += (math.atan2(-float(imu[s, 6]), float(imu[s, 8])) - self._vest_pitch) * m.opt.timestep / R.VEST_TAU   # alone read 10 to 40 deg off a body swaying 2 deg
-                        self._vest_roll += (math.atan2(float(imu[s, 7]), float(imu[s, 8])) - self._vest_roll) * m.opt.timestep / R.VEST_TAU   # A201: the sideways lean the same way
+                        self._vest_roll += (math.atan2(-float(imu[s, 7]), float(imu[s, 8])) - self._vest_roll) * m.opt.timestep / R.VEST_TAU   # A201: the sideways lean the same way (the sign as the pitch's: read against the true roll on the day-102 copy, est -3.5 at true +3.4 before)
                 tq = d.qfrc_actuator[self.dof]
                 heat_in += (tq / self.tau_max) ** 2
                 imu_last, F_last = imu[s], F[s]
