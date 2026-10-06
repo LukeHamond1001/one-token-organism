@@ -880,6 +880,7 @@ class G1World(SimWorld):
         hooks it (`below`). The tract sounds and the ears hear the tick (by day). A tick MuJoCo cannot live raises WorldFault and
         leaves the world where the tick began (A18)."""
         self.door_tick()                                                    # (the door stage: nothing without the leaf)
+        self.sibling_tick()                                                 # D2: the sibling walks its loop (nothing without the figure)
         if self.paused:
             raise RuntimeError("G1World: the world moved while paused (the night)")
         m, d = self.m, self.d
@@ -1226,6 +1227,45 @@ class G1World(SimWorld):
         pos, quat = self._door_swung if op else self._door_closed
         self.m.geom_pos[self._door] = pos; self.m.geom_quat[self._door] = quat
         return op
+
+    def sibling_tick(self):
+        """D2: THE SIBLING WALKS. By day the figure (g1scene._add_sibling: torso, head, two legs, two arms) goes to and fro along the
+        first room's back side (SIB x0 to x1 at y, SIB speed), its legs and arms swinging in a gait (SIB swing rad, the arms against
+        the legs), its body bobbing; at night it stands still. Kinematic (the world's act, as the door's); its parts are geoms in the
+        model's mutable fields, so a save holds it where it was"""
+        m = self.m
+        sib = getattr(self, "_sib", None)
+        if sib is None:
+            g_ = int(mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_GEOM, "sib_torso"))
+            self._sib = sib = None if g_ < 0 else {n_: int(mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_GEOM, n_)) for n_ in ("sib_torso", "sib_head", "sib_leg_l", "sib_leg_r", "sib_arm_l", "sib_arm_r")}
+            self._sib_s = 0.0; self._sib_dir = 1.0; self._sib_t = 0.0
+            if sib is None:
+                return
+        if sib is None or getattr(self, "night", False):
+            return
+        S = G.SIB; dt = TICK_S if "TICK_S" in globals() else 0.15
+        self._sib_s += self._sib_dir * S["speed"] * dt; self._sib_t += dt
+        if self._sib_s > S["x1"] - S["x0"]:
+            self._sib_s = S["x1"] - S["x0"]; self._sib_dir = -1.0
+        elif self._sib_s < 0.0:
+            self._sib_s = 0.0; self._sib_dir = 1.0
+        x = S["x0"] + self._sib_s; y = S["y"]
+        ph = 2.0 * math.pi * self._sib_t * 1.6                              # the gait's phase (1.6 strides a second)
+        bob = 0.015 * math.cos(2.0 * ph)
+        m.geom_pos[sib["sib_torso"]] = (x, y, S["torso_z"] + bob)
+        m.geom_pos[sib["sib_head"]] = (x, y, S["head_z"] + bob)
+        for sd, sg, sign in (("l", 1, 1.0), ("r", -1, -1.0)):
+            a_ = sign * S["swing"] * math.sin(ph)                            # the leg's swing about the hip, fore and aft (about y)
+            self._sib_limb(sib[f"sib_leg_{sd}"], (x, y + sg * 0.07, S["hip_z"] + bob), S["leg_h"], a_ * self._sib_dir)
+            self._sib_limb(sib[f"sib_arm_{sd}"], (x, y + sg * 0.14, S["sho_z"] + bob), S["arm_h"], -0.7 * a_ * self._sib_dir)
+
+    def _sib_limb(self, g, top, half, ang):
+        """a limb capsule hung from `top`, swung `ang` rad about the sideways axis (forward = +x)"""
+        m = self.m
+        dx, dz = math.sin(ang) * half, -math.cos(ang) * half
+        m.geom_pos[g] = (top[0] + dx, top[1], top[2] + dz)
+        q = np.zeros(4); mujoco.mju_axisAngle2Quat(q, np.array([0.0, 1.0, 0.0]), ang)
+        m.geom_quat[g] = q
 
     def carry_to_mat(self, to=None):
         """A110 (2026-09-27, C92): a child that has rolled off the mat is carried back onto it in its sleep, as a person carries a

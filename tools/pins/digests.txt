@@ -352,6 +352,7 @@ A200c (2026-10-06 12:38, the competence fall read against the error's spread; ga
 C298 (2026-10-06 13:30, the blocked carry to the mat's centre): the stub world has no parent; sim digests unchanged (threaded 25414c330832fbae78847381, consts b816e29a1660); the language default kept 7c54199e3c72cf77d45a8e94.
 C299 (2026-10-06 13:44, the look toward the asked thing paid; more 'what is it?'): the stub world has no parent; sim digests unchanged (threaded 25414c330832fbae78847381, consts b816e29a1660); the language default kept 7c54199e3c72cf77d45a8e94.
 C300 (2026-10-06, she shows walking and getting with their words): the stub world has no parent; sim digests unchanged (threaded 25414c330832fbae78847381, consts b816e29a1660); the language default kept 7c54199e3c72cf77d45a8e94.
+D2 (2026-10-06, the sibling figure, step 1): the stub world has no door scene; sim digests unchanged (threaded 25414c330832fbae78847381, consts b816e29a1660); the language default kept 7c54199e3c72cf77d45a8e94.
 C286 (2026-10-05 14:20, her ask waits for a toy in view; the carry brings its toys): the sim digests unchanged; the language default kept 7c54199e3c72cf77d45a8e94.
 C285 (2026-10-05 14:00, its stand and its step pay in her hands): the sim digests unchanged; the language default kept 7c54199e3c72cf77d45a8e94.
 C284 (2026-10-05 12:40, she sees it stand and step): the sim digests unchanged (the stub world has no parent); the language default kept 7c54199e3c72cf77d45a8e94.

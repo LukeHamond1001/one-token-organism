@@ -168,6 +168,27 @@ def _add_room2(spec):
     lt.diffuse[:] = (.55, .52, .46); lt.specular[:] = (0, 0, 0); lt.castshadow = False
 
 
+# D2 (2026-10-06, the owner's word: a human home with other children showing examples): THE SIBLING, 'bo', a child-sized figure of
+# capsules (a metre tall) the world moves each tick (G1World.sibling_tick): it walks a loop of the first room in the child's view,
+# an example of walking before its eyes, the parent naming it. Visual only for now (no contact: it never knocks the child), in a
+# body added last (the saved life's rows hold, as the second room's). Its parts' places and sizes: ours
+SIB = dict(x0=-1.7, x1=1.7, y=1.25, speed=0.45, torso_z=0.62, torso_h=0.17, head_z=0.93, head_r=0.09, hip_z=0.44, leg_h=0.21, sho_z=0.78, arm_h=0.15, swing=0.45, rgba=(0.85, 0.55, 0.30, 1.0))
+
+
+def _add_sibling(spec):
+    b = spec.worldbody.add_body(name="sibling")
+    def cap(name, half, r, pos):
+        g = b.add_geom(name=name, type=mujoco.mjtGeom.mjGEOM_CAPSULE, size=[r, half, 0], pos=list(map(float, pos)))
+        g.contype, g.conaffinity = 0, 0; g.rgba[:] = SIB["rgba"]
+        return g
+    cap("sib_torso", SIB["torso_h"], 0.09, (SIB["x0"], SIB["y"], SIB["torso_z"]))
+    g = b.add_geom(name="sib_head", type=mujoco.mjtGeom.mjGEOM_SPHERE, size=[SIB["head_r"], 0, 0], pos=[SIB["x0"], SIB["y"], SIB["head_z"]])
+    g.contype, g.conaffinity = 0, 0; g.rgba[:] = (0.93, 0.76, 0.62, 1.0)
+    for sd, sg in (("l", 1), ("r", -1)):
+        cap(f"sib_leg_{sd}", SIB["leg_h"], 0.045, (SIB["x0"], SIB["y"] + sg * 0.07, SIB["hip_z"] - SIB["leg_h"]))
+        cap(f"sib_arm_{sd}", SIB["arm_h"], 0.035, (SIB["x0"], SIB["y"] + sg * 0.14, SIB["sho_z"] - SIB["arm_h"]))
+
+
 def load_model(xml=XML, extra=None):
     """The world with the G1's senses added; extra(spec), if given, adds a test rig before compiling (instruments only,
     never the body)."""
@@ -181,6 +202,7 @@ def load_model(xml=XML, extra=None):
         extra(spec)
     if any(mt.name == "door" for mt in spec.materials):                    # THE DOOR STAGE's scene (make_g1room --door=1: its
         _add_room2(spec)                                                    # materials only): the second room's body, last of all
+        _add_sibling(spec)                                                  # D2: the sibling figure, after it
     # A187 (2026-10-04, speed only): THE EYE'S OWN MESHES. Unitree's visual meshes carry 630,000 triangles (a finger link 30,000) and
     # the eyes drew them six times a tick (three views, each with the sun's shadow pass): 119 of a 436 ms tick on the day-78 copy.
     # Each visual geom (no contact, group 2) whose mesh has a decimated copy in assets_vis (tools/make_vis_meshes.py: 12% of the
