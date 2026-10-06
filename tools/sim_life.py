@@ -245,7 +245,7 @@ def main():
                     help="the pair saved every N waking ticks besides the night's own save (0: the night alone): a fix lands at the next checkpoint, not the next dawn (the owner's word 2026-09-29)")
     ap.add_argument("--page", action="store_true", help="serve the /sim page on http://127.0.0.1:8030/ (tools/sim_page.py)")
     ap.add_argument("--extra", default=None, help="a thing added to the room (body/sim/extras.py: book); the pair must have been migrated to it")
-    ap.add_argument("--room", default="a", choices=("a", "b"), help="the room's layout (A133): a, the room of birth; b, its furniture moved")
+    ap.add_argument("--room", default="a", choices=("a", "b", "door"), help="the room's layout (A133): a, the room of birth; b, its furniture moved")
     ap.add_argument("--body", default="a", choices=("a", "b"), help="the body (A134): a, the stock G1; b, longer forearms and shanks, heavier limbs")
     ap.add_argument("--film", default=None, metavar="DIR", help="A123: the room's view saved as JPEG frames in DIR, one every --film-every ticks (the page's render; the captions come from ticks.jsonl by tick)")
     ap.add_argument("--film-every", type=int, default=3, help="ticks between frames (a multiple of the page's 3)")

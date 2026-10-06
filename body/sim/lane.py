@@ -371,7 +371,7 @@ class ParentLane:
         m, d = world.m, world.d
         pm = world.parent
         mouth, fwd, face = EY.mouth_point(m, d)
-        present = not pm.asleep and float(pm.base["at"][0]) < ROOM_EDGE_X     # awake and in the room (the hall is away)
+        present = not pm.asleep and (float(pm.base["at"][0]) < ROOM_EDGE_X) == (float(d.qpos[0]) < ROOM_EDGE_X)   # awake and in the room the child is in (the hall is away; the door stage: the second room with it)
         head, axes = self._head(d)
         pos = {tt: d.xpos[b].copy() for tt, b in self.toy_body.items()}
         in_view = self._ray_first(m, d, face, d.xpos[m.body("torso_link").id]) == self.g1_root

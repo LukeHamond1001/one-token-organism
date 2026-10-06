@@ -38,7 +38,8 @@ XML = HERE / "g1room.xml"
 XML_B = HERE / "g1room_b.xml"                 # A133: the changed room (make_g1room.py --layout=b): the furniture moved, the mat and toys kept
 ROOMS = {"a": XML, "b": XML_B}                # the runner's --room names
 XML_BODY_B = HERE / "g1room_body_b.xml"       # A134: the room of birth with the changed body (make_g1room.py --body=b)
-SCENES = {("a", "a"): XML, ("b", "a"): XML_B, ("a", "b"): XML_BODY_B}   # (room, body) -> the scene; the runner's --room and --body
+XML_DOOR = HERE / "g1room_door.xml"           # the door stage (make_g1room.py --door=1): room a with a door leaf and a second room behind it
+SCENES = {("a", "a"): XML, ("b", "a"): XML_B, ("a", "b"): XML_BODY_B, ("door", "a"): XML_DOOR}   # (room, body) -> the scene; the runner's --room and --body
 
 
 def scene_path(room="a", body="a"):

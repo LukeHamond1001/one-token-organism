@@ -715,19 +715,25 @@ class FloorPlan:
 
     def __init__(self, m, d):
         g = K.GRID_M
+        if int(mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_BODY, "room2")) >= 0:
+            self.X1, self.Y0 = 6.0, -3.4                                    # the door stage: the second room inside the grid
         self.nx, self.ny = int(round((self.X1 - self.X0) / g)) + 1, int(round((self.Y1 - self.Y0) / g)) + 1
         xs = self.X0 + g * np.arange(self.nx); ys = self.Y0 + g * np.arange(self.ny)
         self.xs, self.ys = xs, ys
         X, Y = np.meshgrid(xs, ys, indexing="ij")
         inside = ((X > -2.6) & (X < 2.6) & (Y > -2.3) & (Y < 2.3)) | ((X >= 2.6) & (X < 4.5) & (Y > -2.65) & (Y < -0.35))
+        room2 = int(mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_BODY, "room2"))
+        if room2 >= 0:                                                      # the door stage: the second room's floor is hers too
+            inside = ((X > -2.6) & (X < 2.6) & (Y > -2.3) & (Y < 2.3)) | ((X >= 2.6) & (X <= 2.7) & (Y > -1.95) & (Y < -1.05)) \
+                | ((X > 2.7) & (X < 5.9) & (Y > -3.3) & (Y < 0.3))
         self.dist = np.full((self.nx, self.ny), 9.0)             # each cell's distance to the nearest standing thing or wall
         boxes = []
         room = m.body("room").id
         for gg in range(m.ngeom):
-            if int(m.geom_bodyid[gg]) != room or m.geom_type[gg] == mujoco.mjtGeom.mjGEOM_PLANE:
+            if int(m.geom_bodyid[gg]) not in (room, room2) or m.geom_type[gg] == mujoco.mjtGeom.mjGEOM_PLANE:
                 continue
             nm = m.geom(gg).name or ""
-            if nm in ("mat", "ceiling", "floor") or nm.startswith("pad"):
+            if nm in ("mat", "ceiling", "floor", "door_leaf", "room2_floor", "room2_ceiling", "room2_rug") or nm.startswith("pad"):   # (she opens the door she walks through)
                 continue
             R = d.geom_xmat[gg].reshape(3, 3); c = d.geom_xpos[gg] + R @ m.geom_aabb[gg][:3]
             half = np.abs(R) @ m.geom_aabb[gg][3:]

@@ -609,6 +609,9 @@ class G1World(SimWorld):
         self.f_pain = PAIN_WEIGHTS * self.body_mass * float(np.linalg.norm(m.opt.gravity))
         self.palm_zones = [self.zones.index(f"{s}_hand_palm") for s in ("left", "right")]
         self.sole_zones = [[i for i, z in enumerate(self.zones) if z.startswith(f"{s}_ankle")] for s in ("left", "right")]   # A193: each foot's zones
+        self._door = int(mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_GEOM, "door_leaf")); self._door = None if self._door < 0 else self._door
+        self.door_open = False                                              # the door stage: held open (the day its second room is entered)
+        self._door_setup()
         self._trunk_zones = [self.zones.index(z) for z in ("torso", "pelvis")]   # A195: where a hold on its trunk is felt
         self.palm_of_hand = {"hand_l": self.palm_zones[0], "hand_r": self.palm_zones[1]}
         self.own_hand = np.zeros((2, self.nz + 1), dtype=bool)          # each hand's other links (index nz: no zone), for palm_own_N
@@ -875,6 +878,7 @@ class G1World(SimWorld):
         hands' acts pass the spinal cord first (the palmar grasp). Every 10 ms (5 steps) the loop below the tick is called when a body
         hooks it (`below`). The tract sounds and the ears hear the tick (by day). A tick MuJoCo cannot live raises WorldFault and
         leaves the world where the tick began (A18)."""
+        self.door_tick()                                                    # (the door stage: nothing without the leaf)
         if self.paused:
             raise RuntimeError("G1World: the world moved while paused (the night)")
         m, d = self.m, self.d
@@ -1173,6 +1177,42 @@ class G1World(SimWorld):
         if self.lane is not None:
             self.lane.dusk(self)
 
+    # ---------------------------------------------------------------- the door stage
+    DOOR_XY = (2.65, -1.5)                                                  # the doorway's middle (make_g1room: ROOM_X, the door's y)
+    DOOR_NEAR_M = 1.3                                                       # she opens it from this near and it closes behind her (ours)
+
+    def _door_setup(self):
+        """THE DOOR STAGE's scene (make_g1room.room2: a leaf in the doorway, a second room where the hall is): the hall's three
+        walls are moved out to the second room's bounds and the leaf's closed and open places are kept. Nothing without the leaf"""
+        if self._door is None:
+            return
+        m = self.m
+        r = {"x0": 2.70, "x1": 5.90, "hy": 1.8, "yc": -1.5}                 # make_g1room.ROOM2
+        for nm, pos, size in (("hall_end", (r["x1"] + .05, r["yc"]), (.05, r["hy"] + .1)),
+                              ("hall_side_a", ((r["x0"] + r["x1"]) / 2, r["yc"] + r["hy"] + .05), ((r["x1"] - r["x0"]) / 2, .05)),
+                              ("hall_side_b", ((r["x0"] + r["x1"]) / 2, r["yc"] - r["hy"] - .05), ((r["x1"] - r["x0"]) / 2, .05))):
+            g = m.geom(nm).id
+            m.geom_pos[g][:2] = pos; m.geom_size[g][:2] = size
+            m.geom_rgba[g] = (.96, .86, .62, 1.0)                           # the second room's yellow
+            m.geom_rbound[g] = float(np.linalg.norm(m.geom_size[g])); m.geom_aabb[g][3:] = m.geom_size[g]
+        if not hasattr(self, "_door_closed"):
+            g = self._door
+            self._door_closed = (np.array([2.65, -1.5, m.geom_pos[g][2]]), np.array([1.0, 0.0, 0.0, 0.0]))
+            self._door_swung = (np.array([2.74, -0.58, m.geom_pos[g][2]]), np.array([1.0, 0.0, 0.0, 0.0]))   # beside the doorway, flat on the second room's near wall
+        self.door_tick()
+
+    def door_tick(self):
+        """the leaf open while the stage holds it open (door_open) or she is at the doorway (she opens a door she walks through;
+        it closes behind her), and never closed on a body in the doorway. -> whether it stands open"""
+        if self._door is None:
+            return False
+        near_ = lambda xy: float(np.hypot(float(xy[0]) - self.DOOR_XY[0], float(xy[1]) - self.DOOR_XY[1]))
+        op = bool(self.door_open) or near_(self.d.qpos[:2]) < 0.5 \
+            or (getattr(self, "parent", None) is not None and near_(self.parent.base["at"]) < self.DOOR_NEAR_M)
+        pos, quat = self._door_swung if op else self._door_closed
+        self.m.geom_pos[self._door] = pos; self.m.geom_quat[self._door] = quat
+        return op
+
     def carry_to_mat(self, to=None):
         """A110 (2026-09-27, C92): a child that has rolled off the mat is carried back onto it in its sleep, as a person carries a
         sleeping baby to its bed: at dawn, before the light, its body is set down at the mat's centre on its back in the birth pose
@@ -1408,6 +1448,14 @@ class G1World(SimWorld):
     def load_state(self, blob):
         """the whole world back exactly from save_state's bytes"""
         st = pickle.loads(bytes(blob))
+        if st.get("version") == 1 and st.get("nstate") != mujoco.mj_stateSize(self.m, STATE_SPEC) and self._door is not None:
+            # THE DOOR STAGE: a save of the room before its second room. The door scene's new body (room2: fixed geoms) comes
+            # after every other, so the save's state is this world's but for that body's applied force (six zeros, before the
+            # equality flags), and its model fields are this model's first rows (_restore)
+            S_ = mujoco.mjtState; tail_ = mujoco.mj_stateSize(self.m, int(S_.mjSTATE_EQ_ACTIVE) | int(S_.mjSTATE_MOCAP_POS) | int(S_.mjSTATE_MOCAP_QUAT) | int(S_.mjSTATE_USERDATA) | int(S_.mjSTATE_PLUGIN))
+            k_ = mujoco.mj_stateSize(self.m, STATE_SPEC) - int(st["nstate"]); ph_ = np.asarray(st["physics"])
+            if k_ == 6:
+                st["physics"] = np.concatenate([ph_[:len(ph_) - tail_], np.zeros(6), ph_[len(ph_) - tail_:]]); st["nstate"] = int(st["physics"].size)
         if st.get("version") != 1 or st.get("nstate") != mujoco.mj_stateSize(self.m, STATE_SPEC):
             raise ValueError("G1World.load_state: not a save of this world")
         self._restore(st)
@@ -1619,7 +1667,7 @@ class G1World(SimWorld):
                               "observer": self.observer.state(), "sounds": self.sounds.state(),
                               "eyes": None if self.eyes is None else self.eyes.state(),
                               "words_out": self.words_out, "tract_pa": self.tract_pa, "tract_raw": self.tract_raw, "crying": self.crying, "night": self.night, "dawn_left": int(self.dawn_left),
-                              "carried": [[int(t), list(a), list(b)] for t, a, b in self.carried],
+                              "carried": [[int(t), list(a), list(b)] for t, a, b in self.carried], "door_open": bool(self.door_open),
                               "tidied": [[int(t), k, list(a), list(b)] for t, k, a, b in self.tidied],
                               "lane": None if self.lane is None else self.lane.state()}),
                 "warnings": np.array([int(d.warning[i].number) for i in range(int(mujoco.mjtWarning.mjNWARNING))])}
@@ -1628,7 +1676,11 @@ class G1World(SimWorld):
     def _restore(self, st):
         m, d = self.m, self.d
         for f, v in st["model"].items():
-            getattr(m, f)[...] = v
+            if np.shape(v) == getattr(m, f).shape:
+                getattr(m, f)[...] = v
+            else:                                                           # (the door stage: a save of the room before its second
+                getattr(m, f)[:len(v)] = v                                  # room: this model's first rows, load_state)
+        self._door_setup()
         mujoco.mj_setState(m, d, st["physics"], STATE_SPEC)
         for i, n in enumerate(st["warnings"]):
             d.warning[i].number = int(n)
@@ -1667,6 +1719,7 @@ class G1World(SimWorld):
         self.words_out = s5["words_out"]; self.tract_pa = np.asarray(s5["tract_pa"], float).copy()
         self.tract_raw = np.asarray(s5["tract_raw"], float).copy(); self.crying = bool(s5["crying"])
         self.night, self.dawn_left = bool(s5["night"]), int(s5["dawn_left"])
+        self.door_open = bool(s5.get("door_open", False))                    # (the door stage; older saves: closed)
         self.carried = [(int(t), [float(x) for x in a], [float(x) for x in b]) for t, a, b in s5.get("carried", [])]   # (A110; older saves: none)
         self.tidied = [(int(t), str(k), [float(x) for x in a], [float(x) for x in b]) for t, k, a, b in s5.get("tidied", [])]   # (A117; older saves: none)
         if self.lane is not None and s5.get("lane") is not None:

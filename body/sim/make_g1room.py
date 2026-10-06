@@ -229,10 +229,6 @@ MAT = dict(
     art_a=dict(rgba=".93 .74 .58 1", specular="0"), art_b=dict(rgba=".66 .74 .84 1", specular="0"),
     art_c=dict(rgba=".97 .94 .88 1", specular="0"), art_d=dict(rgba=".78 .82 .70 1", specular="0"),
     hall=dict(rgba=".80 .78 .74 1", specular="0"),
-    door=dict(rgba=".93 .90 .84 1", specular=".15", shininess=".3"),          # the door's leaf (the door stage)
-    floor2=dict(rgba=".42 .58 .62 1", specular=".05"), wall2=dict(rgba=".96 .86 .62 1", specular="0"),   # the second room: a blue-green floor, yellow walls
-    rug2=dict(rgba=".86 .38 .30 1", specular="0"), bench2=dict(rgba=".55 .40 .28 1", specular=".1"),
-    arch2=dict(rgba=".30 .45 .80 1", specular=".2"),
     # the toys: saturated, one dominant hue each
     t_red=dict(rgba=".92 .12 .10 1", specular=".5", shininess=".7"),
     t_orange=dict(rgba=".99 .45 .05 1", specular=".5", shininess=".7"),
@@ -249,6 +245,38 @@ MAT = dict(
     t_black=dict(rgba=".05 .05 .06 1", specular=".6", shininess=".9"),
     t_beak=dict(rgba="1 .52 .08 1", specular=".3", shininess=".5"),
 )
+
+
+# THE DOOR STAGE's materials, after all the others (the saved life's material fields are then the new scene's first rows)
+MAT2 = dict(
+    door=dict(rgba=".93 .90 .84 1", specular=".15", shininess=".3"),
+    floor2=dict(rgba=".42 .58 .62 1", specular=".05"), wall2=dict(rgba=".96 .86 .62 1", specular="0"),
+    rug2=dict(rgba=".86 .38 .30 1", specular="0"), bench2=dict(rgba=".55 .40 .28 1", specular=".1"),
+    arch2=dict(rgba=".30 .45 .80 1", specular=".2"),
+)
+ROOM2 = dict(x0=ROOM_X + .10, x1=ROOM_X + 3.30, half_y=1.8, door_y0=-1.95, door_y1=-1.05, door_h=2.05)   # the second room's floor plan
+
+
+def room2():
+    """THE DOOR STAGE (the owner's word, 2026-10-04: generalization is a door in its one room opening onto a new room it enters
+    itself): a leaf closes the doorway (world.door_tick swings it beside the doorway), and behind it, where the hall is, a SECOND
+    ROOM: 3.2 m by 3.6 m, its floor blue-green, its walls yellow, a round red rug, a low bench, an arch to pass under. Fixed geoms
+    in a body of their own written LAST (no joint, and every geom, light and material after the life's own: the saved life's
+    state and model fields load as the new scene's first rows); the hall's three walls stay in the room's body and the world
+    moves them out to the second room's bounds (G1World._door_setup). An environment's change, disclosed"""
+    W, Hh = ROOM_X, ROOM_H
+    r = ROOM2; yc = (r["door_y0"] + r["door_y1"]) / 2; X0, X1, hy, dh = r["x0"], r["x1"], r["half_y"], r["door_h"]
+    g = []
+    g.append(f'<geom name="door_leaf" type="box" pos="{W + .05} {yc:.4g} {dh / 2:.4g}" size=".02 {(r["door_y1"] - r["door_y0"]) / 2 - .005:.4g} {dh / 2 - .005:.4g}" material="door" {WORLD}/>')
+    g.append(f'<geom name="room2_floor" type="box" pos="{(X0 + X1) / 2:.4g} {yc:.4g} 0" size="{(X1 - X0) / 2:.4g} {hy} .001" material="floor2" {DECOR}/>')
+    g.append(f'<geom name="room2_ceiling" type="box" pos="{(X0 + X1) / 2:.4g} {yc:.4g} {Hh + .03}" size="{(X1 - X0) / 2:.4g} {hy} .03" material="ceiling" {DECOR}/>')
+    g.append(f'<geom name="room2_rug" type="cylinder" pos="{W + 1.5} {yc:.4g} .003" size=".7 .003" material="rug2" {DECOR}/>')
+    g.append(f'<geom name="room2_bench" type="box" pos="{X1 - .25:.4g} {yc + .9:.4g} .20" size=".20 .60 .20" material="bench2" {WORLD}/>')
+    for k_, yy in (("a", yc - 1.25), ("b", yc - .55)):                  # the arch: two posts and a beam, 0.7 m apart, by the far wall
+        g.append(f'<geom name="room2_arch_{k_}" type="box" pos="{X1 - .5:.4g} {yy:.4g} .55" size=".05 .05 .55" material="arch2" {WORLD}/>')
+    g.append(f'<geom name="room2_arch_top" type="box" pos="{X1 - .5:.4g} {yc - .9:.4g} 1.15" size=".05 .40 .05" material="arch2" {WORLD}/>')
+    g.append(f'<light name="room2_lamp" pos="{W + 1.7} {yc:.4g} 2.4" dir="0 0 -1" diffuse=".55 .52 .46" specular="0 0 0" castshadow="false"/>')
+    return '    <body name="room2">\n      ' + "\n      ".join(g) + '\n    </body>'
 
 
 def f(*v):
@@ -619,7 +647,7 @@ LAYOUTS = {
 }                                                                                                                     # north of the mat, clear of the drum's birth spot (1.62, .32)
 
 
-def room(layout="a", door=False):
+def room(layout="a"):
     W, D, Hh = ROOM_X, ROOM_Y, ROOM_H
     lay = LAYOUTS[layout]
     g = []
@@ -636,31 +664,11 @@ def room(layout="a", door=False):
     for yy in (door_y0, door_y1):
         g.append(f'<geom type="box" pos="{W - .005} {yy} {door_h / 2:.4g}" size=".012 .045 {door_h / 2:.4g}" material="trim" {DECOR}/>')
     g.append(f'<geom type="box" pos="{W - .005} {(door_y0 + door_y1) / 2:.4g} {door_h + .04:.4g}" size=".012 {(door_y1 - door_y0) / 2 + .045:.4g} .04" material="trim" {DECOR}/>')
-    if door:
-        # THE DOOR STAGE (the owner's word, 2026-10-04: generalization is a door in its one room opening onto a new room it enters
-        # itself): a leaf closes the doorway (world.open_door swings it flat against the second room's wall), and behind it, where the
-        # hall was, a SECOND ROOM: 3.2 m by 3.6 m, its floor blue-green, its walls yellow, a round red rug, a low bench, an arch to
-        # pass under. All fixed geoms (no joint: the saved life's state loads as it is). An environment's change, disclosed
-        yc = (door_y0 + door_y1) / 2
-        X0, X1, Y0, Y1 = W + .10, W + 3.30, yc - 1.8, yc + 1.8
-        g.append(f'<geom name="door_leaf" type="box" pos="{W + .05} {yc:.4g} {door_h / 2:.4g}" size=".02 {(door_y1 - door_y0) / 2 - .005:.4g} {door_h / 2 - .005:.4g}" material="door" {WORLD}/>')
-        g.append(f'<geom name="room2_floor" type="box" pos="{(X0 + X1) / 2:.4g} {yc:.4g} -.001" size="{(X1 - X0) / 2:.4g} 1.8 .001" material="floor2" {DECOR}/>')
-        g.append(f'<geom name="room2_ceiling" type="box" pos="{(X0 + X1) / 2:.4g} {yc:.4g} {Hh + .03}" size="{(X1 - X0) / 2:.4g} 1.8 .03" material="ceiling" {DECOR}/>')
-        g.append(f'<geom name="room2_end" type="box" pos="{X1 + .05} {yc:.4g} {Hh / 2}" size=".05 1.9 {Hh / 2}" material="wall2" {WORLD}/>')
-        g.append(f'<geom name="room2_side_a" type="box" pos="{(X0 + X1) / 2:.4g} {Y1 + .05:.4g} {Hh / 2}" size="{(X1 - X0) / 2:.4g} .05 {Hh / 2}" material="wall2" {WORLD}/>')
-        g.append(f'<geom name="room2_side_b" type="box" pos="{(X0 + X1) / 2:.4g} {Y0 - .05:.4g} {Hh / 2}" size="{(X1 - X0) / 2:.4g} .05 {Hh / 2}" material="wall2" {WORLD}/>')
-        g.append(f'<geom name="room2_rug" type="cylinder" pos="{W + 1.5} {yc:.4g} .003" size=".7 .003" material="rug2" {DECOR}/>')
-        g.append(f'<geom name="room2_bench" type="box" pos="{X1 - .25:.4g} {yc + .9:.4g} .20" size=".20 .60 .20" material="bench2" {WORLD}/>')
-        for k_, yy in (("a", yc - 1.25), ("b", yc - .55)):                  # the arch: two posts and a beam, 0.7 m apart, by the far wall
-            g.append(f'<geom name="room2_arch_{k_}" type="box" pos="{X1 - .5:.4g} {yy:.4g} .55" size=".05 .05 .55" material="arch2" {WORLD}/>')
-        g.append(f'<geom name="room2_arch_top" type="box" pos="{X1 - .5:.4g} {yc - .9:.4g} 1.15" size=".05 .40 .05" material="arch2" {WORLD}/>')
-        g.append(f'<light name="room2_lamp" pos="{W + 1.7} {yc:.4g} 2.4" dir="0 0 -1" diffuse=".55 .52 .46" specular="0 0 0" castshadow="false"/>')
-    else:
-        # the hall beyond the door (the house to come): a floor, a far wall, a side wall
-        g.append(f'<geom type="box" pos="{W + 1.0} {(door_y0 + door_y1) / 2:.4g} -.001" size=".95 1.2 .001" material="floor" {DECOR}/>')
-        g.append(f'<geom name="hall_end" type="box" pos="{W + 1.95} {(door_y0 + door_y1) / 2:.4g} {Hh / 2}" size=".05 1.2 {Hh / 2}" material="hall" {WORLD}/>')
-        g.append(f'<geom name="hall_side_a" type="box" pos="{W + 1.0} {(door_y0 + door_y1) / 2 + 1.2:.4g} {Hh / 2}" size=".95 .05 {Hh / 2}" material="hall" {WORLD}/>')
-        g.append(f'<geom name="hall_side_b" type="box" pos="{W + 1.0} {(door_y0 + door_y1) / 2 - 1.2:.4g} {Hh / 2}" size=".95 .05 {Hh / 2}" material="hall" {WORLD}/>')
+    # the hall beyond the door (the house to come): a floor, a far wall, a side wall
+    g.append(f'<geom type="box" pos="{W + 1.0} {(door_y0 + door_y1) / 2:.4g} -.001" size=".95 1.2 .001" material="floor" {DECOR}/>')
+    g.append(f'<geom name="hall_end" type="box" pos="{W + 1.95} {(door_y0 + door_y1) / 2:.4g} {Hh / 2}" size=".05 1.2 {Hh / 2}" material="hall" {WORLD}/>')
+    g.append(f'<geom name="hall_side_a" type="box" pos="{W + 1.0} {(door_y0 + door_y1) / 2 + 1.2:.4g} {Hh / 2}" size=".95 .05 {Hh / 2}" material="hall" {WORLD}/>')
+    g.append(f'<geom name="hall_side_b" type="box" pos="{W + 1.0} {(door_y0 + door_y1) / 2 - 1.2:.4g} {Hh / 2}" size=".95 .05 {Hh / 2}" material="hall" {WORLD}/>')
     # skirting boards
     for pos, size in (((0, D - .012, .05), (W, .012, .05)), ((0, -D + .012, .05), (W, .012, .05)),
                       ((-W + .012, 0, .05), (.012, D, .05)), ((W - .012, (door_y1 + D) / 2, .05), (.012, (D - door_y1) / 2, .05)),
@@ -889,7 +897,7 @@ def face_shaded(mat):
 def scene_xml(folder=HERE, layout="a", body="a", door=False):
     """the scene's XML text, its paths relative to `folder` (where it is to be written)"""
     rel = lambda p: os.path.relpath(HERE / p, Path(folder).resolve())     # every path in the XML relative to the XML's own folder
-    mats = "\n    ".join(f'<material name="{k}" ' + " ".join(f'{a}="{v}"' for a, v in d.items()) + "/>" for k, d in face_shaded(MAT).items())
+    mats = "\n    ".join(f'<material name="{k}" ' + " ".join(f'{a}="{v}"' for a, v in d.items()) + "/>" for k, d in face_shaded(dict(MAT, **MAT2) if door else MAT).items())
     cams = dict(room=((2.45, -2.2, 1.7), (-.2, -.2, .35), 52), mat=((1.6, -2.0, 1.15), (-.1, -.55, .2), 42),
                 top=((0, -.6, 3.2), (0, -.599, 0), 50))
     cam_xml = "\n    ".join(f'<camera name="{k}" pos="{f(*p)}" xyaxes="{lookat_xyaxes(p, t)}" fovy="{fv}"/>' for k, (p, t, fv) in cams.items())
@@ -980,11 +988,12 @@ def scene_xml(folder=HERE, layout="a", body="a", door=False):
     {lights_xml()}
     {cam_xml}
     <body name="room" childclass="room">
-    {room(layout, door)}
+    {room(layout)}
     {play_mat()}
     </body>
 {toys()}
 {parent()}
+{room2() if door else ''}
   </worldbody>
   <actuator>
     <!-- HER MUSCLES: one per axis of each of her joints, their force ranges her strength (parent_consts.STRENGTH; A25b) -->
