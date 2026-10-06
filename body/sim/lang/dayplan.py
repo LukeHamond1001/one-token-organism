@@ -284,7 +284,12 @@ class DayPlan:
                 a_ = c.motion._act(mid_)
             except Exception:
                 continue
-            if a_.get("kind") == "stand_up" and st_ == "refused" and "lost" in str(a_.get("why", "")) and getattr(pm, "carry_pending", None) is None:
+            if a_.get("kind") == "stand_up" and st_ == "refused" and getattr(pm, "carry_pending", None) is None and \
+                    ("lost" in str(a_.get("why", "")) or "no spot" in str(a_.get("why", ""))):
+                # C303 (2026-10-06): A STAND REFUSED FOR WANT OF A SPOT CARRIES IT TO ITS MAT AT ONCE (not after CARRY_AFTER refusals within
+                # CARRY_WINDOW, C277's rule for her acts in general): the day-104 pair's probes refused 'no spot she can kneel at lets her do
+                # it (stand)' in two of fourteen stands, and the live stand is offered once in FLOOR_STAND_GAP (75 s), so a second refusal
+                # cost 75 s more of lying by the wall. A parent whose try to stand the baby fails for room moves it to the mat at once
                 pm.carry_pending = int(t)
         # THE DOOR STAGE (the owner's word, 2026-10-04: a door in its room opens onto a new room it enters itself; after walking and
         # talking). From DOOR_OPEN_DAY the door stands open (world.door_open) and every held walk's destination is the doorway and
