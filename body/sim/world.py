@@ -520,6 +520,8 @@ def _uncanon(x):
 
 BUCKET_NEAR_M = 0.5                    # C130: the bucket farther than this from the child's chest at dawn is set beside it (ours)
 BUCKET_BESIDE_M = 0.35                 # C130: where it is set: a ring this far round its chest, within a G1 arm's reach (ours)
+DAWN_FAR_M = 2.0                       # C311: a toy farther than this from the child at dawn (the other room, the far corner) is brought back to it (ours)
+DAWN_RINGS = (0.6, 0.8, 1.0)           # C311: the rings round its chest the far toys are set on at dawn (the play mat's spread; ours)
 
 
 def PM_Child(m, d, g1_set):
@@ -1402,6 +1404,7 @@ class G1World(SimWorld):
         the world goes on from wherever the night left it, the child carried back onto the mat if it rolled off (A110)"""
         self.carry_to_mat(to=((4.1, -1.5) if getattr(self, "door_open", False) and float(self.d.qpos[0]) > 2.75 else None))   # (the door stage: a child in the second room sleeps on its rug)
         self.tidy_toys()
+        self.toys_far_back()                                                # C311: the toys of the other room brought to its side
         self.bucket_beside()
         self.night = False
         self.dawn_left = DAWN_TICKS
@@ -1549,6 +1552,22 @@ class G1World(SimWorld):
             self.tidied.append((int(self.tick), k, [float(xy[0]), float(xy[1])], [float(place[0]), float(place[1])]))
             moved.append(k)
         return moved
+
+    def toys_far_back(self):
+        """C311 (2026-10-07): THE FAR TOYS COME BACK TO IT AT DAWN. The child slept on the second room's rug through day 108 with its toys
+        tidied beside it; a landing at the dawn tick of day 109 carried it to the mat at the load (sim_life's A110 path) and the toys
+        stayed on the rug: the ball, the book and the bucket lay 4 m from it through days 109 and 110, the ball never once before its
+        eyes (the organ's first live name), no hide to be found, the morning tidy (A117) leaving them because she could get to them. Whoever
+        carries a child to its bed brings its toys to its side: at dawn, every toy farther than DAWN_FAR_M from it (the other room, the
+        far corner) is set on a ring DAWN_RINGS round its chest (toys_beside's form: free points, clear of the others, off its body);
+        the toys within DAWN_FAR_M keep the room as it was; the bucket is bucket_beside's. An environment's act, disclosed; logged
+        in `tidied`. -> the toys moved"""
+        par = self.parent
+        if par is None:
+            return []
+        xy = self.d.qpos[:2]
+        far = [k for k, b in par.toys.items() if k != "bucket" and float(np.linalg.norm(self.d.xpos[b][:2] - xy)) > DAWN_FAR_M]
+        return self.toys_beside(far, rings=DAWN_RINGS) if far else []
 
     def save_state(self):
         """the whole world as bytes: the physics, the model's run-time fields, the senses' carry, the world's random

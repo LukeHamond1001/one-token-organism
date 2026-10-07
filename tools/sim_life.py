@@ -143,6 +143,11 @@ def build(args):
             print(f"the child carried to the mat at this dawn (A110): {world.carried[-1]}", flush=True)   # off the mat): carried now
         if world.dawn_left == W.DAWN_TICKS and world.tidy_toys():          # A117 (B8): a pair saved at a dawn before A117: the lost toys
             print(f"lost toys put back at this dawn (B8, A117): {world.tidied[-3:]}", flush=True)   # put back now
+        far_ = world.toys_far_back()                                        # C311: at a load the toys left in the other room (a landing at a
+        if far_:                                                            # dawn tick carried it without them) come to its side, and the
+            print(f"the far toys brought to its side at this load (C311): {far_}", flush=True)   # bucket beside it (dawn's own order; the
+        if world.dawn_left == W.DAWN_TICKS and world.bucket_beside():       # carry-back's tidy, C286, moves toys in the day as well)
+            print(f"the bucket set beside it at this dawn (C130, C311): {world.tidied[-1]}", flush=True)
         L = Life.load(life_path, anat, cfg=cfg, save_path=life_path, world=world)   # A101: a resumed life lives under the TREE's constants
                                                                                     # (SIM_CFG, and --lr0): until A101 the save's cfg ruled
                                                                                     # and no switch turned after birth could reach a life
