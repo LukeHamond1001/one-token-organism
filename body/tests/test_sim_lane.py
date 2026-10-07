@@ -195,7 +195,8 @@ def test_the_days_layout():
     assert d.blocks[0][0] == 30 and d.blocks[-1][1] == 2300 and d.episode(2299) != "wind"
     # A161: a motor block entered with the child on its back owes one pull-to-sit, its first offer; later offers are the lesson
     class _Ch: posture = "back"
-    class _Mo: child = _Ch()
+    class _Mo:
+        child = _Ch(); holds = []; arms = {"L": {}, "R": {}}; holding = {"L": None, "R": None}   # (C281/C291: the tick reads her holds and her arms)
     class _Con:
         def __init__(self): self.motion = _Mo(); self.asked = []; self.routine = None
         def request(self, intent, **kw): self.asked.append(intent)
