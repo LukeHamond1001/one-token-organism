@@ -122,14 +122,15 @@ class GroundingMixin:
         u = int(u)
         if u == int(getattr(self, "end_id", -1)) or u == int(getattr(self, "eot", -1)):
             last_ = getattr(self, "_ground_last", None)                    # A202e: the line over: its last word's hearing weighs GROUND_FINAL
-            if last_ is not None:
-                self._ground_bind(int(last_[0]), np.asarray(last_[1]), GROUND_FINAL - 1.0)
-            self._ground_last = None
+            if last_ is not None and int(getattr(self, "_ground_line_n", 0)) >= 2:   # A202f: within a line of two words or more: a line of
+                self._ground_bind(int(last_[0]), np.asarray(last_[1]), GROUND_FINAL - 1.0)   # one word ('oh.') has no final position (day 106:
+            self._ground_last = None; self._ground_line_n = 0                           # 'oh' primed 37 times, the names 4)
             return
         if self._ground_skip(u):
             return
         T = np.asarray(g.appearance(frame), dtype=np.float64)
         self._ground_bind(u, T, 1.0)
+        self._ground_line_n = int(getattr(self, "_ground_line_n", 0)) + 1   # (A202f: the line's words so far)
         self._ground_last = (u, [float(x_) for x_ in T]) if _norm(T) > GROUND_FLOOR else None   # (plain numbers: the working day's hasher)
         tr[0] = u; tr[1] = GROUND_TRACE
 

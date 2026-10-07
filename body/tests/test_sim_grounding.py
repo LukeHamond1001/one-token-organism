@@ -117,6 +117,13 @@ def test_the_word_heard_on_a_thing_draws_the_eyes_to_its_look():
             b._ground_learn(w, _frame(_eye_p((1, 2), RED, FLOOR), _eye_f(RED, FLOOR)))
     say = b._ground_say(_frame(ep, _eye_f(YEL, FLOOR)))
     assert say is not None and say[0] == duck, say
+    # A202f: a line of one word ("oh.") gets no final weight: three "oh." over yellow bind 3, not 9
+    oh = 23
+    b._ground_line_n = 0                                                   # (the hearings above came without a line's end)
+    for _ in range(3):
+        b._ground_learn(oh, _frame(_eye_p((1, 2), YEL, FLOOR), _eye_f(YEL, FLOOR)))
+        b._ground_learn(END, _frame(_eye_p((1, 2), YEL, FLOOR), _eye_f(YEL, FLOOR)))
+    assert n[oh] == 3, n[oh]
     # the night: no eyes, no look, nothing bound, the cue quiet
     nf = types.SimpleNamespace(obs={"body": np.zeros(250)}, truth={})
     b._ground_learn(ball, nf); b._ground_sense(nf)
