@@ -7264,11 +7264,17 @@ def test_the_unseen_label_is_a_show():
     con2 = _pair_con()
     _run_to(con2, 200)
     con2.request("label", o="duck")
-    out2 = _run_to(con2, 3, t0=200)
+    tg = lambda t, c: "duck"                                            # C304: the duck is where it looks (its target): the label stays one
+    out2 = _run_to(con2, 3, t0=200, target=tg)
     assert not [a for a in con2.acts_open if a[1] == "show"] and not any("C201" in r[2] for r in con2.fast.refused), (con2.acts_open, con2.fast.refused[-3:])
-    said2 = [getattr(s.line, 'text', s.line) for t, s in out2 + _run_to(con2, 12, t0=203) if s.line is not None]
+    said2 = [getattr(s.line, 'text', s.line) for t, s in out2 + _run_to(con2, 12, t0=203, target=tg) if s.line is not None]
     assert said2 and all(TP.key(ln) in frames_of("label", "duck") for ln in said2), said2
-    print(f"lang 73: a label of the block the child cannot see became her show of it {said}; a label of the duck in its view stayed one {said2}")
+    con3 = _pair_con()                                                   # C304 (2026-10-07): the duck in its view but not where it looks: a show of it
+    _run_to(con3, 200)
+    con3.request("label", o="duck")
+    _run_to(con3, 3, t0=200)
+    assert [tuple(a[1:3]) for a in con3.acts_open if a[1] == "show"] == [("show", "duck")], (con3.acts_open, con3.fast.refused[-3:])
+    print(f"lang 73: a label of the block the child cannot see became her show of it {said}; a label of the duck it looks at stayed one {said2}; the duck in view but not looked at: a show (C304)")
 
 
 def test_the_worn_word_not_echoed():

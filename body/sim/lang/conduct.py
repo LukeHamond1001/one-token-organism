@@ -2320,8 +2320,13 @@ class Conduct:
                 return None
             return self._drop(t, intent, f"unseen: {kw['o']!r}")
         it = INTENTS[intent]
-        if intent in ("label", "label_colour") and o is not None and not o.child_sees and o.on not in ("hand", PARENT_NAME) \
+        if intent in ("label", "label_colour") and o is not None and o.id != p.child_target and o.on not in ("hand", PARENT_NAME) \
                 and o.id not in p.child_holds:
+            # C304 (2026-10-07): A LABEL OF A TOY THE CHILD IS NOT LOOKING AT IS A SHOW OF IT. C201 showed a toy the child could not SEE
+            # (child_sees: within its head camera's 112-degree field); day 108's copy (p1 look probe, 700 ticks): every named toy lay 23 to
+            # 81 degrees from where its eyes pointed, its target none, its fovea on the beige wall of the second room, and the grounding
+            # organ (A202) bound one word in 18,000 ticks. Joint attention is the thing where the infant LOOKS, or brought there
+            # (Tomasello and Farrar 1986): a toy that is not its target (her reading of its head line, A40) is shown before its eyes
             # C201 (2026-10-01): A LABEL OF A TOY THE CHILD CANNOT SEE IS A SHOW OF IT. Life day 55, the child on its back the whole day:
             # 137 of her planned labels were dropped "not true: the child does not see a X" (the 'you see the X.' frame) and the rest
             # were said of toys outside its view, teaching nothing; her lines fell back to the social line, and the words it heard
@@ -2456,6 +2461,15 @@ class Conduct:
             ln = f.compose("confirm", t, p, o=o) if o is not None else None
             return ln or f.compose("confirm_act", t, p)
         if r["kind"] == "label":                                            # C296: her own answer to the question it did not answer
+            if o is not None and o.id != p.child_target and o.on not in ("hand", PARENT_NAME) and o.id not in p.child_holds:
+                # C305 (2026-10-07): HER ANSWER NAMES THE THING WHERE IT LOOKS, OR SHOWS IT. Day 108's copy (the look probe): 'where is
+                # the box?' ... 'this is a box.', 'a duck. a duck.', 'here is the drum.' said while every toy lay 20 to 80 degrees from its
+                # eyes and her hands stood it up; the grounding organ (A202) bound one word in 18,000 ticks, having nothing in its fovea to
+                # bind them to. A parent answering her own question picks the thing up and shows it; with her hands full she waits. The
+                # answer of a toy that is not its target is her show of it (refused while her hands are busy: no bare naming of the unseen)
+                self.request("show", o=o.id)
+                f.refused.append((t, "label", f"reply: {o.id!r} not where it looks: a show of it instead (C305)"))
+                return None
             ln = f.compose("label", t, p, o=o) if o is not None else None
             if ln is not None:
                 return ln

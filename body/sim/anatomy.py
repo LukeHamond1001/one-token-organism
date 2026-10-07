@@ -98,10 +98,10 @@ from body.core.anatomy import Cerebellar, Channel, EarChannel, Effector, EventLi
 def _ground_appearance(frame):
     """A202: the look of what the fovea holds this tick (body/sim/eyes.py: ground_appearance over the frame's eye_f) -> [4]"""
     from body.sim import eyes as _eyes                                         # (eyes imports the world; the anatomy is imported first)
-    ef = frame.obs.get("eye_f")
+    ef = frame.obs.get("eye_f"); ep = frame.obs.get("eye_p")
     if ef is None or len(ef) < 4:                                              # the eyes off (the night): no look
         return np.zeros(4)
-    return _eyes.ground_appearance(ef)
+    return _eyes.ground_appearance(ef, ep if ep is not None and len(ep) >= 4 else None)   # (A202g: against the scene)
 
 
 def _ground_periphery(frame):

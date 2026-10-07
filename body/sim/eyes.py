@@ -337,11 +337,17 @@ GROUND_CENTRE = 2       # the fovea's colour cells counted as the thing looked a
 GROUND_K = 4            # the look's numbers: red-green ON, OFF, blue-yellow ON, OFF
 
 
-def ground_appearance(eye_f):
-    """the look of what the fovea holds: the colour window's central cells' mean opponent code less its outer cells' (the figure against
-    its ground; near zero on the empty floor) -> [4]"""
+def ground_appearance(eye_f, eye_p=None):
+    """the look of what the fovea holds: the colour window's cells' mean opponent code less the scene's (the colour periphery's cells'
+    mean; A202g: the whole 21-degree window against the room, so a toy anywhere in the window is the look, where the central 4 x 4
+    against the window's own ring read a toy held 15 degrees off as its colour's negative); near zero on the empty floor -> [4].
+    Without the periphery (a test's), the window's centre against its ring as before"""
     n = W.FOVEA_PX // CELL_F
     c = np.asarray(eye_f, dtype=np.float64)[-n * n * GROUND_K:].reshape(n, n, GROUND_K)
+    if eye_p is not None:
+        rows, cols = COL_CELLS
+        scene = np.asarray(eye_p, dtype=np.float64)[-rows * cols * GROUND_K:].reshape(-1, GROUND_K).mean(axis=0)
+        return c.reshape(-1, GROUND_K).mean(axis=0) - scene
     a, b = GROUND_CENTRE, n - GROUND_CENTRE
     inner = c[a:b, a:b].reshape(-1, GROUND_K).mean(axis=0)
     mask = np.ones((n, n), dtype=bool); mask[a:b, a:b] = False
