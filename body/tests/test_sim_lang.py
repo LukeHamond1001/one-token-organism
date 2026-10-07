@@ -7277,6 +7277,39 @@ def test_the_unseen_label_is_a_show():
     print(f"lang 73: a label of the block the child cannot see became her show of it {said}; a label of the duck it looks at stayed one {said2}; the duck in view but not looked at: a show (C304)")
 
 
+def test_one_show_at_a_time():
+    """lang 74 (C309, 2026-10-07): one show at a time, never of what she does not carry. With her show of the block open (the stub motion
+    never ends it) a requested show of the duck is dropped 'one at a time', a show of the bucket 'does not carry it', and the follow-in by
+    reach (the duck reached for, not looked at: C306's show) asks no second show and names nothing; with the block's show ended the
+    duck's show is asked. Day 109: 211 shows asked, 182 refused, six open at once, a thousand ticks at 3 s each"""
+    con = _pair_con()
+    _run_to(con, 200)
+    con.request("show", o="block")
+    _run_to(con, 3, t0=200)
+    shows = lambda c: [tuple(a[1:3]) for a in c.acts_open if a[1] == "show" and a[5] not in C.ENDED]
+    assert shows(con) == [("show", "block")], (con.acts_open, con.fast.refused[-3:])
+    con.request("show", o="duck")
+    _run_to(con, 3, t0=203)
+    assert shows(con) == [("show", "block")] and any("one at a time (C309)" in r[2] for r in con.fast.refused[-4:]), (con.acts_open, con.fast.refused[-4:])
+    con.request("show", o="bucket")
+    _run_to(con, 3, t0=206)
+    assert any("does not carry it (C119, C309)" in r[2] for r in con.fast.refused[-4:]), con.fast.refused[-4:]
+    con.request("show", o="block")                                          # (the stub motion ends a show within nine ticks: opened again)
+    _run_to(con, 2, t0=209)
+    assert shows(con) == [("show", "block")], con.acts_open
+    con.fast.last_set["duck"] = con.fast.last_named["duck"] = 0           # the duck's set gap long past
+    reach_run = lambda c, n, t0: [(t, c.tick(t, P(t, child_target=None, child_reaches=("duck",)))) for t in range(t0, t0 + n)]
+    out = reach_run(con, 1, 211)                                            # its hand reaches for the duck, its eyes elsewhere, her show open
+    said = [getattr(s.line, 'text', s.line) for t, s in out if s.line is not None]
+    assert shows(con) == [("show", "block")] and not any("duck" in str(x) for x in said) and \
+        not any("C306" in r[2] for r in con.fast.refused[-1:]), (shows(con), said, con.fast.refused[-4:])
+    out = reach_run(con, 12, 212)                                           # the block's show ends (the stub's few ticks): the duck's show asked
+    assert ("show", "duck") in [tuple(a[1:3]) for a in con.acts_open] and \
+        any("a show of 'duck' instead (C306, C309)" in r[2] for r in con.fast.refused[-12:]), (con.acts_open, con.fast.refused[-6:])
+    print(f"lang 74 (C309): with the block's show open the duck's and the bucket's shows were dropped ({[r[2][:40] for r in con.fast.refused[-8:] if 'C309' in r[2]][:3]}), "
+          f"the reach for the duck named nothing; the show ended, the duck's show asked")
+
+
 def test_the_worn_word_not_echoed():
     """lang 72 (C198, 2026-10-01): a worn word is not parroted back. The child says "duck" 40 times with nothing attended: her first replies echo
     it ("duck! duck." as imitation), and once the vocal book holds HABIT_TAU of it (her smile worn) no reply is the bare word any more (the

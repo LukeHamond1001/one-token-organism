@@ -43,6 +43,7 @@ import numpy as np
 
 from . import consts as K
 from . import templates as TP
+from ..parent_consts import NEVER_FETCHED
 
 PLAN_STREAM = 7                        # her day plan's random stream of the body's seed (ours; world 1, tract 2, lines 3, reading 4,
                                        # imperfection 5, trials 6)
@@ -742,7 +743,8 @@ class DayPlan:
                 c.request(ask, o=o)
             else:                                                       # none: the toy shown (into its view), the ask another time
                 c.request("show", o=o)
-        elif focus and roll < 0.85:
+        elif [o for o in focus if o not in NEVER_FETCHED] and roll < 0.85:
+            focus = [o for o in focus if o not in NEVER_FETCHED]          # C309: never a show of what she does not carry (the bucket, C119)
             free = [o for o in focus if o not in seen or seen[o].on != "hand"] or focus   # A117: never the toy in its hand (her fetch never takes a
             free = self._at_hand(lane, free)                            # C272: the toys at her hand first
             o = free[int(self.rng.integers(len(free)))]                 # toy from it, A4: life day 13's 4 shows refused for the car)

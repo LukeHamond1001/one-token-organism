@@ -265,7 +265,8 @@ HAND_HIGH_M = 0.06                              # C139: a pick whose hand stoppe
                                                 # where it lies (conduct.left), and the morning tidy puts it back (ours)
 HIDE_REACH_M = 0.55                             # C138: the hide brings the bucket to within this of one of the child's hands (a G1 arm reaches 0.55, lane.arm_reach; ours)
 TP_OPEN_CONTAINERS = frozenset({"bucket"})      # (templates.OPEN_CONTAINERS, named here without the import: the lang package imports this module)
-NEVER_FETCHED = frozenset({"bucket"})          # C119: what she never carries: the hide game's container (day 27: ten shows of it refused at the put, 45 to 50 cm off)
+NEVER_FETCHED = K.NEVER_FETCHED                 # C119: what she never carries: the hide game's container (day 27: ten shows of it refused at the put, 45 to 50 cm off);
+                                                # C309: in parent_consts, shared with her conduct and her day plan (day 109: 25 shows of the bucket asked and refused)
                                             # (ours: the far shoulder's grip in her tall reach from 0.55 to 0.65 m in the rig)
                                             # last drawn is rebased onto the drawn pose (2 cm: under it her drive absorbs the difference)
                                             # more is a planning fault, refused (ours)

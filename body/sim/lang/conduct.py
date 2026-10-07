@@ -193,6 +193,7 @@ from . import stimuli as ST
 from . import templates as TP
 from .lexicon import BIRTH_WORDS, NAME, PARENT_NAME
 from .percept import Reader
+from ..parent_consts import NEVER_FETCHED
 from ..voice.playback import CUT_MAX, TICK
 from ..voice.synth import SR
 
@@ -2230,18 +2231,29 @@ class Conduct:
                             return lines_[0], False, None
         # 7. joint attention: a follow-in variation set naming its target as she reads it (4.10; her gaze goes there in L1)
         o = self._target(p)
-        if o is not None and o.id != p.child_target and o.id not in p.child_holds and o.on not in ("hand", PARENT_NAME) \
-                and f.last_set.get(o.id, NEVER) <= t - K.SET_PER_OBJECT:
+        if o is not None and o.id != p.child_target and o.id not in p.child_holds and o.on not in ("hand", PARENT_NAME):
             # C306 (2026-10-07): THE FOLLOW-IN OF A TOY ITS HAND REACHES FOR BUT ITS EYES ARE NOT ON IS A SHOW OF IT. Day 108's copy (p1
             # look probe v6): 'a ball. a ball.', 'look. the rattle.', 'here is the drum.' named what its hand reached for (A40's second
             # reading) while every toy lay 30 to 80 degrees from its eyes (its own frame 'you see the ball.' refused as untrue beside them)
             # and the grounding organ bound nothing. Joint attention is the thing where it looks or brought there: the follow-in by reach
             # becomes her show of the toy (held before its eyes as she names it; refused while her hands are busy, so nothing names the
-            # unseen). The follow-in by its gaze (its target) and of a toy in a hand stay as they were
-            f.last_set[o.id] = t
-            self.request("show", o=o.id)
-            f.refused.append((t, "label", f"follow-in: {o.id!r} reached for, not looked at: a show of it instead (C306)"))
-            return None
+            # unseen). The follow-in by its gaze (its target) and of a toy in a hand stay as they were.
+            # C309 (2026-10-07): ONE SHOW AT A TIME, OF WHAT SHE HOLDS. Day 109's show block: the reach it read moved from toy to toy as
+            # its arms moved, and each was asked as a show the tick her motion refused the last (211 shows in the day, 182 refused: 'nowhere
+            # to set the drum aside' 69 times with the drum in her hand, the bucket 25 times, the show point beyond every spot 32 times),
+            # the refusals' spot searches at 3 s a tick for a thousand ticks. A parent shows one thing at a time, and with a toy in her
+            # hand shows that: no show is asked while one is open, the toy asked is the one she holds when she holds one, never one she
+            # does not carry (the bucket), and the follow-in by reach names nothing but through her show
+            if f.last_set.get(o.id, NEVER) <= t - K.SET_PER_OBJECT and \
+                    not any(a_[1] == "show" and a_[5] not in ENDED for a_ in self.acts_open):
+                held_ = [v_ for v_ in (getattr(self.motion, "holding", None) or {}).values() if v_ is not None and v_ not in NEVER_FETCHED]
+                toy_ = held_[0] if held_ else o.id
+                if toy_ not in NEVER_FETCHED:
+                    f.last_set[o.id] = t
+                    self.request("show", o=toy_)
+                    f.refused.append((t, "label", f"follow-in: {o.id!r} reached for, not looked at: a show of {toy_!r} instead (C306, C309)"))
+                    return None
+            o = None
         if o is not None and f.last_named.get(o.id, NEVER) <= t - K.SAME_OBJECT and \
                 f.last_set.get(o.id, NEVER) <= t - K.SET_PER_OBJECT:
             lines = f.variation_set("label_held" if o.id in p.child_holds else "label", t, p, o=o)
@@ -2330,6 +2342,11 @@ class Conduct:
         if intent == "new_word":                                            # word, her percept not seeing it in the hand; her motion
             return self._introduce(kw["word"], t, p, kw.get("o"))           # knows (C118), so the request is dropped before she goes
         o = p.obj(kw["o"]) if kw.get("o") else None
+        if intent == "show":                                                # C309: one show at a time; never of what she does not carry
+            if kw.get("o") in NEVER_FETCHED:
+                return self._drop(t, intent, f"the {kw['o']} stays where it stands: she does not carry it (C119, C309)")
+            if any(a_[1] == "show" and a_[5] not in ENDED for a_ in self.acts_open):
+                return self._drop(t, intent, "a show is under way: one at a time (C309)")
         if intent == "show" and o is not None:
             # C308 (2026-10-07): THE SHOW'S LINE WAITS FOR THE TOY BEFORE ITS EYES. Day 108's copy (p1 look probe show4.txt): 'look at the
             # car.' was said as the show was asked, while she stood 1.9 m away with empty hands setting out to fetch it; the toy came before

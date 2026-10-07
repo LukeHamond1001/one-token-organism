@@ -43,7 +43,9 @@ GROUND_TRACE = 20       # ticks (3 s) a heard word keeps drawing the eyes toward
 GROUND_FLOOR = 0.02     # the least contrast (opponent units) that counts as a look at a thing, in the fovea or a cell (ours)
 GROUND_MATCH = 0.6      # the least cosine between a word's look and a cell's for the cue or the name (ours)
 GROUND_MARGIN = 0.15    # the best match's lead over the second (ours)
-GROUND_SAY = 1.0        # the logit prior on the word whose look fills the fovea, times the margin (ours)
+GROUND_SAY = 2.0        # A202i: the prior on the logit of the word whose look fills the fovea, in the readout's own units: this many standard
+                        # deviations of the readout's logits for a margin at GROUND_MARGIN, in proportion past it (ours). It was 1.0 times
+                        # the margin, 0.2 of a logit against a top gap of 2.6 (day 109: 'ball' primed 47 times and never said)
 GROUND_FINAL = 3.0      # A202e: the weight of a line's last word's hearing (its look counted this many times over a word within the line):
                         # the utterance-final word is the one infants bind (Fernald and Mazzie 1991's final-position prominence; her lines
                         # end in the focus word, templates.py's rule), so 'look', 'is' and 'the' bind a third as hard as the name (ours)
@@ -51,6 +53,14 @@ GROUND_FINAL = 3.0      # A202e: the weight of a line's last word's hearing (its
 
 def _norm(x, axis=None):
     return np.sqrt(np.sum(np.asarray(x, dtype=np.float64) ** 2, axis=axis))
+
+
+def ground_prior(logits, margin):
+    """A202i: the size of the name's prior on its logit: GROUND_SAY readout standard deviations per GROUND_MARGIN of margin. The
+    readout's logits set the scale (the seen thing's name competes in the lexical choice's own currency: a day-109 readout's
+    logits spread 1.6 with a top gap of 2.6, and a prior of 0.2 could never be said)"""
+    sd = float(logits.std()) if hasattr(logits, "std") else float(np.std(np.asarray(logits, dtype=np.float64)))
+    return GROUND_SAY * (float(margin) / GROUND_MARGIN) * sd
 
 
 class GroundingMixin:

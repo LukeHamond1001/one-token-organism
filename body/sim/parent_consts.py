@@ -528,3 +528,4 @@ WALK_FAR_M = 1.0                # m: she walks it this far, then sits it down (o
 SIT_BACK_M = 0.55               # m: its chest is led this far behind its feet as she sits it down (the G1's sitting: its pelvis behind its heels)
 LOWER_MAX_TICKS = 120           # the sitting down's longest (18 s; ours)
 WALK_STALL_TICKS = 80           # a walk with no 2 cm of progress in this long (4.5 s) is over (ours)
+NEVER_FETCHED = frozenset({"bucket"})   # C119: what she never carries (the hide game's container); C309: her conduct and her day plan ask no show of it

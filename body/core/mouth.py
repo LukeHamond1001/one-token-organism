@@ -451,10 +451,12 @@ class MouthMixin:
             logits = m.readout(pred1).clone() * (1.0 + sc_ * float(pred1.norm()))
             if getattr(self.anatomy, "grounding", None) is not None:
                 gs_ = self._ground_say(self.world.now)                  # A202: the word whose look fills the fovea, a prior on its logit
-                self._ground_say_now = None if gs_ is None else [int(gs_[0]), float(gs_[1])]   # (body/core/grounding.py: GROUND_SAY x the margin)
+                self._ground_say_now = None
                 if gs_ is not None:
-                    from body.core.grounding import GROUND_SAY
-                    logits[int(gs_[0])] = logits[int(gs_[0])] + GROUND_SAY * float(gs_[1])
+                    from body.core.grounding import ground_prior       # A202i: in the readout's units (body/core/grounding.py)
+                    add_ = ground_prior(logits, gs_[1])
+                    self._ground_say_now = [int(gs_[0]), float(gs_[1]), float(add_), float(logits.max() - logits[int(gs_[0])])]
+                    logits[int(gs_[0])] = logits[int(gs_[0])] + add_
             act_on = bool(int(self.cfg.get("actor", 0)) and stri and getattr(self, "_z_now", None) is not None)
             self._cands_now = None
             if int(self.cfg.get("actor", 0)) and str(self.cfg.get("actor_form", "add")) == "softmax":

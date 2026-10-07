@@ -90,6 +90,10 @@ def test_the_word_heard_on_a_thing_draws_the_eyes_to_its_look():
     # the name: the ball in the fovea primes "ball"; the empty floor primes nothing; the skipped symbol never
     say = b._ground_say(_frame(ep, _eye_f(RED, FLOOR)))
     assert say is not None and say[0] == ball and say[1] > GR.GROUND_MARGIN, say
+    import torch                                                           # A202i: the prior in the readout's units: GROUND_SAY standard
+    lg = torch.tensor([0.0, 1.0, 2.0, 3.0])                                 # deviations of the logits per GROUND_MARGIN of margin
+    assert abs(GR.ground_prior(lg, GR.GROUND_MARGIN) - GR.GROUND_SAY * float(lg.std())) < 1e-6
+    assert abs(GR.ground_prior(lg, 2 * GR.GROUND_MARGIN) - 2 * GR.GROUND_SAY * float(lg.std())) < 1e-6
     assert b._ground_say(_frame(ep, _eye_f(FLOOR, FLOOR))) is None
     assert b._ground_say(_frame(ep, _eye_f(BLUE, FLOOR)))[0] == block
     # A202b: a word heard over everything ("is": red, blue, red, blue ...) averages to no look (the running mean), its consistency falls,
