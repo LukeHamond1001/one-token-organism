@@ -6628,6 +6628,13 @@ class ParentMotion:
     def _act_stand_up(self, a, t):
         if self.child.posture not in ("back", "sitting"):
             raise Refuse("she stands it up from its back or from sitting (C268)")
+        held = [v for v in self.holding.values() if v is not None]
+        if held:
+            # C319 (2026-10-07): A TOY IN HER HAND IS SET ASIDE FIRST, as for the pull-to-sit (C237). Days 111 and 113 refused stands 'her hands
+            # are busy: standing it up takes both (C268)' with the toy of the act before still in her hand; it is set down beside her and the
+            # stand planned again
+            a["info"]["set_aside_first"] = a["info"].get("set_aside_first", 0) + 1
+            return [dict(type="plan", what="set_aside", args=dict(toy=held[0])), dict(type="plan", what="act", args={})]
         return self._near(a, where="side", offs=(0.88, 0.80, 0.96), alongs=(-0.15, -0.05, -0.25, 0.05, -0.35), need="stand") + [dict(type="plan", what="stand", args={})]   # beside its hips
 
     def _stand_sides(self):
