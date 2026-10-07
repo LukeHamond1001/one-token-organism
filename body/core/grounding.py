@@ -83,13 +83,13 @@ class GroundingMixin:
             self._ground_s = torch.zeros(int(self.m.vocab), dtype=torch.float64)   # A202b: the sum of its hearings' look sizes
             self._ground_trace = [-1, 0]
             self._ground_stats = {"bind": 0, "cue": 0, "say": 0}
-        if getattr(self, "_ground_v", None) != 4:   # (3: A202e's weighted counts; 4: A202n)              # A202d: the rows bound before the consistency law (A202b) carried
+        if getattr(self, "_ground_v", None) != 5:   # (3: A202e's weighted counts; 4: A202n; 5: A202o, the rows of her skin begun again)              # A202d: the rows bound before the consistency law (A202b) carried
             k = int(self.anatomy.grounding.size)                          # looks averaged with a recency weight and no record of their
             self._ground_A = torch.zeros((int(self.m.vocab), k), dtype=torch.float64)   # hearings' sizes, so 'good' read as consistent for
             self._ground_n = torch.zeros(int(self.m.vocab), dtype=torch.float64)        # hundreds of hearings to come: begun again, once
             self._ground_s = torch.zeros(int(self.m.vocab), dtype=torch.float64)        # (fast mapping rebuilds a day's rows in an hour).
             self._ground_mu = None                                                      # A202n (2026-10-07): the rows bound before the figure law
-            self._ground_v = 4                                                          # (A202m) carried her sweater as the look of 'the', 'see',
+            self._ground_v = 5                                                          # (A202m) carried her sweater as the look of 'the', 'see',
                                                                                         # 'you', 'oh', 'good' (190 hearings of 'see'): begun again, once
         if getattr(self, "_ground_mu", None) is None or int(self._ground_mu.shape[0]) != int(self._ground_A.shape[1]):
             # A202k: the grand mean of the looks over every hearing (what the eyes hold while she speaks, whatever the word), begun

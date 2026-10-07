@@ -175,3 +175,25 @@ def test_the_look_every_word_shares_is_no_words_look():
     f = _frame(ep, _eye_f(FLOOR, FLOOR)); b._ground_sense(f)
     assert f.obs["named_periph"][0] == 1.0 and f.obs["named_periph"][1] > 0, f.obs["named_periph"]   # 'ball' heard: toward the red cell (right)
     print(f"A202k ok: mu {np.round(mu, 3).tolist()} say(sweater) None, say(red) ball; cue(see) none, cue(ball) {np.round(f.obs['named_periph'], 2).tolist()}")
+
+
+def test_the_speakers_face_is_not_a_referent():
+    """A202o (2026-10-07): the rows rebuilt under the figure law all carried her skin's look (she speaks face to face; the born face cue
+    draws its eyes to her face). A word heard while her face lies within the fovea's window (face_periph fired, its direction inside
+    FOVEA_HALF) binds nothing and primes nothing; the same word with her face off to the side binds the figure in the fovea"""
+    from body.sim.anatomy import FOVEA_HALF
+    b = _Body(); b.end_id = 1
+    A, n, tr = b._ground_state()
+    ball = 40
+    f = _frame(_eye_p((1, 2), RED, FLOOR), _eye_f(RED, FLOOR)); f.obs["face_periph"] = np.array([1.0, 0.0, 0.0])   # her face at the fovea's centre
+    b._ground_learn(ball, f)
+    assert n[ball] == 0, n[ball]
+    f2 = _frame(_eye_p((1, 2), RED, FLOOR), _eye_f(RED, FLOOR)); f2.obs["face_periph"] = np.array([1.0, 2.5 * FOVEA_HALF, 0.0])   # her face off to the side
+    b._ground_learn(ball, f2)
+    assert n[ball] == 1, n[ball]
+    block = 41
+    for _ in range(GR.GROUND_SAY_MIN_N):
+        b._ground_learn(ball, f2)
+        b._ground_learn(block, _frame(_eye_p((1, 2), BLUE, FLOOR), _eye_f(BLUE, FLOOR)))   # (a second word with another look: the shared look a mix)
+    assert b._ground_say(f) is None and b._ground_say(f2) is not None and b._ground_say(f2)[0] == ball, (b._ground_say(f), b._ground_say(f2))
+    print("A202o ok: a word heard with her face in the fovea binds nothing and primes nothing; with her face aside, the red ball binds and primes 'ball'")
