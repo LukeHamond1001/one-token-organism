@@ -101,12 +101,28 @@ def test_the_word_heard_on_a_thing_draws_the_eyes_to_its_look():
     f6 = _frame(ep, _eye_f(FLOOR, FLOOR)); b._ground_sense(f6)
     assert f6.obs["named_periph"][0] == 0.0, f6.obs["named_periph"]
     assert b._ground_say(_frame(ep, _eye_f(RED, FLOOR)))[0] == ball
+    # A202e: the line's last word binds GROUND_FINAL times as hard: "look the duck." three times over yellow, "look" and "the" bound at 1
+    # each, "duck" (before the end symbol) at 3: the yellow fovea primes "duck", not "look"
+    look, the2, duck, END = 20, 21, 22, 1
+    b.end_id = END
+    YEL = (0.16, 0.0, 0.0, 0.84)   # the room's yellow (1, .84, .08) on the opponent axes
+    for _ in range(3):
+        for w in (look, the2, duck):
+            b._ground_learn(w, _frame(_eye_p((1, 2), YEL, FLOOR), _eye_f(YEL, FLOOR)))
+        b._ground_learn(END, _frame(_eye_p((1, 2), YEL, FLOOR), _eye_f(YEL, FLOOR)))
+    assert n[duck] == 9 and n[look] == 3 and n[the2] == 3, (n[duck], n[look], n[the2])
+    # "look" and "the" heard over the ball too: their looks mix, the duck's stays; the yellow fovea primes "duck"
+    for _ in range(3):
+        for w in (look, the2):
+            b._ground_learn(w, _frame(_eye_p((1, 2), RED, FLOOR), _eye_f(RED, FLOOR)))
+    say = b._ground_say(_frame(ep, _eye_f(YEL, FLOOR)))
+    assert say is not None and say[0] == duck, say
     # the night: no eyes, no look, nothing bound, the cue quiet
     nf = types.SimpleNamespace(obs={"body": np.zeros(250)}, truth={})
     b._ground_learn(ball, nf); b._ground_sense(nf)
     assert n[ball] == 3 and nf.obs["named_periph"][0] == 0.0
     r = b.ground_report()
-    assert r["words"] == 3 and r["bind"] == 18 and r["cue"] >= 3, r
+    assert r["words"] >= 4 and r["bind"] >= 30 and r["cue"] >= 3, r
     print("A202 ok", r)
 
 

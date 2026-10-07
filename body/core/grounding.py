@@ -44,6 +44,9 @@ GROUND_FLOOR = 0.02     # the least contrast (opponent units) that counts as a l
 GROUND_MATCH = 0.6      # the least cosine between a word's look and a cell's for the cue or the name (ours)
 GROUND_MARGIN = 0.15    # the best match's lead over the second (ours)
 GROUND_SAY = 1.0        # the logit prior on the word whose look fills the fovea, times the margin (ours)
+GROUND_FINAL = 3.0      # A202e: the weight of a line's last word's hearing (its look counted this many times over a word within the line):
+                        # the utterance-final word is the one infants bind (Fernald and Mazzie 1991's final-position prominence; her lines
+                        # end in the focus word, templates.py's rule), so 'look', 'is' and 'the' bind a third as hard as the name (ours)
 
 
 def _norm(x, axis=None):
@@ -61,16 +64,16 @@ class GroundingMixin:
         if A is None or int(A.shape[0]) != int(self.m.vocab):
             k = int(self.anatomy.grounding.size)
             self._ground_A = torch.zeros((int(self.m.vocab), k), dtype=torch.float64)
-            self._ground_n = torch.zeros(int(self.m.vocab), dtype=torch.int64)
+            self._ground_n = torch.zeros(int(self.m.vocab), dtype=torch.float64)   # (A202e: the hearings' weights, a line's last word's GROUND_FINAL)
             self._ground_s = torch.zeros(int(self.m.vocab), dtype=torch.float64)   # A202b: the sum of its hearings' look sizes
             self._ground_trace = [-1, 0]
             self._ground_stats = {"bind": 0, "cue": 0, "say": 0}
-        if getattr(self, "_ground_v", None) != 2:                      # A202d: the rows bound before the consistency law (A202b) carried
+        if getattr(self, "_ground_v", None) != 3:   # (3: A202e's weighted counts)                      # A202d: the rows bound before the consistency law (A202b) carried
             k = int(self.anatomy.grounding.size)                          # looks averaged with a recency weight and no record of their
             self._ground_A = torch.zeros((int(self.m.vocab), k), dtype=torch.float64)   # hearings' sizes, so 'good' read as consistent for
-            self._ground_n = torch.zeros(int(self.m.vocab), dtype=torch.int64)          # hundreds of hearings to come: begun again, once
+            self._ground_n = torch.zeros(int(self.m.vocab), dtype=torch.float64)        # hundreds of hearings to come: begun again, once
             self._ground_s = torch.zeros(int(self.m.vocab), dtype=torch.float64)        # (fast mapping rebuilds a day's rows in an hour)
-            self._ground_v = 2
+            self._ground_v = 3
         return self._ground_A.numpy(), self._ground_n.numpy(), self._ground_trace
 
     def _ground_consist(self, w=None):
@@ -117,14 +120,26 @@ class GroundingMixin:
             return
         A, n, tr = self._ground_state()
         u = int(u)
+        if u == int(getattr(self, "end_id", -1)) or u == int(getattr(self, "eot", -1)):
+            last_ = getattr(self, "_ground_last", None)                    # A202e: the line over: its last word's hearing weighs GROUND_FINAL
+            if last_ is not None:
+                self._ground_bind(int(last_[0]), np.asarray(last_[1]), GROUND_FINAL - 1.0)
+            self._ground_last = None
+            return
         if self._ground_skip(u):
             return
-        T = np.asarray(g.appearance(frame), dtype=np.float64); nT = _norm(T)
-        if nT > GROUND_FLOOR:
-            n[u] += 1; rate = max(1.0 / float(n[u]), GROUND_RATE)             # A202b: the running mean of its hearings' looks
-            A[u] += rate * (T - A[u]); self._ground_s.numpy()[u] += nT
-            self._ground_stats["bind"] += 1
+        T = np.asarray(g.appearance(frame), dtype=np.float64)
+        self._ground_bind(u, T, 1.0)
+        self._ground_last = (u, [float(x_) for x_ in T]) if _norm(T) > GROUND_FLOOR else None   # (plain numbers: the working day's hasher)
         tr[0] = u; tr[1] = GROUND_TRACE
+
+    def _ground_bind(self, u, T, w):
+        """one hearing of word u with look T at weight w: the weighted running mean (A202b, A202e), when the fovea holds a look"""
+        A, n, _ = self._ground_state(); nT = _norm(T)
+        if nT > GROUND_FLOOR and w > 0.0:
+            n[u] += w; rate = max(w / float(n[u]), GROUND_RATE * w)
+            A[u] += min(1.0, rate) * (T - A[u]); self._ground_s.numpy()[u] += w * nT
+            self._ground_stats["bind"] += 1
 
     def _ground_say(self, frame):
         """(3) THE NAME, at the voice's choice: (the word whose look fills the fovea, its margin), or None"""
