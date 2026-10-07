@@ -2063,7 +2063,7 @@ def test_the_morning_tidy():
         b = m.body(f"toy_{toy}").id; j = m.body_jntadr[b]
         adr = m.jnt_qposadr[j]; dof = m.jnt_dofadr[j]
         d.qpos[adr:adr + 2] = xy; d.qvel[dof:dof + 6] = 0
-    put("cup", (0.38, 1.04)); put("stacker", (-2.53, -2.22)); put("ball", (1.6, -1.8))
+    put("cup", (-2.0, 1.9)); put("stacker", (-2.53, -2.22)); put("ball", (1.6, -1.8))   # (the door room's table stands at (-2.0, 1.9); the old room's at (0.38, 1.04))
     mujoco.mj_forward(m, d)
     for _ in range(10):
         w.apply({})
