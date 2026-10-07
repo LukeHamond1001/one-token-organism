@@ -4057,6 +4057,20 @@ class ParentMotion:
         LEAN_DIST_M (face_reach); None anything"""
         if need is None:
             return True
+        if "|" in need:                                                     # C307: several needs at one spot, all met
+            return all(self._need_ok(n_, H, yaw) for n_ in need.split("|"))
+        if need == "show":
+            # C307 (2026-10-07): THE SHOW'S SPOT REACHES THE SHOW POINT. Day 108's copy (p1 look probe, show2.txt): her shows ran 694 ticks of
+            # 2,000 with the toy at the floor by its side (z 0.05, 0.38 m to the right of its camera's axis, behind its image plane) while
+            # her lines said 'look at the car.': the show's approach tested only the put's place (C177), the show point (SHOW_DIST_M up
+            # along the child's eye axis) lay beyond her reach from where she knelt, her hand stopped short and the shake ran there. The
+            # spot is tested as the show reaches (_reachable with the show's own target, either hand, coarsely), from her heels there
+            saved = self.base
+            self.base = dict(saved, at=_lst(np.asarray(H, float)), yaw=float(yaw), mode="heels", lean=0.0, spine=0.0, twist=0.0)
+            try:
+                return any(self._reachable(sd, dict(k="show"), step=10) for sd in "LR")
+            finally:
+                self.base = saved
         if self._spent():                                                   # C280
             return False
         fwd = np.array([math.cos(yaw), math.sin(yaw)])
@@ -5721,7 +5735,8 @@ class ParentMotion:
             near = self._near(a, where="head", offs=PUT_HEAD_OFFS)          # setting the toy down within the child's reach (A100), but its
         else:                                                               # approach carried no need, so off the mat she knelt where the put
             xy = self._put_xy()                                             # then lay 48 to 57 cm beyond her reach (day 47: 13 shows, 13 refused
-            near = self._near(a, need=f"reach:{xy[0]:.3f},{xy[1]:.3f}")     # "could not be set down where she meant it"). As bring_back's (A133)
+            near = self._near(a, need=f"show|reach:{xy[0]:.3f},{xy[1]:.3f}")   # "could not be set down where she meant it"). As bring_back's (A133);
+                                                                            # C307: and the show point itself
         return self._fetch(a, toy) + near + [dict(type="plan", what="show", args=dict(toy=toy))]
 
     def _plan_show(self, a, toy):
@@ -5743,6 +5758,12 @@ class ParentMotion:
         """the shown toy shaken for its sound (4.10) for n ticks; she keeps shaking gently while it is shown"""
         sd = ph["side"]
         arm = self.arms[sd]
+        e_ = float(arm.get("err") or 0.0)
+        if e_ > K.HOLD_SLIP_M:                                              # C307: the toy is not before its eyes (her hand stopped short): no
+            if a is not None:                                               # shake there; the act goes on to set the toy down (its info says)
+                a["info"]["show_short_m"] = round(e_, 3)
+            self.stats["show_short"] = self.stats.get("show_short", 0) + 1
+            return "done"
         if arm["mode"] == "at":
             arm["shake_t"] = arm.get("shake_t", 0) + 1
         return "done" if ph.get("t", 0) + 1 >= ph["n"] else "run"

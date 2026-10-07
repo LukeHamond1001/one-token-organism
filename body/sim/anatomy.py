@@ -472,12 +472,16 @@ class SimAnatomy(LanguageAnatomy):
         if int((cfg or {}).get("competence", SIM_CFG.get("competence", 0))):
             rewards.append(Competence("competence", clip=COMPETENCE_GAIN, signs=(1.0,)))   # A181: mastery of its own doing pays (+), a switch of
         self.channels, self.effectors, self.rewards, self.inner_at = chans, [tract, voice, gaze] + limbs, rewards, 2
-        self.orienting = [OrientCue("face", "face_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF),
+        self.orienting = [# A202: the heard word's look found in the periphery (body/core/grounding.py): a standing cue, as her face is, so
+                          # the born saccade turns the eyes to it and the orienting bias pulls while it stands; first among the standing
+                          # cues (A208): a child hearing 'ball' looks at the ball before its hand or her face
+                          OrientCue("named", "named_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF),
+                          # A208 (2026-10-07): its own moving hand draws the eyes next (hand regard, visually guided reaching: the thing reached
+                          # for enters the fovea with the hand; body/sim/eyes.py hand_cue), a standing cue the born saccade turns to (A186)
+                          OrientCue("hand", "hand_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF),
+                          OrientCue("face", "face_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF),
                           OrientCue("sound", "sound_side", fired=0, yaw=1, sense=-1.0, side_only=True, onset=True),
-                          OrientCue("onset", "onset_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF, onset=True),
-                          # A202: the heard word's look found in the periphery (body/core/grounding.py): a standing cue, as her face is,
-                          # so the born saccade turns the eyes to it and the orienting bias pulls while it stands
-                          OrientCue("named", "named_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF)]
+                          OrientCue("onset", "onset_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF, onset=True)]
         # A202: THE GROUNDING OF WORDS IN JOINT ATTENTION: the G1's look is its colour (the colour window's and the colour periphery's
         # opponent code, body/sim/eyes.py: ground_appearance, ground_periphery; the gaze from the body channel, GAZE_AT); the end the
         # offset teaches and the space are never bound

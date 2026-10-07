@@ -335,6 +335,9 @@ def window_centre(side, gaze):
 GROUND_CENTRE = 2       # the fovea's colour cells counted as the thing looked at: the central 4 x 4 of 8 x 8 (ours: the fovea's inner
                         # 10 deg, where a toy at arm's length fills it)
 GROUND_K = 4            # the look's numbers: red-green ON, OFF, blue-yellow ON, OFF
+GROUND_FLOOR_WIN = 0.02 # A202h: the fovea's look above this is the look (body/core/grounding.GROUND_FLOOR's number; ours)
+GROUND_SAL_FLOOR = 0.06 # A202h: the least colour contrast of a periphery cell against the scene to count as the thing in view (ours:
+                        # the beige room's cells read 0.02 to 0.04 against their mean)
 
 
 def ground_appearance(eye_f, eye_p=None):
@@ -346,8 +349,22 @@ def ground_appearance(eye_f, eye_p=None):
     c = np.asarray(eye_f, dtype=np.float64)[-n * n * GROUND_K:].reshape(n, n, GROUND_K)
     if eye_p is not None:
         rows, cols = COL_CELLS
-        scene = np.asarray(eye_p, dtype=np.float64)[-rows * cols * GROUND_K:].reshape(-1, GROUND_K).mean(axis=0)
-        return c.reshape(-1, GROUND_K).mean(axis=0) - scene
+        cells_ = np.asarray(eye_p, dtype=np.float64)[-rows * cols * GROUND_K:].reshape(-1, GROUND_K)
+        scene = cells_.mean(axis=0)
+        win = c.reshape(-1, GROUND_K).mean(axis=0) - scene
+        # A202h (2026-10-07): THE LOOK IS WHAT STANDS OUT IN VIEW WHEN THE FOVEA HOLDS LESS. Day 108's copies: with her shows brought before
+        # its eyes (C304-C306) the toy still lay 30 to 60 degrees from the fovea's line (the eyes' own acts wander; the fovea's 21-degree
+        # window is narrow), the fovea's look stayed below the floor and nothing bound. An infant's attention is captured by the salient
+        # colourful thing held before it whether or not its fovea has arrived (exogenous attention: Posner 1980; the saliency map: Itti and
+        # Koch 2001), and a word heard then binds to it. The look is the colour periphery's cell that stands out most against the scene
+        # when it stands out more than the window does and past GROUND_SAL_FLOOR; else the window's look as above. The cue's cells (each
+        # against the scene) share its form, so the heard word draws the eyes to the salient thing and the fovea learns to follow
+        if float(np.linalg.norm(win)) > GROUND_FLOOR_WIN:                  # the fovea holds a look: it is the look (two toys in view: the one
+            return win                                                      # its eyes are on, not the brighter)
+        sal = cells_ - scene; k_ = int(np.argmax(np.linalg.norm(sal, axis=1)))
+        if float(np.linalg.norm(sal[k_])) > GROUND_SAL_FLOOR:
+            return sal[k_]
+        return win
     a, b = GROUND_CENTRE, n - GROUND_CENTRE
     inner = c[a:b, a:b].reshape(-1, GROUND_K).mean(axis=0)
     mask = np.ones((n, n), dtype=bool); mask[a:b, a:b] = False
@@ -480,6 +497,37 @@ def face_cue(m, d, gaze):
     return np.zeros(3)
 
 
+HAND_BODIES = ("left_wrist_yaw_link", "right_wrist_yaw_link")   # A208: the Dex3 palms ride these (the URDF's hand_palm_link meshes)
+HAND_CUE_MPS = 0.15             # A208: a hand moving faster than this is reached with; its direction draws the eyes (ours)
+
+
+def hand_cue(m, d, gaze, prev):
+    """A208 (2026-10-07): THE BORN HAND CUE (the frame's hand_periph; the anatomy's OrientCue "hand", standing). Infants of two to four
+    months look at their own moving hands and keep the arm where they can see it (White, Castle and Held 1964; van der Meer 1997), and
+    reaching comes to be guided by the eye on the hand: the thing reached for enters the fovea with the hand. [1, yaw, pitch] while a
+    hand of its own moves faster than HAND_CUE_MPS and lies in the left eye's image: the faster hand's direction from the fovea's centre
+    (gaze_at less the gaze; rad, + right / + up); zeros otherwise. `prev` {body: last tick's position} is the eyes' memory (state).
+    Read from the body's own kinematics, as the face cue is read from the world until a born detector works (A157); never a channel"""
+    out = np.zeros(3); best = HAND_CUE_MPS
+    for name in HAND_BODIES:
+        b = mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_BODY, name)
+        if b < 0:
+            continue
+        pos = d.xpos[b].copy(); last = prev.get(name)
+        prev[name] = pos
+        if last is None:
+            continue
+        v = float(np.linalg.norm(pos - last)) / W.TICK_S
+        if v <= best:
+            continue
+        pr = project(m, d, "L", pos)
+        if pr is None or not (0 <= pr[0] < G.EYE_W and 0 <= pr[1] < G.EYE_H):
+            continue
+        ga = gaze_at(m, d, pos)
+        out = np.array([1.0, float(ga[0] - gaze[0]), float(ga[1] - gaze[1])]); best = v
+    return out
+
+
 class Eyes:
     """the G1's three views over a G1World (A38, A42): `render()` the two grey imagers' and the colour camera's native images into one
     buffer with one read-back, `see()` this tick's codes (rendered again only when something they would see has moved: the state, the
@@ -520,6 +568,7 @@ class Eyes:
         self.prev_ex = None                                             # last tick's changes past the threshold,
         self.hab = {sd: np.zeros((G.EYE_H // POOL, G.EYE_W // POOL)) for sd in "LR"}   # its habituation per place,
         self.onset = (None, np.zeros(3))                                # and this tick's reading (world tick, [fired, yaw, pitch])
+        self.hand_prev = {}                                             # A208: the hands' last positions (the hand cue's speed)
         world.eyes = self
 
     def set_shadows(self, shadows):
@@ -581,7 +630,15 @@ class Eyes:
             self._cache = (key, eye_p, eye_f, face_cue(self.m, w.d, w.gaze), truth)      # A157: the born face cue's stand-in (the truth
         _, eye_p, eye_f, cue, truth = self._cache                                         # last: the page reads it there, sim_page.py)
         return {"eye_p": eye_p.copy(), "eye_f": eye_f.copy(), "face_fovea": np.zeros(1), "face_periph": cue.copy(),
-                "onset_periph": self._onset(truth["periphery"]).copy(), "truth": truth}
+                "onset_periph": self._onset(truth["periphery"]).copy(), "hand_periph": self._hand(), "truth": truth}
+
+    def _hand(self):
+        """A208: the born hand cue once a world tick (hand_cue; its memory of the hands' places kept in the eyes' state)"""
+        w = self.world
+        if getattr(self, "_hand_at", None) == w.tick:
+            return self._hand_out.copy()
+        self._hand_out = hand_cue(self.m, w.d, w.gaze, self.hand_prev); self._hand_at = w.tick
+        return self._hand_out.copy()
 
     def _onset(self, per):
         """THE VISUAL ONSET CUE (A43), once a world tick: the grey peripheries' change since the last tick, each pixel's over the scene's
@@ -625,13 +682,16 @@ class Eyes:
     def state(self):
         return dict(prev_ex=None if self.prev_ex is None else {sd: self.prev_ex[sd].copy() for sd in "LR"},
                     prev_per=None if self.prev_per is None else {sd: self.prev_per[sd].copy() for sd in "LR"},
-                    hab={sd: self.hab[sd].copy() for sd in "LR"}, onset=[self.onset[0], self.onset[1].copy()])
+                    hab={sd: self.hab[sd].copy() for sd in "LR"}, onset=[self.onset[0], self.onset[1].copy()],
+                    hand_prev={k_: v_.copy() for k_, v_ in self.hand_prev.items()})   # A208
 
     def load_state(self, s):
         self.prev_per = None if s["prev_per"] is None else {sd: np.array(s["prev_per"][sd], dtype=np.float64) for sd in "LR"}
         self.hab = {sd: np.array(s["hab"][sd], dtype=np.float64) for sd in "LR"}
         self.prev_ex = None if s.get("prev_ex") is None else {sd: np.array(s["prev_ex"][sd], dtype=bool) for sd in "LR"}
         self.onset = (s["onset"][0], np.array(s["onset"][1], dtype=np.float64))
+        self.hand_prev = {k_: np.array(v_, dtype=np.float64) for k_, v_ in (s.get("hand_prev") or {}).items()}   # A208 (older saves: none)
+        self._hand_at = None
         self._cache = None
 
     def close(self):

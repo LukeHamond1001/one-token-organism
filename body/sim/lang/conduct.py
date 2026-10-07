@@ -2214,8 +2214,34 @@ class Conduct:
         # 6. a pending ask: the expectant pause while she judges it
         if self.pending is not None:
             return None
+        # 6b. C308: a show under way whose toy has come before its eyes (her motion's shake phase): its line, now, with no new act
+        sw_ = getattr(self, "show_wait", None)
+        if sw_ is not None:
+            if not [a_ for a_ in self.acts_open if a_[0] in sw_["mids"]]:
+                self.show_wait = None                                       # the show ended (refused, done) before its shake: no line
+            else:
+                ph_ = getattr(self.motion, "phases", None)
+                if ph_ and isinstance(ph_[0], dict) and ph_[0].get("type") == "shake":
+                    o_ = p.obj(sw_["obj"]); self.show_wait = None
+                    if o_ is not None:
+                        lines_ = f.variation_set("show", t, p, o=o_)
+                        if lines_ and f.allowed(lines_[0], t)[0]:
+                            f.last_set[o_.id] = t; f.queue = lines_[1:]; self._line_no_acts = True
+                            return lines_[0], False, None
         # 7. joint attention: a follow-in variation set naming its target as she reads it (4.10; her gaze goes there in L1)
         o = self._target(p)
+        if o is not None and o.id != p.child_target and o.id not in p.child_holds and o.on not in ("hand", PARENT_NAME) \
+                and f.last_set.get(o.id, NEVER) <= t - K.SET_PER_OBJECT:
+            # C306 (2026-10-07): THE FOLLOW-IN OF A TOY ITS HAND REACHES FOR BUT ITS EYES ARE NOT ON IS A SHOW OF IT. Day 108's copy (p1
+            # look probe v6): 'a ball. a ball.', 'look. the rattle.', 'here is the drum.' named what its hand reached for (A40's second
+            # reading) while every toy lay 30 to 80 degrees from its eyes (its own frame 'you see the ball.' refused as untrue beside them)
+            # and the grounding organ bound nothing. Joint attention is the thing where it looks or brought there: the follow-in by reach
+            # becomes her show of the toy (held before its eyes as she names it; refused while her hands are busy, so nothing names the
+            # unseen). The follow-in by its gaze (its target) and of a toy in a hand stay as they were
+            f.last_set[o.id] = t
+            self.request("show", o=o.id)
+            f.refused.append((t, "label", f"follow-in: {o.id!r} reached for, not looked at: a show of it instead (C306)"))
+            return None
         if o is not None and f.last_named.get(o.id, NEVER) <= t - K.SAME_OBJECT and \
                 f.last_set.get(o.id, NEVER) <= t - K.SET_PER_OBJECT:
             lines = f.variation_set("label_held" if o.id in p.child_holds else "label", t, p, o=o)
@@ -2304,6 +2330,16 @@ class Conduct:
         if intent == "new_word":                                            # word, her percept not seeing it in the hand; her motion
             return self._introduce(kw["word"], t, p, kw.get("o"))           # knows (C118), so the request is dropped before she goes
         o = p.obj(kw["o"]) if kw.get("o") else None
+        if intent == "show" and o is not None:
+            # C308 (2026-10-07): THE SHOW'S LINE WAITS FOR THE TOY BEFORE ITS EYES. Day 108's copy (p1 look probe show4.txt): 'look at the
+            # car.' was said as the show was asked, while she stood 1.9 m away with empty hands setting out to fetch it; the toy came before
+            # its eyes hundreds of ticks later, or never, and the word and the thing never met (the grounding organ bound one word in
+            # 18,000 ticks). A parent says 'look at the car' as she holds the car up. The show's act is opened here without a line; the
+            # line is said when her motion's shake phase runs (the toy at the show point), or not at all if the show ends before it
+            mids_ = [self._request(a_, t, p) for a_ in acts_for("show", (o.id,))]
+            self.show_wait = dict(obj=o.id, mids=mids_, t=int(t))
+            f.refused.append((t, intent, f"request: the show of {o.id!r} opened; its line waits for the toy before its eyes (C308)"))
+            return None
         if kw.get("o") and o is None:
             it_ = INTENTS.get(intent)
             if it_ is not None and it_.ask is None and it_.acts and it_.acts[0].kind in FETCH_KINDS and self.remembered(kw["o"]):
@@ -2558,6 +2594,8 @@ class Conduct:
             self._open_ask(line, it, t, n, word_ends, p)
         cls = TP.GROWTH_CLASS.get(line.focus) if line.intent == "new_word" else None
         acts = acts_for(line.intent, line.refs, b=line.focus, w=line.focus, word_class=cls)
+        if getattr(self, "_line_no_acts", False):                        # C308: the show's line voices the show under way: no second show
+            acts = []; self._line_no_acts = False
         if self.pending is not None:                        # an ask she is judging: her eyes on the child, no point or show
             acts = blind(acts)                              # (A51, her method)
         for a in acts:

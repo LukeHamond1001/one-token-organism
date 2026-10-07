@@ -809,12 +809,12 @@ class G1World(SimWorld):
             face = float(fl[0])
             obs.update(words=word, face=fl.copy(), ears=s["ears"].copy(), sound_side=s["sound_side"].copy(),
                        eye_p=np.zeros(AN.SIZES["eye_p"]), eye_f=np.zeros(AN.SIZES["eye_f"]), onset_periph=np.zeros(3),
-                       face_periph=np.zeros(3), face_fovea=np.zeros(1))
+                       face_periph=np.zeros(3), face_fovea=np.zeros(1), hand_periph=np.zeros(3))   # (A208: the born hand cue)
         truth = self._truth()
         if self.eyes is not None and not self.night:                    # the eyes (W3r: the D435's three views at the anatomy's sizes,
             seen = self.eyes.see()                                      # body/sim/eyes.py; A38, A42)
-            for k in ("eye_p", "eye_f", "face_fovea", "face_periph", "onset_periph"):
-                obs[k] = seen[k]
+            for k in ("eye_p", "eye_f", "face_fovea", "face_periph", "onset_periph", "hand_periph"):
+                obs[k] = seen.get(k, np.zeros(3))
             truth["eyes"] = seen["truth"]
         return Frame(self.tick, obs, face, truth)
 
