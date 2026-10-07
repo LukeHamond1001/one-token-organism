@@ -464,6 +464,7 @@ class DayPlan:
                 self.next_ask = t + 10                                      # C286: nothing in its view now: asked as soon as something is
                                                                             # (the whole gap was waited each time, and a toy was in its
                                                                             # view on 40 ticks of 500: no ask in day 92's first 7,500)
+        c.quiet_shows = bool(kind == "motor" and self.sit_due)                # C315: a stand owed: her conduct asks no show of its own
         busy = (c.pending is not None or c.trial is not None or not c.fast.voice_free(t)
                 or any(a[5] not in ("done", "refused", "cancelled") for a in c.acts_open))
         if kind == "wake":

@@ -2244,7 +2244,11 @@ class Conduct:
             # the refusals' spot searches at 3 s a tick for a thousand ticks. A parent shows one thing at a time, and with a toy in her
             # hand shows that: no show is asked while one is open, the toy asked is the one she holds when she holds one, never one she
             # does not carry (the bucket), and the follow-in by reach names nothing but through her show
-            if f.last_set.get(o.id, NEVER) <= t - K.SET_PER_OBJECT and \
+            # C315 (2026-10-07): IN A MOTOR BLOCK WITH A STAND OWED, NO SHOW OF HER OWN. Days 110 and 111: shows were open on most of the
+            # motor block's ticks (her follow-ins by reach, C306), every open act made her day plan busy, and the owed stand waited: 8 stands
+            # a day, 1,000 to 2,000 ticks apart where a stand takes 370. A parent playing 'up! stand up!' does not break off to show a toy
+            # the baby's hand brushed; her day plan says so each tick (quiet_shows)
+            if f.last_set.get(o.id, NEVER) <= t - K.SET_PER_OBJECT and not getattr(self, "quiet_shows", False) and \
                     not any(a_[1] == "show" and a_[5] not in ENDED for a_ in self.acts_open):
                 held_ = [v_ for v_ in (getattr(self.motion, "holding", None) or {}).values() if v_ is not None and v_ not in NEVER_FETCHED]
                 toy_ = held_[0] if held_ else o.id

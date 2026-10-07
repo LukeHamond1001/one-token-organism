@@ -7306,6 +7306,10 @@ def test_one_show_at_a_time():
     out = reach_run(con, 12, 212)                                           # the block's show ends (the stub's few ticks): the duck's show asked
     assert ("show", "duck") in [tuple(a[1:3]) for a in con.acts_open] and \
         any("a show of 'duck' instead (C306, C309)" in r[2] for r in con.fast.refused[-12:]), (con.acts_open, con.fast.refused[-6:])
+    con2 = _pair_con(); _run_to(con2, 200)                                 # C315: a stand owed in a motor block (quiet_shows): the reach asks no show
+    con2.quiet_shows = True; con2.fast.last_set["duck"] = con2.fast.last_named["duck"] = 0
+    reach_run(con2, 6, 200)
+    assert not [a for a in con2.acts_open if a[1] == "show"] and not any("C306" in r[2] for r in con2.fast.refused[-6:]), (con2.acts_open, con2.fast.refused[-6:])
     print(f"lang 74 (C309): with the block's show open the duck's and the bucket's shows were dropped ({[r[2][:40] for r in con.fast.refused[-8:] if 'C309' in r[2]][:3]}), "
           f"the reach for the duck named nothing; the show ended, the duck's show asked")
 
