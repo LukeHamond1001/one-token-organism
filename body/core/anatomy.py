@@ -500,13 +500,15 @@ class Grounding:
     observation the organ writes its cue into ([fired, yaw, pitch] from the fovea's centre, read by an OrientCue of the same name as the
     born cues are), `size` the look's numbers, `appearance(frame)` the look of what the fovea holds now, contrast-coded (k numbers; near
     zero when it holds no thing), `periphery(frame)` every periphery cell's look in the same numbers and its direction from the fovea's
-    centre, (feats [cells, k], dirs [cells, 2]), `skip` the symbols never bound (the end the offset teaches, the space). The anatomy
+    centre, (feats [cells, k], dirs [cells, 2]), `skip` the symbols never bound (the end the offset teaches, the space), `name_skip` the
+    symbols bound and cued but never primed in the voice (A202q: sub-word units). The anatomy
     names them and holds no state."""
     obs: str
     size: int
     appearance: object
     periphery: object
     skip: tuple = ()
+    name_skip: tuple = ()     # A202q: the symbols the name never primes (a body's sub-word units: the G1's letters; a toy's name is not one letter)
 
 
 class Anatomy:

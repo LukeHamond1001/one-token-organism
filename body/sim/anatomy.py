@@ -500,7 +500,8 @@ class SimAnatomy(LanguageAnatomy):
         # opponent code, body/sim/eyes.py: ground_appearance, ground_periphery; the gaze from the body channel, GAZE_AT); the end the
         # offset teaches and the space are never bound
         self.grounding = Grounding("named_periph", 4, _ground_appearance, _ground_periphery,
-                                   skip=tuple(int(x_) for x_ in (self.end_id, self.space_id) if x_ is not None))
+                                   skip=tuple(int(x_) for x_ in (self.end_id, self.space_id) if x_ is not None),
+                                   name_skip=tuple(int(i_) for i_ in (tok.token_to_id(ch_) for ch_ in "abcdefghijklmnopqrstuvwxyz") if i_ is not None))   # A202q: the letters
         # THE CEREBELLUM'S INTERFACE (7.5, A44; the module's doc): the mossy numbers in their order, each named and declared by its
         # middle and half-range; the readouts on the waist's, the arms' and the legs' joints; the flocculus on the gaze's yaw and pitch
         mossy, off, half = [], [], []

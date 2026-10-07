@@ -42,6 +42,18 @@ class _Body(GR.GroundingMixin):
         self.bans = ()
 
 
+LEAD = 70                       # a line's first word, heard while the eyes are on the floor (no figure: nothing bound)
+
+
+def _ends_line(b, w, frame):
+    """A202q: word w heard as the last word of a two-word line ('look. ball.'), as her names are: the lead word over the empty floor,
+    then w over `frame`, then the line's end"""
+    if getattr(b, "end_id", None) is None:
+        b.end_id = 1
+    empty = _frame(_eye_p((1, 2), FLOOR, FLOOR), _eye_f(FLOOR, FLOOR))
+    b._ground_learn(LEAD, empty); b._ground_learn(w, frame); b._ground_learn(b.end_id, frame)
+
+
 RED = (0.6, 0.0, 0.0, 0.3)      # red-green ON, no OFF, no blue-yellow ON, blue-yellow OFF (a red ball on the opponent axes)
 BLUE = (0.0, 0.2, 0.7, 0.0)
 FLOOR = (0.02, 0.0, 0.0, 0.05)  # the beige floor: a faint warm cast
@@ -89,8 +101,8 @@ def test_the_word_heard_on_a_thing_draws_the_eyes_to_its_look():
     assert f5.obs["named_periph"][0] == 0.0
     # the name: the ball in the fovea primes "ball"; the empty floor primes nothing; the skipped symbol never
     for _ in range(GR.GROUND_SAY_MIN_N):                                   # (A202l: the name after many hearings, the cue after few)
-        b._ground_learn(ball, _frame(_eye_p((1, 2), RED, FLOOR), _eye_f(RED, FLOOR)))
-        b._ground_learn(block, _frame(_eye_p((1, 2), BLUE, FLOOR), _eye_f(BLUE, FLOOR)))
+        _ends_line(b, ball, _frame(_eye_p((1, 2), RED, FLOOR), _eye_f(RED, FLOOR)))     # (A202q: her names end her lines)
+        _ends_line(b, block, _frame(_eye_p((1, 2), BLUE, FLOOR), _eye_f(BLUE, FLOOR)))
     say = b._ground_say(_frame(ep, _eye_f(RED, FLOOR)))
     assert say is not None and say[0] == ball and say[1] > GR.GROUND_MARGIN, say
     import torch                                                           # A202i: the prior in the readout's units: GROUND_SAY standard
@@ -135,7 +147,7 @@ def test_the_word_heard_on_a_thing_draws_the_eyes_to_its_look():
     # the night: no eyes, no look, nothing bound, the cue quiet
     nf = types.SimpleNamespace(obs={"body": np.zeros(250)}, truth={})
     b._ground_learn(ball, nf); b._ground_sense(nf)
-    assert n[ball] == 3 + GR.GROUND_SAY_MIN_N and nf.obs["named_periph"][0] == 0.0   # (A202l's extra hearings above)
+    assert n[ball] == 3 + GR.GROUND_FINAL * GR.GROUND_SAY_MIN_N and nf.obs["named_periph"][0] == 0.0   # (A202l's extra hearings above)
     r = b.ground_report()
     assert r["words"] >= 4 and r["bind"] >= 30 and r["cue"] >= 3, r
     print("A202 ok", r)
@@ -157,9 +169,9 @@ def test_the_look_every_word_shares_is_no_words_look():
     see, ball = 30, 31
     for _ in range(60):
         b._ground_learn(see, _frame(_eye_p((1, 2), SWEATER, FLOOR), _eye_f(SWEATER, FLOOR)))
-    for _ in range(10):
-        b._ground_learn(ball, _frame(_eye_p((1, 2), BALL, FLOOR), _eye_f(BALL, FLOOR)))
-    assert n[see] == 60 and n[ball] == 10 and b._ground_consist(see) >= GR.GROUND_CONSIST, (n[see], n[ball], b._ground_consist(see))
+    for _ in range(4):                                                      # (A202q: her names end her lines; 4 lines weigh 12, the 10 hearings it had)
+        _ends_line(b, ball, _frame(_eye_p((1, 2), BALL, FLOOR), _eye_f(BALL, FLOOR)))
+    assert n[see] == 60 and n[ball] == 4 * GR.GROUND_FINAL and b._ground_consist(see) >= GR.GROUND_CONSIST, (n[see], n[ball], b._ground_consist(see))
     mu = b._ground_mu.numpy()
     assert np.linalg.norm(mu - np.asarray(SWEATER)) < np.linalg.norm(mu - np.asarray(BALL)), mu   # the baseline is mostly her sweater
     assert b._ground_say(_frame(None, _eye_f(SWEATER, FLOOR))) is None       # her sweater in the fovea: no word is primed
@@ -198,8 +210,34 @@ def test_the_speakers_face_is_not_a_referent():
     assert n[ball] == 2, n[ball]
     block = 41
     for _ in range(GR.GROUND_SAY_MIN_N):
-        b._ground_learn(ball, f2)
-        b._ground_learn(block, _frame(_eye_p((1, 2), BLUE, FLOOR), _eye_f(BLUE, FLOOR)))   # (a second word with another look: the shared look a mix)
+        _ends_line(b, ball, f2)                                             # (A202q: her names end her lines)
+        _ends_line(b, block, _frame(_eye_p((1, 2), BLUE, FLOOR), _eye_f(BLUE, FLOOR)))   # (a second word with another look: the shared look a mix)
     assert b._ground_say(f) is None and b._ground_say(f2) is not None and b._ground_say(f2)[0] == ball, (b._ground_say(f), b._ground_say(f2))
     assert b._ground_say(f3) is not None and b._ground_say(f3)[0] == ball   # (A202p: the ball beside her face primes 'ball')
     print("A202o ok: a word heard with her face in the fovea binds nothing and primes nothing; with her face aside, the red ball binds and primes 'ball'")
+
+
+def test_the_name_is_a_word_that_ends_her_lines():
+    """A202q (2026-10-07): day 111 under A202p primed 'at' 372 times, 'the' 156 and the letter 'x' 171 (the last letter of 'box', a word
+    the child's table spells) with no toy in view. 'at' and 'the' heard as often as 'ball' over the ball, always within her lines
+    ('look at the ball.'): the cue keeps them, but only 'ball', which ends the lines, is primed in the voice; a letter (name_skip) that
+    ends lines over the box is never primed"""
+    from body.sim.anatomy import _ground_appearance, _ground_periphery
+    b = _Body(); b.end_id = 1
+    xl = 5                                                                  # a letter (the G1's letters are the anatomy's name_skip)
+    b.anatomy.grounding = Grounding("named_periph", 4, _ground_appearance, _ground_periphery, skip=(1,), name_skip=(xl,))
+    A, n, tr = b._ground_state()
+    at, the, ball = 50, 51, 52
+    seen = _frame(_eye_p((1, 2), RED, FLOOR), _eye_f(RED, FLOOR))
+    other = _frame(_eye_p((1, 2), BLUE, FLOOR), _eye_f(BLUE, FLOOR))
+    for _ in range(12):                                                     # 'look at the ball.' x 12 over the ball
+        for w in (LEAD, at, the, ball):
+            b._ground_learn(w, seen)
+        b._ground_learn(b.end_id, seen)
+        _ends_line(b, xl, other)                                            # 'b o x.': its last letter over the box (another look)
+    h, f = b._ground_h.numpy(), b._ground_f.numpy()
+    assert h[ball] == 12 and f[ball] == 12 and h[at] == 12 and f[at] == 0 and f[xl] == 12, (h[ball], f[ball], h[at], f[at], f[xl])
+    say = b._ground_say(seen)
+    assert say is not None and say[0] == ball, say                          # the ball in view: 'ball', not 'at' or 'the'
+    assert b._ground_say(other) is None                                     # the box in view: its letter is never primed
+    print(f"A202q ok: 'ball' finals {f[ball]:.0f}/{h[ball]:.0f} primed; 'at' finals {f[at]:.0f}/{h[at]:.0f} never; the letter ending 'box' never")

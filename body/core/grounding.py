@@ -51,6 +51,11 @@ GROUND_MARGIN = 0.15    # the best match's lead over the second (ours)
 GROUND_SAY = 2.0        # A202i: the prior on the logit of the word whose look fills the fovea, in the readout's own units: this many standard
                         # deviations of the readout's logits for a margin at GROUND_MARGIN, in proportion past it (ours). It was 1.0 times
                         # the margin, 0.2 of a logit against a top gap of 2.6 (day 109: 'ball' primed 47 times and never said)
+GROUND_FINAL_SHARE = 0.5   # A202q: the least share of a word's hearings (with a thing in view) that ended a line of two words or more for the
+                        # name to be primed in the voice (ours). Day 111 under A202p: 'at' primed 372 times, 'the' 156, with no toy in
+                        # view; her lines end in the focus word ('look at the ball.'), so a toy's name ends most of its lines and 'at',
+                        # 'the', 'is', 'see' end almost none (Fernald and Mazzie 1991's final position: what a child first says is what
+                        # ends the line). The cue (hearing -> looking) keeps every word
 GROUND_FINAL = 3.0      # A202e: the weight of a line's last word's hearing (its look counted this many times over a word within the line):
                         # the utterance-final word is the one infants bind (Fernald and Mazzie 1991's final-position prominence; her lines
                         # end in the focus word, templates.py's rule), so 'look', 'is' and 'the' bind a third as hard as the name (ours)
@@ -91,6 +96,10 @@ class GroundingMixin:
             self._ground_mu = None                                                      # A202n (2026-10-07): the rows bound before the figure law
             self._ground_v = 5                                                          # (A202m) carried her sweater as the look of 'the', 'see',
                                                                                         # 'you', 'oh', 'good' (190 hearings of 'see'): begun again, once
+        if getattr(self, "_ground_h", None) is None or int(self._ground_h.shape[0]) != int(self._ground_A.shape[0]):
+            self._ground_h = torch.zeros(int(self._ground_A.shape[0]), dtype=torch.float64)   # A202q: each word's hearings with a thing in view
+            self._ground_f = torch.zeros(int(self._ground_A.shape[0]), dtype=torch.float64)   # A202q: of them, those that ended a line (begun at zero
+                                                                                               # on a life mid-way: a name waits for its new hearings)
         if getattr(self, "_ground_mu", None) is None or int(self._ground_mu.shape[0]) != int(self._ground_A.shape[1]):
             # A202k: the grand mean of the looks over every hearing (what the eyes hold while she speaks, whatever the word), begun
             # from the rows there are (their weighted mean), so a life mid-way carries it from its first tick under the law
@@ -161,6 +170,7 @@ class GroundingMixin:
             last_ = getattr(self, "_ground_last", None)                    # A202e: the line over: its last word's hearing weighs GROUND_FINAL
             if last_ is not None and int(getattr(self, "_ground_line_n", 0)) >= 2:   # A202f: within a line of two words or more: a line of
                 self._ground_bind(int(last_[0]), np.asarray(last_[1]), GROUND_FINAL - 1.0)   # one word ('oh.') has no final position (day 106:
+                self._ground_f.numpy()[int(last_[0])] += 1.0                  # (A202q: a final hearing)
             self._ground_last = None; self._ground_line_n = 0                           # 'oh' primed 37 times, the names 4)
             return
         self._ground_look_now = None                                        # (C314: an instrument: the word heard this tick and its look's size)
@@ -171,6 +181,8 @@ class GroundingMixin:
         self._ground_look_now = [int(u), -1.0 if T is None else float(_norm(T))]   # (plain numbers: the working day's hasher)
         if T is not None:
             self._ground_bind(u, T, 1.0)
+            if _norm(T) > GROUND_FLOOR:
+                self._ground_h.numpy()[u] += 1.0                               # (A202q: a hearing with a thing in view)
         self._ground_line_n = int(getattr(self, "_ground_line_n", 0)) + 1   # (A202f: the line's words so far)
         self._ground_last = (u, [float(x_) for x_ in T]) if T is not None and _norm(T) > GROUND_FLOOR else None   # (plain numbers: the working day's hasher)
         tr[0] = u; tr[1] = GROUND_TRACE
@@ -200,6 +212,11 @@ class GroundingMixin:
             return None
         cons = self._ground_consist()
         ok = (n >= GROUND_SAY_MIN_N) & (cons >= GROUND_CONSIST)            # A202l: the name after many hearings
+        h_ = self._ground_h.numpy(); f_ = self._ground_f.numpy()             # A202q: a word that mostly ends her lines, not a sub-word unit
+        ok = ok & (h_ >= 1.0) & (f_ >= GROUND_FINAL_SHARE * np.maximum(h_, 1.0))   # (the count is A202l's, on the weighted hearings)
+        for i_ in tuple(getattr(g, "name_skip", ()) or ()):
+            if 0 <= int(i_) < ok.shape[0]:
+                ok[int(i_)] = False
         if int(ok.sum()) < 1:
             return None
         A = self._ground_centred(A)
