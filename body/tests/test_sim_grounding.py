@@ -88,6 +88,9 @@ def test_the_word_heard_on_a_thing_draws_the_eyes_to_its_look():
     f5 = _frame(ep, _eye_f(FLOOR, FLOOR)); b._ground_sense(f5)
     assert f5.obs["named_periph"][0] == 0.0
     # the name: the ball in the fovea primes "ball"; the empty floor primes nothing; the skipped symbol never
+    for _ in range(GR.GROUND_SAY_MIN_N):                                   # (A202l: the name after many hearings, the cue after few)
+        b._ground_learn(ball, _frame(_eye_p((1, 2), RED, FLOOR), _eye_f(RED, FLOOR)))
+        b._ground_learn(block, _frame(_eye_p((1, 2), BLUE, FLOOR), _eye_f(BLUE, FLOOR)))
     say = b._ground_say(_frame(ep, _eye_f(RED, FLOOR)))
     assert say is not None and say[0] == ball and say[1] > GR.GROUND_MARGIN, say
     import torch                                                           # A202i: the prior in the readout's units: GROUND_SAY standard
@@ -131,7 +134,7 @@ def test_the_word_heard_on_a_thing_draws_the_eyes_to_its_look():
     # the night: no eyes, no look, nothing bound, the cue quiet
     nf = types.SimpleNamespace(obs={"body": np.zeros(250)}, truth={})
     b._ground_learn(ball, nf); b._ground_sense(nf)
-    assert n[ball] == 3 and nf.obs["named_periph"][0] == 0.0
+    assert n[ball] == 3 + GR.GROUND_SAY_MIN_N and nf.obs["named_periph"][0] == 0.0   # (A202l's extra hearings above)
     r = b.ground_report()
     assert r["words"] >= 4 and r["bind"] >= 30 and r["cue"] >= 3, r
     print("A202 ok", r)

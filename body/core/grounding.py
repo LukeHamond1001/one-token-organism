@@ -38,7 +38,12 @@ GROUND_RATE = 0.05      # A202b: the least step of a row toward this hearing's l
                         # drifting at this rate once it has many (ours). 0.15 at first: 'is' then tracked whatever was shown last
 GROUND_CONSIST = 0.75   # A202b: the least consistency of a word's look (its mean's size over its hearings' mean size: 1 for one look
                         # always, 0.7 for two colours by turns, near 0 for a word heard over everything) for the cue and the name (ours)
-GROUND_MIN_N = 3        # hearings before a word's look is trusted for the cue and the name (ours: fast mapping's few)
+GROUND_MIN_N = 3        # hearings before a word's look is trusted for the cue (ours: fast mapping's few)
+GROUND_SAY_MIN_N = 8    # A202l: hearings before a word's look is trusted for the NAME (ours: comprehension leads production; a child says a
+                        # word after many hearings). Day 110's first ten minutes under A202k: the letter symbol 'd', three hearings at one
+                        # look, became the best match against the centred rows and was primed 855 times and said 153
+GROUND_AWAY = 0.5       # A202l: the look in view (and a periphery cell) counts only when it stands off the shared look by this share of the
+                        # shared look's size (ours): the baseline's own drift is not a thing in view
 GROUND_TRACE = 20       # ticks (3 s) a heard word keeps drawing the eyes toward its look (ours: the orienting response's span)
 GROUND_FLOOR = 0.02     # the least contrast (opponent units) that counts as a look at a thing, in the fovea or a cell (ours)
 GROUND_MATCH = 0.6      # the least cosine between a word's look and a cell's for the cue or the name (ours)
@@ -102,6 +107,10 @@ class GroundingMixin:
         whose look is only that baseline has no look left (below GROUND_FLOOR). The rows themselves stay the raw running means"""
         return np.asarray(X, dtype=np.float64) - self._ground_mu.numpy()
 
+    def _ground_floor(self):
+        """A202l: the least size of a look in view past the shared look: GROUND_FLOOR, or GROUND_AWAY of the shared look's own size"""
+        return max(GROUND_FLOOR, GROUND_AWAY * float(_norm(self._ground_mu.numpy())))
+
     def _ground_consist(self, w=None):
         """A202b: a word's look's consistency, |mean| / (the mean of its hearings' |look|), 0 with no hearing (for every word when w is None)"""
         A, n, _ = self._ground_state(); s_ = self._ground_s.numpy()
@@ -128,7 +137,7 @@ class GroundingMixin:
                 feats = self._ground_centred(feats); dirs = np.asarray(dirs, dtype=np.float64)
                 nf = _norm(feats, axis=1)
                 cos = (feats @ (T / nt)) / np.maximum(nf, 1e-9)
-                cos = np.where(nf > GROUND_FLOOR, cos, -1.0)
+                cos = np.where(nf > self._ground_floor(), cos, -1.0)        # A202l: a cell off the shared look
                 if cos.size >= 2:
                     order = np.argsort(-cos, kind="stable")
                     b, s = int(order[0]), int(order[1])
@@ -178,10 +187,10 @@ class GroundingMixin:
             return None
         A, n, _ = self._ground_state()
         T = self._ground_centred(g.appearance(frame)); nt = _norm(T)      # A202k: the look in view past what every word shares
-        if nt <= GROUND_FLOOR:
+        if nt <= self._ground_floor():
             return None
         cons = self._ground_consist()
-        ok = (n >= GROUND_MIN_N) & (cons >= GROUND_CONSIST)
+        ok = (n >= GROUND_SAY_MIN_N) & (cons >= GROUND_CONSIST)            # A202l: the name after many hearings
         if int(ok.sum()) < 1:
             return None
         A = self._ground_centred(A)
