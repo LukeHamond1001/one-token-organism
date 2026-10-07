@@ -4044,8 +4044,12 @@ class ParentMotion:
         """C131 (life day 32): whether a path on the floor leads from where she is to a spot's standing point (A6's clearances, the
         toys in the way cleared as a walk would). The spot chooser passed a spot beside the child and the walk to it was refused
         "no path on the floor" 27 times in a day (the child lay by the doorway, the spot on its far side, the way round it closed by
-        its own clearance and the wall's): a spot she cannot get to is no spot, and the next side is tried"""
-        start = np.asarray(self.base["at"], float)
+        its own clearance and the wall's): a spot she cannot get to is no spot, and the next side is tried.
+        C317 (2026-10-07): the path starts where she will stand once up (_standing_at), not where she sits or kneels: seated on the
+        sofa her seat lies inside the sofa's footprint in the floor plan and no path left it, so every stand asked while she sat
+        was refused 'no spot she can kneel at' (days 112 and 113: stands done 3 of 11, 3 of 10; the day-113 copy from the sofa:
+        no spot; the same copy with her on the floor: a spot at once)"""
+        start = np.asarray(self._standing_at(), float)
         if float(np.linalg.norm(np.asarray(stand, float) - start)) < 0.05:
             return True
         try:
