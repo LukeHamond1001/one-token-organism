@@ -139,3 +139,35 @@ def test_the_word_heard_on_a_thing_draws_the_eyes_to_its_look():
 
 if __name__ == "__main__":
     test_the_word_heard_on_a_thing_draws_the_eyes_to_its_look()
+
+
+def test_the_look_every_word_shares_is_no_words_look():
+    """A202k (2026-10-07): her sweater's look comes with every word (the fovea rests on her body while she speaks: day 109's 'the' 160
+    hearings, 'see' 145, 'you', 'is', 'look', 'it', all one blue-green look). 'see' heard 60 times over her sweater and 'ball' 10 times
+    over the red ball: the sweater in the fovea primes nothing and the heard 'see' draws the eyes nowhere, while the ball in the fovea
+    primes 'ball' and the heard 'ball' draws the eyes to the red cell beside the sweater's"""
+    b = _Body(); b.end_id = 1
+    A, n, tr = b._ground_state()
+    SWEATER = (0.01, 0.037, 0.05, 0.008)                                    # her sweater (.20 .56 .62) on the opponent axes, as day 109 read it
+    BALL = (0.093, 0.0, 0.0, 0.066)                                         # the red ball as day 109 read it ("a" carried (0.062, 0, 0, 0.044)), half again as big: past the saliency floor in this stub window
+    see, ball = 30, 31
+    for _ in range(60):
+        b._ground_learn(see, _frame(_eye_p((1, 2), SWEATER, FLOOR), _eye_f(SWEATER, FLOOR)))
+    for _ in range(10):
+        b._ground_learn(ball, _frame(_eye_p((1, 2), BALL, FLOOR), _eye_f(BALL, FLOOR)))
+    assert n[see] == 60 and n[ball] == 10 and b._ground_consist(see) >= GR.GROUND_CONSIST, (n[see], n[ball], b._ground_consist(see))
+    mu = b._ground_mu.numpy()
+    assert np.linalg.norm(mu - np.asarray(SWEATER)) < np.linalg.norm(mu - np.asarray(BALL)), mu   # the baseline is mostly her sweater
+    assert b._ground_say(_frame(None, _eye_f(SWEATER, FLOOR))) is None       # her sweater in the fovea: no word is primed
+    say = b._ground_say(_frame(None, _eye_f(BALL, FLOOR)))
+    assert say is not None and say[0] == ball, say                          # the ball in the fovea: 'ball'
+    ep = _eye_p((1, 3), BALL, FLOOR)                                         # the red cell to the right of the fovea's column
+    rows, cols = E.COL_CELLS
+    c = ep[-rows * cols * 4:].reshape(rows, cols, 4); c[1, 1] = SWEATER      # her sweater in another cell
+    tr[0] = see; tr[1] = GR.GROUND_TRACE
+    f = _frame(ep, _eye_f(FLOOR, FLOOR)); b._ground_sense(f)
+    assert f.obs["named_periph"][0] == 0.0, f.obs["named_periph"]            # 'see' heard: the eyes drawn nowhere
+    tr[0] = ball; tr[1] = GR.GROUND_TRACE
+    f = _frame(ep, _eye_f(FLOOR, FLOOR)); b._ground_sense(f)
+    assert f.obs["named_periph"][0] == 1.0 and f.obs["named_periph"][1] > 0, f.obs["named_periph"]   # 'ball' heard: toward the red cell (right)
+    print(f"A202k ok: mu {np.round(mu, 3).tolist()} say(sweater) None, say(red) ball; cue(see) none, cue(ball) {np.round(f.obs['named_periph'], 2).tolist()}")

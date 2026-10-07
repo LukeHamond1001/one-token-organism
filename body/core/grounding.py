@@ -84,7 +84,23 @@ class GroundingMixin:
             self._ground_n = torch.zeros(int(self.m.vocab), dtype=torch.float64)        # hundreds of hearings to come: begun again, once
             self._ground_s = torch.zeros(int(self.m.vocab), dtype=torch.float64)        # (fast mapping rebuilds a day's rows in an hour)
             self._ground_v = 3
+        if getattr(self, "_ground_mu", None) is None or int(self._ground_mu.shape[0]) != int(self._ground_A.shape[1]):
+            # A202k: the grand mean of the looks over every hearing (what the eyes hold while she speaks, whatever the word), begun
+            # from the rows there are (their weighted mean), so a life mid-way carries it from its first tick under the law
+            n_ = self._ground_n; tot = float(n_.sum())
+            self._ground_mu = (self._ground_A * n_[:, None]).sum(0) / tot if tot > 0 else torch.zeros(int(self._ground_A.shape[1]), dtype=torch.float64)
+            self._ground_mu_n = tot
         return self._ground_A.numpy(), self._ground_n.numpy(), self._ground_trace
+
+    def _ground_centred(self, X):
+        """A202k: THE LOOK EVERY WORD SHARES IS NO WORD'S LOOK. Day 109's rows: 'the' (160 hearings), 'see' (145), 'you', 'is', 'look',
+        'it' all carried one look, the blue-green of her sweater (the fovea rests on her body while she speaks), 'see' primed 145 times
+        in day 110's first hour and said 36; a word heard over the speaker's own appearance at every hearing learns that appearance as
+        its meaning. A cue present on every trial earns no association (Rescorla and Wagner 1972's blocking; the cross-situational
+        learner's competition among words for a referent, Yu and Smith 2007): the grand mean of the looks is taken off each word's row
+        and off the look in view at the cue and the name, so what the speaker's presence adds to every hearing falls out, and a word
+        whose look is only that baseline has no look left (below GROUND_FLOOR). The rows themselves stay the raw running means"""
+        return np.asarray(X, dtype=np.float64) - self._ground_mu.numpy()
 
     def _ground_consist(self, w=None):
         """A202b: a word's look's consistency, |mean| / (the mean of its hearings' |look|), 0 with no hearing (for every word when w is None)"""
@@ -106,10 +122,10 @@ class GroundingMixin:
         out = np.zeros(3)
         w, left = int(tr[0]), int(tr[1])
         if left > 0 and w >= 0 and int(n[w]) >= GROUND_MIN_N and self._ground_consist(w) >= GROUND_CONSIST:
-            T = A[w]; nt = _norm(T)
+            T = self._ground_centred(A[w]); nt = _norm(T)                   # A202k: the word's look past what every word shares
             if nt > GROUND_FLOOR:
                 feats, dirs = g.periphery(frame)
-                feats = np.asarray(feats, dtype=np.float64); dirs = np.asarray(dirs, dtype=np.float64)
+                feats = self._ground_centred(feats); dirs = np.asarray(dirs, dtype=np.float64)
                 nf = _norm(feats, axis=1)
                 cos = (feats @ (T / nt)) / np.maximum(nf, 1e-9)
                 cos = np.where(nf > GROUND_FLOOR, cos, -1.0)
@@ -151,6 +167,9 @@ class GroundingMixin:
             n[u] += w; rate = max(w / float(n[u]), GROUND_RATE * w)
             A[u] += min(1.0, rate) * (T - A[u]); self._ground_s.numpy()[u] += w * nT
             self._ground_stats["bind"] += 1
+            mu = self._ground_mu.numpy(); tot = float(self._ground_mu_n) + w   # A202k: the grand mean over every hearing (its drift
+            mu += max(w / tot, GROUND_RATE * w / 10.0) * (np.asarray(T, dtype=np.float64) - mu)   # a tenth of a row's: the baseline
+            self._ground_mu_n = tot                                                                 # moves slower than any word)
 
     def _ground_say(self, frame):
         """(3) THE NAME, at the voice's choice: (the word whose look fills the fovea, its margin), or None"""
@@ -158,13 +177,14 @@ class GroundingMixin:
         if g is None or frame is None:
             return None
         A, n, _ = self._ground_state()
-        T = np.asarray(g.appearance(frame), dtype=np.float64); nt = _norm(T)
+        T = self._ground_centred(g.appearance(frame)); nt = _norm(T)      # A202k: the look in view past what every word shares
         if nt <= GROUND_FLOOR:
             return None
         cons = self._ground_consist()
         ok = (n >= GROUND_MIN_N) & (cons >= GROUND_CONSIST)
         if int(ok.sum()) < 1:
             return None
+        A = self._ground_centred(A)
         na = _norm(A, axis=1)
         cos = (A @ (T / nt)) / np.maximum(na, 1e-9)
         cos = np.where(ok & (na > GROUND_FLOOR), cos * cons, -1.0)         # A202b: weighed by the word's consistency: the word that
@@ -181,4 +201,4 @@ class GroundingMixin:
             return None
         A, n, tr = self._ground_state()
         return {**{k_: int(v_) for k_, v_ in self._ground_stats.items()}, "words": int(np.sum((n >= GROUND_MIN_N) & (self._ground_consist() >= GROUND_CONSIST))),
-                "trace": [int(tr[0]), int(tr[1])]}
+                "trace": [int(tr[0]), int(tr[1])], "mu": round(float(_norm(self._ground_mu.numpy())), 3)}   # (A202k: the shared look's size)

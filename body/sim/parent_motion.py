@@ -3574,6 +3574,8 @@ class ParentMotion:
             if ph.get("waited", 0) < K.ARRIVE_WAIT_TICKS:                   # her hand is a body: it may still be on its way (her aim
                 ph["waited"] = ph.get("waited", 0) + 1                      # by sight brings it: _aim_fix)
                 return "run"
+            if float(np.linalg.norm(c - g)) > 1.0:                          # C312: an instrument (day 109: 'the cup 393 cm off, 27 cm above it')
+                self._far_miss("grasp", sd, g, c, int(self.toys.get(toy, -1)), str(toy))
             if float(g[2] - c[2]) > HAND_HIGH_M:                            # C139: her hand stopped above it: something in its way
                 return (f"the {toy} was not under her hand ({100 * float(np.linalg.norm(c - g)):.0f} cm off: her hand stopped "
                         f"{100 * float(g[2] - c[2]):.0f} cm above it): beyond her reach from above")
@@ -4950,6 +4952,8 @@ class ParentMotion:
                         return "run"                                        # within a hand's length (her grip holds the less the
                     if miss > K.HOLD_SLIP_M:                                # farther: GRIP_TOL_M)
                         why = f"her {'left' if ph['side'] == 'L' else 'right'} hand did not arrive on it ({100 * miss:.0f} cm off: it moved)"
+                        if miss > 1.0:                                      # C312 (2026-10-07): an instrument. Days 108 and 109: 'did not
+                            self._far_miss("hold", ph["side"], g, want, int(ph["body"]), str(ph.get("kind")))   # arrive (182 to 246 cm off)'
                         return self._reach_again(a, ph, why)                # A166, C235: reached for again where the arm is
             ph["engaged"] = True
             he = self.stats.setdefault("holds_engaged", {}); he[ph["kind"]] = he.get(ph["kind"], 0) + 1
@@ -4986,6 +4990,25 @@ class ParentMotion:
         if st.startswith("stopped"):
             return st
         return "run"
+
+    def _far_miss(self, what, sd, g, want, body, tag):
+        """C312 (2026-10-07): AN INSTRUMENT FOR THE IMPOSSIBLE MISS. Days 108 and 109: every stand refused, 'her left hand did not arrive on
+        it (182 to 246 cm off: it moved)' with her kneeling 0.6 m from the child, and picks 'the cup was not under her hand (393 cm off,
+        27 cm above it)'; the end-of-109 copy stood it up and walked it (p1_tools/standup.py), its hands' physical places within 0.4 m of
+        its plan's through 420 ticks. A miss past a metre is a fault of a frame, a stale id or a body left behind, not a child that
+        moved; when one happens the state that could explain it goes to the run log in one line (stats['far_miss']: her grip's physical
+        place, the hand body's, the target, the link's or the toy's place and id, her base, the arm's mode and target, the tick)"""
+        try:
+            hb = self.bm.hand_body[sd]
+            rec = dict(t=int(getattr(self, "tick", -1)), what=what, side=sd, tag=tag, grip=_lst(np.round(g, 3)), want=_lst(np.round(want, 3)),
+                       hand_body=_lst(np.round(self.d.xpos[hb], 3)), body=int(body), body_name=(self.m.body(int(body)).name if body >= 0 else None),
+                       body_xpos=(_lst(np.round(self.d.xpos[int(body)], 3)) if body >= 0 else None), base=dict(self.base),
+                       arm={k_: (str(v_)[:60]) for k_, v_ in (self.arms.get(sd) or {}).items() if k_ in ("mode", "to", "err", "step", "target")},
+                       written_grip=_lst(np.round(self._grip_now(sd)[0], 3)), child=_lst(np.round(self.d.qpos[:3], 3)))
+            self.stats["far_miss"] = rec
+            print(f"far miss: {rec}", flush=True)
+        except Exception as e:                                              # (the instrument never ends her act)
+            print(f"far miss: (not read: {e!r})", flush=True)
 
     def _reach_again(self, a, ph, why):
         """a hand that did not take the forearm it reached for, reaching again where the arm is now; `why` the refusal otherwise.
