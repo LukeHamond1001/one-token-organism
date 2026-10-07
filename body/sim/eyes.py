@@ -340,6 +340,20 @@ GROUND_SAL_FLOOR = 0.06 # A202h: the least colour contrast of a periphery cell a
                         # the beige room's cells read 0.02 to 0.04 against their mean)
 
 
+GROUND_FIG = 0.02       # A202m: the least departure of a fovea window cell from the window's mean for the window to hold a figure (ours)
+
+
+def _local_contrast(c):
+    """A202m: each cell's opponent-code distance from the mean of its 4-neighbours (the edge cells' from those they have) -> [rows*cols]"""
+    rows, cols, k = c.shape
+    out = np.zeros(rows * cols)
+    for r in range(rows):
+        for q in range(cols):
+            nb = [c[r2, q2] for r2, q2 in ((r - 1, q), (r + 1, q), (r, q - 1), (r, q + 1)) if 0 <= r2 < rows and 0 <= q2 < cols]
+            out[r * cols + q] = float(np.linalg.norm(c[r, q] - np.mean(nb, axis=0)))
+    return out
+
+
 def ground_appearance(eye_f, eye_p=None):
     """the look of what the fovea holds: the colour window's cells' mean opponent code less the scene's (the colour periphery's cells'
     mean; A202g: the whole 21-degree window against the room, so a toy anywhere in the window is the look, where the central 4 x 4
@@ -359,12 +373,23 @@ def ground_appearance(eye_f, eye_p=None):
         # Koch 2001), and a word heard then binds to it. The look is the colour periphery's cell that stands out most against the scene
         # when it stands out more than the window does and past GROUND_SAL_FLOOR; else the window's look as above. The cue's cells (each
         # against the scene) share its form, so the heard word draws the eyes to the salient thing and the fovea learns to follow
-        if float(np.linalg.norm(win)) > GROUND_FLOOR_WIN:                  # the fovea holds a look: it is the look (two toys in view: the one
-            return win                                                      # its eyes are on, not the brighter)
-        sal = cells_ - scene; k_ = int(np.argmax(np.linalg.norm(sal, axis=1)))
-        if float(np.linalg.norm(sal[k_])) > GROUND_SAL_FLOOR:
-            return sal[k_]
-        return win
+        # A202m (2026-10-07): A THING IS A FIGURE AGAINST ITS GROUND. Day 110's rows: 'the' (193 hearings), 'see', 'you', 'oh', 'good' all
+        # carried her sweater's blue-green, the fovea resting on her body while she spoke, and 'drum' was primed 22 times with the drum
+        # before its eyes twice: a window filled edge to edge by one surface (her sweater, the wall) stood out against the room and read
+        # as a look. A thing in view is a figure against its surround (centre-surround contrast: the retina's ganglion cells, Kuffler
+        # 1953; figure-ground); a surface that fills the window has no figure. The window's look counts only when its cells are not
+        # one surface (a cell's departure from the window's mean past GROUND_FIG), and a periphery cell stands out only against its
+        # neighbours (its local contrast past GROUND_SAL_FLOOR), not merely against the room's mean; a view with neither is no thing
+        # (None), and the organ neither binds nor names on it
+        cw = c.reshape(-1, GROUND_K)
+        fig = float(np.max(np.linalg.norm(cw - cw.mean(axis=0), axis=1)))
+        if fig > GROUND_FIG and float(np.linalg.norm(win)) > GROUND_FLOOR_WIN:   # the fovea holds a figure: its look against the room
+            return win                                                      # (two toys in view: the one its eyes are on, not the brighter)
+        loc = _local_contrast(cells_.reshape(rows, cols, GROUND_K))
+        k_ = int(np.argmax(loc))
+        if float(loc[k_]) > GROUND_SAL_FLOOR:
+            return cells_[k_] - scene
+        return None
     a, b = GROUND_CENTRE, n - GROUND_CENTRE
     inner = c[a:b, a:b].reshape(-1, GROUND_K).mean(axis=0)
     mask = np.ones((n, n), dtype=bool); mask[a:b, a:b] = False

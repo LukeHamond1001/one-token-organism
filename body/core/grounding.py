@@ -163,10 +163,12 @@ class GroundingMixin:
             return
         if self._ground_skip(u):
             return
-        T = np.asarray(g.appearance(frame), dtype=np.float64)
-        self._ground_bind(u, T, 1.0)
+        T_ = g.appearance(frame)                                            # A202m: None when no figure is in view (no thing to bind)
+        T = None if T_ is None else np.asarray(T_, dtype=np.float64)
+        if T is not None:
+            self._ground_bind(u, T, 1.0)
         self._ground_line_n = int(getattr(self, "_ground_line_n", 0)) + 1   # (A202f: the line's words so far)
-        self._ground_last = (u, [float(x_) for x_ in T]) if _norm(T) > GROUND_FLOOR else None   # (plain numbers: the working day's hasher)
+        self._ground_last = (u, [float(x_) for x_ in T]) if T is not None and _norm(T) > GROUND_FLOOR else None   # (plain numbers: the working day's hasher)
         tr[0] = u; tr[1] = GROUND_TRACE
 
     def _ground_bind(self, u, T, w):
@@ -186,7 +188,10 @@ class GroundingMixin:
         if g is None or frame is None:
             return None
         A, n, _ = self._ground_state()
-        T = self._ground_centred(g.appearance(frame)); nt = _norm(T)      # A202k: the look in view past what every word shares
+        T_ = g.appearance(frame)
+        if T_ is None:                                                      # A202m: no figure in view: no thing to name
+            return None
+        T = self._ground_centred(T_); nt = _norm(T)                         # A202k: the look in view past what every word shares
         if nt <= self._ground_floor():
             return None
         cons = self._ground_consist()

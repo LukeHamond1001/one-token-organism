@@ -97,7 +97,8 @@ def test_the_word_heard_on_a_thing_draws_the_eyes_to_its_look():
     lg = torch.tensor([0.0, 1.0, 2.0, 3.0])                                 # deviations of the logits per GROUND_MARGIN of margin
     assert abs(GR.ground_prior(lg, GR.GROUND_MARGIN) - GR.GROUND_SAY * float(lg.std())) < 1e-6
     assert abs(GR.ground_prior(lg, 2 * GR.GROUND_MARGIN) - 2 * GR.GROUND_SAY * float(lg.std())) < 1e-6
-    assert b._ground_say(_frame(ep, _eye_f(FLOOR, FLOOR))) is None
+    assert b._ground_say(_frame(ep, _eye_f(FLOOR, FLOOR)))[0] == block   # A202h/A202m: the fovea on the floor, the block standing out in the periphery: 'block'
+    assert b._ground_say(_frame(_eye_p((1, 2), FLOOR, FLOOR), _eye_f(FLOOR, FLOOR))) is None   # the floor everywhere: no figure, nothing primed (A202m)
     assert b._ground_say(_frame(ep, _eye_f(BLUE, FLOOR)))[0] == block
     # A202b: a word heard over everything ("is": red, blue, red, blue ...) averages to no look (the running mean), its consistency falls,
     # and it neither draws the eyes nor is primed, while "ball" (red every time) keeps a consistent look
