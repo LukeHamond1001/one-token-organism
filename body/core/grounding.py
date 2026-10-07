@@ -163,10 +163,12 @@ class GroundingMixin:
                 self._ground_bind(int(last_[0]), np.asarray(last_[1]), GROUND_FINAL - 1.0)   # one word ('oh.') has no final position (day 106:
             self._ground_last = None; self._ground_line_n = 0                           # 'oh' primed 37 times, the names 4)
             return
+        self._ground_look_now = None                                        # (C314: an instrument: the word heard this tick and its look's size)
         if self._ground_skip(u):
             return
         T_ = g.appearance(frame)                                            # A202m: None when no figure is in view (no thing to bind)
         T = None if T_ is None else np.asarray(T_, dtype=np.float64)
+        self._ground_look_now = [int(u), -1.0 if T is None else float(_norm(T))]   # (plain numbers: the working day's hasher)
         if T is not None:
             self._ground_bind(u, T, 1.0)
         self._ground_line_n = int(getattr(self, "_ground_line_n", 0)) + 1   # (A202f: the line's words so far)
