@@ -5762,9 +5762,13 @@ class ParentMotion:
         if self.child.posture == "front":                                   # C177 (2026-10-01): THE SHOW'S SPOT REACHES ITS PUT. A show ends by
             near = self._near(a, where="head", offs=PUT_HEAD_OFFS)          # setting the toy down within the child's reach (A100), but its
         else:                                                               # approach carried no need, so off the mat she knelt where the put
-            xy = self._put_xy()                                             # then lay 48 to 57 cm beyond her reach (day 47: 13 shows, 13 refused
-            near = self._near(a, need=f"show|reach:{xy[0]:.3f},{xy[1]:.3f}")   # "could not be set down where she meant it"). As bring_back's (A133);
-                                                                            # C307: and the show point itself
+            near = self._near(a, need="show")                               # then lay 48 to 57 cm beyond her reach (day 47: 13 shows, 13 refused
+                                                                            # "could not be set down where she meant it"). As bring_back's (A133);
+                                                                            # C307: and the show point itself. C318 (2026-10-07): the show point
+                                                                            # alone: both at one spot left no spot at all (the corner's ball: 0
+                                                                            # of 140 spots; days 109 to 113: 32 a day refused 'no spot ...
+                                                                            # show|reach'); the put after it re-kneels nearer as it needs (C256,
+                                                                            # C258)
         return self._fetch(a, toy) + near + [dict(type="plan", what="show", args=dict(toy=toy))]
 
     def _plan_show(self, a, toy):
