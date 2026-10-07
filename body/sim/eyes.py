@@ -355,7 +355,7 @@ def _local_contrast(c):
     return out
 
 
-def ground_appearance(eye_f, eye_p=None, face=None, gaze=None):
+def ground_appearance(eye_f, eye_p=None, face=None, gaze=None, own=None):
     """the look of what the fovea holds: the colour window's cells' mean opponent code less the scene's (the colour periphery's cells'
     mean; A202g: the whole 21-degree window against the room, so a toy anywhere in the window is the look, where the central 4 x 4
     against the window's own ring read a toy held 15 degrees off as its colour's negative); near zero on the empty floor -> [4].
@@ -386,7 +386,9 @@ def ground_appearance(eye_f, eye_p=None, face=None, gaze=None):
         # (None), and the organ neither binds nor names on it
         cw = c.reshape(-1, GROUND_K)
         fig = float(np.max(np.linalg.norm(cw - cw.mean(axis=0), axis=1)))
-        if face is None and fig > GROUND_FIG and float(np.linalg.norm(win)) > GROUND_FLOOR_WIN:   # the fovea holds a figure: its look against the room
+        own_ = None if own is None else np.asarray(own, dtype=np.float64)   # A202s: its own hands are part of itself, not a thing named
+        own_win = bool(own_ is not None and own_.size == rows * cols + 1 and own_[-1] > 0)
+        if face is None and not own_win and fig > GROUND_FIG and float(np.linalg.norm(win)) > GROUND_FLOOR_WIN:   # the fovea holds a figure: its look against the room
             return win                                                      # (two toys in view: the one its eyes are on, not the brighter)
         loc = _local_contrast(cells_.reshape(rows, cols, GROUND_K))
         loc = np.minimum(loc, np.linalg.norm(cells_ - scene, axis=1))     # (A202p: a cell stands out when it differs from its neighbours AND
@@ -399,6 +401,8 @@ def ground_appearance(eye_f, eye_p=None, face=None, gaze=None):
             d_ = _cell_dirs(gaze if gaze is not None else (0.0, 0.0))
             far_ = np.hypot(d_[:, 0] - float(face[0]), d_[:, 1] - float(face[1])) > FACE_EXCL_RAD
             loc = np.where(far_, loc, -1.0)
+        if own_ is not None and own_.size == rows * cols + 1:
+            loc = np.where(own_[:rows * cols] > 0, -1.0, loc)              # (A202s: a cell its own hand lies in)
         k_ = int(np.argmax(loc))
         if float(loc[k_]) > GROUND_SAL_FLOOR:
             return cells_[k_] - scene
@@ -572,6 +576,39 @@ def hand_cue(m, d, gaze, prev):
     return out
 
 
+_SELF_IDS = {}
+
+
+def self_cells(m, d, gaze):
+    """A202s (2026-10-07): WHERE ITS OWN HANDS ARE IN ITS VIEW (the frame's self_cells): [15 colour periphery cells, the fovea window]: 1
+    where a link of its own hands or wrists projects into the colour camera's cell, or within the colour window (its half-size and a
+    quarter more for the hand's own extent). The body schema: an infant knows where its own hand is from its body sense, and its hand is
+    part of itself (hand regard; the born hand cue's projection, A208, read from the body's own kinematics); never a channel"""
+    ids = _SELF_IDS.get(id(m))
+    if ids is None:
+        ids = [b for b in range(m.nbody) if (m.body(b).name.startswith(("left_", "right_")) and ("hand" in m.body(b).name or "wrist" in m.body(b).name))]
+        _SELF_IDS[id(m)] = ids
+    rows, cols = COL_CELLS
+    out = np.zeros(rows * cols + 1)
+    cc = m.camera("eye_C").id
+    Rc, pc = d.cam_xmat[cc].reshape(3, 3), d.cam_xpos[cc]
+    cx, cy = window_centre("L", gaze); cl = m.camera("eye_L").id
+    v = d.cam_xmat[cl].reshape(3, 3) @ np.array([(cx - G.EYE_W / 2) / W.EYE_F_PX, -(cy - G.EYE_H / 2) / W.EYE_F_PX, -1.0])
+    u = Rc.T @ v
+    wx, wy = (G.COL_W / 2 + COL_F_PX * u[0] / -u[2], G.COL_H / 2 - COL_F_PX * u[1] / -u[2]) if u[2] < 0 else (None, None)
+    reach_ = COL_WIN / 2 * 1.25
+    for b in ids:
+        q = Rc.T @ (d.xpos[b] - pc)
+        if q[2] >= -0.02:
+            continue
+        px, py = G.COL_W / 2 + COL_F_PX * q[0] / -q[2], G.COL_H / 2 - COL_F_PX * q[1] / -q[2]
+        if 0 <= px < G.COL_W and 0 <= py < G.COL_H:
+            out[int(py // (G.COL_H / rows)) * cols + int(px // (G.COL_W / cols))] = 1.0
+        if wx is not None and abs(px - wx) <= reach_ and abs(py - wy) <= reach_:
+            out[-1] = 1.0
+    return out
+
+
 class Eyes:
     """the G1's three views over a G1World (A38, A42): `render()` the two grey imagers' and the colour camera's native images into one
     buffer with one read-back, `see()` this tick's codes (rendered again only when something they would see has moved: the state, the
@@ -674,7 +711,7 @@ class Eyes:
             self._cache = (key, eye_p, eye_f, face_cue(self.m, w.d, w.gaze), truth)      # A157: the born face cue's stand-in (the truth
         _, eye_p, eye_f, cue, truth = self._cache                                         # last: the page reads it there, sim_page.py)
         return {"eye_p": eye_p.copy(), "eye_f": eye_f.copy(), "face_fovea": np.zeros(1), "face_periph": cue.copy(),
-                "onset_periph": self._onset(truth["periphery"]).copy(), "hand_periph": self._hand(), "truth": truth}
+                "onset_periph": self._onset(truth["periphery"]).copy(), "hand_periph": self._hand(), "self_cells": self_cells(self.m, self.world.d, self.world.gaze), "truth": truth}
 
     def _hand(self):
         """A208: the born hand cue once a world tick (hand_cue; its memory of the hands' places kept in the eyes' state)"""

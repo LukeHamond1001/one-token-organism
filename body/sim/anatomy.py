@@ -115,7 +115,7 @@ def _ground_appearance(frame):
         face_ = (float(fp[1]), float(fp[2]))
     body_ = frame.obs.get("body")
     gaze_ = body_[GAZE_AT:GAZE_AT + 3] if body_ is not None and len(body_) >= GAZE_AT + 3 else (0.0, 0.0, 0.0)
-    return _eyes.ground_appearance(ef, ep if ep is not None and len(ep) >= 4 else None, face=face_, gaze=gaze_)   # (A202g: against the scene; A202m: None with no figure)
+    return _eyes.ground_appearance(ef, ep if ep is not None and len(ep) >= 4 else None, face=face_, gaze=gaze_, own=frame.obs.get("self_cells"))   # (A202s)   # (A202g: against the scene; A202m: None with no figure)
 
 
 def _ground_periphery(frame):

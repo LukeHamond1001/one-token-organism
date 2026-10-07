@@ -241,3 +241,18 @@ def test_the_name_is_a_word_that_ends_her_lines():
     assert say is not None and say[0] == ball, say                          # the ball in view: 'ball', not 'at' or 'the'
     assert b._ground_say(other) is None                                     # the box in view: its letter is never primed
     print(f"A202q ok: 'ball' finals {f[ball]:.0f}/{h[ball]:.0f} primed; 'at' finals {f[at]:.0f}/{h[at]:.0f} never; the letter ending 'box' never")
+
+
+def test_its_own_hand_is_not_a_thing_named():
+    """A202s (2026-10-07): the day-114 copy traced two looks in three to the child's own hand and wrist links. With the red cell marked as
+    its own hand (self_cells), the look skips it: the floor everywhere else gives no look; unmarked, the red cell is the look; its own
+    hand in the fovea window: the window is not read"""
+    rows, cols = E.COL_CELLS
+    ep = _eye_p((1, 3), RED, FLOOR); ef = _eye_f(FLOOR, FLOOR)
+    look = E.ground_appearance(ef, ep)
+    assert look is not None and look[0] > 0.3, look
+    own = np.zeros(rows * cols + 1); own[1 * cols + 3] = 1.0
+    assert E.ground_appearance(ef, ep, own=own) is None
+    own2 = np.zeros(rows * cols + 1); own2[-1] = 1.0
+    assert E.ground_appearance(_eye_f(RED, FLOOR), _eye_p((1, 2), FLOOR, FLOOR), own=own2) is None   # (its hand in the window, nothing else stands out)
+    print("A202s ok: the red cell is the look; marked as its own hand, no look; its own hand in the window, the window not read")

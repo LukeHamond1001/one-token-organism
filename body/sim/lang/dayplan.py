@@ -548,9 +548,11 @@ class DayPlan:
         over both forearms taken, the pull growing to her brief cap and rising only with its own flexion, A9; once per block, twice a
         day); every later offer of the block is her reach-rung lesson (A90). Life days 50 to 56 the child lay on its back the whole day
         and no one offered it the sit: the pull-to-sit and the prop had stayed closed since birth (NOT_AT_BIRTH)"""
-        if self.sit_due and self._lying_on_back(lane) and \
-                not [v for v in getattr(lane.conduct.motion, "holding", {}).values() if v is not None]:   # C277: with a toy in her hand the
-            self.sit_due = False                                            # toy's lesson first (day 89: 'her hands are busy' three times)
+        if self.sit_due and self._lying_on_back(lane):                  # C277 (day 89: 'her hands are busy' three times) had the toy in her
+            # hand's lesson first; C320 (2026-10-07): the stand and the pull set a held toy aside themselves (C237, C319), so the owed stand
+            # comes first: day 114's motor block (3,394 ticks, the child on its back throughout) offered 4 stands and spent 659 ticks on the
+            # hide game of the toy in her hand
+            self.sit_due = False
             if self.sit_tries == 0:
                 self.sit_tries = 1                                          # (C224: the block's first try)
             lane.conduct.request("motor_sit")
