@@ -619,14 +619,14 @@ def test_cut_words_not_said():
     counts). Now a word is said only as its sound ends."""
     act = np.array([4, 4, 2, 4, 2, 2, 2, 4, 2, 0])
 
-    def go(voice, cut_at, n=12, tok=None, target=lambda t: "duck"):
+    def go(voice, cut_at, n=12, tok=None, target=lambda t: "duck", focus=None):
         """her line "look. the duck." from tick 0, the child sounding at cut_at and cut_at + 1; -> (conduct, cuts, what she
         had said by tick 9, the line's own end: her echo window, her last focus, the ledger's said counts)."""
         tr = T.Tract(1)
         snd = {t: tr.tick(act if cut_at <= t < cut_at + 2 else None) for t in range(n)}
         con = C.Conduct(seed=2, transcriber=Transcriber(None), voice=voice)
         con.fast.last_set["duck"] = con.fast.last_named["duck"] = -1000
-        line = TP.Line("look. the duck.", "label", "plain", "duck", "duck", ("duck",))
+        line = TP.Line("look. the duck.", "label", "plain", focus, "duck", ("duck",))   # (C316: no focus: the old stop law; with it, said through it)
         con._say(line, 0, P(0, child_target="duck"), C.Say())
         cuts, at9 = [], None
         for t in range(1, n):
@@ -641,6 +641,9 @@ def test_cut_words_not_said():
                                           target=lambda t: "duck" if t < 3 or t >= 14 else None)
     assert cuts == [3], cuts
     assert "duck" not in said and said.get("the") == 5, said
+    con_f, cuts_f, (said_f, _focus_f, _counts_f) = go(None, 3, n=40, focus="duck",
+                                                       target=lambda t: "duck" if t < 3 or t >= 14 else None)
+    assert cuts_f == [3] and "duck" in said_f, (cuts_f, said_f)              # C316: the talk-over stops after the line's name
     assert "duck" not in counts and counts["the"]["said"] == 1, counts
     assert focus is None, focus
     st = con.ledger.words["duck"]
@@ -650,9 +653,9 @@ def test_cut_words_not_said():
     spans = {"look. the duck.": [("look", 0, 2400), ("the", 2400, 4800), ("duck", 4800, 4800 + 6 * 2400)]}
     con, cuts, (said, focus, counts) = go(_FakeVoice(spans), 3)
     assert cuts == [3] and "duck" not in said and "duck" not in counts and said.get("the") == 1, (said, counts)
-    con, cuts, (said, focus, counts) = go(_FakeVoice(spans), 7)            # cut 2 ticks from "duck"'s end: finished
+    con, cuts, (said, focus, counts) = go(_FakeVoice(spans), 7, focus="duck")   # cut 2 ticks from "duck"'s end: finished
     assert said.get("duck") == 7 and focus == "duck" and counts["duck"]["heard"] == 1, (said, focus, counts)
-    con, cuts, (said, focus, counts) = go(None, 30)                        # not cut: every word said as it ends
+    con, cuts, (said, focus, counts) = go(None, 30, focus="duck")          # not cut: every word said as it ends
     assert said == {"look": 2, "the": 5, "duck": 8} and counts["duck"]["heard"] == 1 and focus == "duck", (said, counts)
     print("19 'look. the duck.' cut at tick 3: 'the' finished and said, 'duck' withdrawn: not in her echo window, not said or "
           "heard in the ledger, not her last focus, so the child's own 'duck' at tick 16 counts toward 'says'; a lengthened "

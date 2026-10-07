@@ -213,7 +213,7 @@ class GroundingMixin:
         cons = self._ground_consist()
         ok = (n >= GROUND_SAY_MIN_N) & (cons >= GROUND_CONSIST)            # A202l: the name after many hearings
         h_ = self._ground_h.numpy(); f_ = self._ground_f.numpy()             # A202q: a word that mostly ends her lines, not a sub-word unit
-        ok = ok & (h_ >= 1.0) & (f_ >= GROUND_FINAL_SHARE * np.maximum(h_, 1.0))   # (the count is A202l's, on the weighted hearings)
+        ok = ok & (h_ >= GROUND_MIN_N) & (f_ >= GROUND_FINAL_SHARE * np.maximum(h_, 1.0))   # (the weighted count is A202l's; the share on at least GROUND_MIN_N hearings: day 112's 'is', 2 of 2, primed 70 times)
         for i_ in tuple(getattr(g, "name_skip", ()) or ()):
             if 0 <= int(i_) < ok.shape[0]:
                 ok[int(i_)] = False

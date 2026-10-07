@@ -75,9 +75,10 @@ class Utterance:
             ramp = 0.5 + 0.5 * np.cos(np.pi * (np.arange(a, stop) - (stop - FADE)) / FADE)
             self.x[a:stop] *= ramp.astype(np.float32)
 
-    def cut(self, words=None):
+    def cut(self, words=None, through=None):
         """finish the word sounding now and stop at its end, or break off after CUT_MAX ticks if its end is further (its
-        queued symbols withdrawn from `words`, the words channel); between words stop now. Returns the ticks still to sound."""
+        queued symbols withdrawn from `words`, the words channel); between words stop now. C316: `through` a word's index: the
+        line is said at least to that word's end (her line's name, finished before she stops). Returns the ticks still to sound."""
         if self.done or self.cut_at_tick is not None:
             return int(np.ceil(max(0, self.stop_at - self.pos) / TICK))
         stop = self.pos
@@ -88,6 +89,10 @@ class Utterance:
                     stop = self.pos + CUT_MAX * TICK
                     self.broken = i
                 break
+        if through is not None and 0 <= int(through) < len(self.clip.words) and self.clip.words[int(through)][2] > stop:
+            stop = int(self.clip.words[int(through)][2])               # C316: said through the name
+            if self.broken is not None and self.broken <= int(through):
+                self.broken = None
         self.stop_at = min(self.stop_at, stop)
         if self.broken is not None and words is not None and self.broken in self.handed:
             words.withdraw(self.handed[self.broken], close_tick=self.start + (self.stop_at - 1) // TICK)

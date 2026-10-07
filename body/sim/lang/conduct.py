@@ -641,6 +641,7 @@ class Say:
     acts: tuple = ()
     judgments: list = field(default_factory=list)    # [(worth, kind, word)] for parent_feel.Feelings.judge
     cut: bool = False
+    cut_through: int = None                          # C316: the talk-over's stop comes after this word of her line (its focus)
     listen: bool = False
     heard: list = field(default_factory=list)        # the child's words that ended this tick (transcriber.ChildWord)
     frown: str = None                                # stage 2: "talk_over" or "hit" (parent_feel.Feelings.talk_over / harm)
@@ -787,7 +788,7 @@ class FastLayer:
         if last and self.current is not None:
             self.last_focus = self.current.focus
 
-    def cut_point(self, t):
+    def cut_point(self, t, through=None):
         """the talk-over at tick t (the child's sound heard at t; her line's samples up to the end of tick t have sounded):
         -> (the tick her line stops, the number of its words said), by the playback's own rule (body/sim/voice/playback.py
         Utterance.cut): the word sounding is finished if its end is at most CUT_MAX ticks away, else broken off at CUT_MAX
@@ -799,6 +800,8 @@ class FastLayer:
             if on < pos < end:
                 stop = end if end - pos <= CUT_MAX * TICK else pos + CUT_MAX * TICK
                 break
+        if through is not None and 0 <= int(through) < len(sp["words"]) and sp["words"][int(through)][2] > stop:
+            stop = sp["words"][int(through)][2]                       # C316: said through her line's name
         kept = sum(1 for _w, _on, end in sp["words"] if end <= stop)
         return sp["start"] + -(-stop // TICK), kept
 
@@ -1844,7 +1847,17 @@ class Conduct:
             if f.speaking(t) and self.trial is None:        # the talk-over: she finishes her word, stops, listens (4.6);
                 out.cut, out.listen = True, True            # never in a trial, whose sentence she says whole and whose
                 self.cuts += 1                              # stillness no frown breaks (4.8: nothing the child's voice does
-                stop, kept = f.cut_point(t)                 # voids a trial; P3's eleventh round)
+                # C316 (2026-10-07): SHE FINISHES THE NAME BEFORE SHE STOPS. Day 112: the child sounds on 28% of ticks and its turns began
+                # inside her lines, so 'you see the box?' reached it as 'you see', 'look at the block.' as 'look', 'oh! the box.' as 'oh
+                # the': the toys' names, her lines' last words, were almost never heard, and the grounding organ credited the cut word as
+                # the line's last. A parent beside a babbling baby says the toy's name, then stops and listens: the talk-over's stop
+                # comes after her line's focus word when it has not yet sounded (out.cut_through, the playback's `through`)
+                cur_ = f.current; ws_ = [w_ for w_, _a, _e in (f.spans or {}).get("words", [])]
+                thr_ = None
+                if cur_ is not None and getattr(cur_, "focus", None) and cur_.focus in ws_:
+                    thr_ = len(ws_) - 1 - ws_[::-1].index(cur_.focus)
+                out.cut_through = thr_
+                stop, kept = f.cut_point(t, through=thr_)   # voids a trial; P3's eleventh round)
                 self.ledger.cut(t, f.current, kept, stop)
                 f.busy_until = min(f.busy_until, stop)      # the world's voice_done may end it sooner
                 f.queue = []

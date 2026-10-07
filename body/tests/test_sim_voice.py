@@ -633,3 +633,20 @@ if __name__ == "__main__":
             print("ERROR", t.__name__, ":", type(e).__name__, str(e)[:300])
     print(f"{len(TESTS) - failed}/{len(TESTS)} passed in {time.time() - t0:.0f}s")
     sys.exit(1 if failed else 0)
+
+
+def test_the_cut_finishes_the_name():
+    """C316 (2026-10-07): 'you see the ball?' cut by the child's turn during 'see': without `through` it stops at 'see's end and 'ball'
+    never reaches the words channel; with `through` the name's index it is said to the end of 'ball', the channel gets 'ball', and nothing
+    after it is said"""
+    words = [("you", 0, 2000), ("see", 2400, 4600), ("the", 4800, 6800), ("ball", 7200, 12000), ("up", 12400, 14000)]
+    for through, want in ((None, False), (3, True)):
+        u, w, labels = Utterance(_clip(words, 7), 0), LX.Words(), []
+        for t in range(2):
+            u.tick(t, w); labels.append(LX.TABLE[w.tick(t)])
+        u.cut(w, through=through)
+        for t in range(2, 10):
+            u.tick(t, w); labels.append(LX.TABLE[w.tick(t)])
+        said = [x for x in labels if x != "<rest>"]
+        assert ("ball" in said) == want and "up" not in said and u.broken is None, (through, said, u.broken)
+    print(f"C316: the cut during 'see' with the name's index finishes through 'ball': {said}")

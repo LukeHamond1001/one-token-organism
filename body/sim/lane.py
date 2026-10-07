@@ -748,7 +748,7 @@ class ParentLane:
         scaffold = self.conduct.scaffold
         words = self.words if scaffold else None
         if out.cut and self.utt is not None:
-            self.utt.cut(words)
+            self.utt.cut(words, through=getattr(out, "cut_through", None))   # C316: through her line's name
         if out.line is not None:
             self.n_lines += 1
             if out.clip is not None:
