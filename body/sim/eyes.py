@@ -340,6 +340,7 @@ GROUND_SAL_FLOOR = 0.06 # A202h: the least colour contrast of a periphery cell a
                         # the beige room's cells read 0.02 to 0.04 against their mean)
 
 
+FACE_EXCL_RAD = math.radians(8.0)   # A202p: the periphery cells within this of her face's direction are hers, not a thing's (ours: a face's half-width at arm's length)
 GROUND_FIG = 0.02       # A202m: the least departure of a fovea window cell from the window's mean for the window to hold a figure (ours)
 
 
@@ -354,11 +355,13 @@ def _local_contrast(c):
     return out
 
 
-def ground_appearance(eye_f, eye_p=None):
+def ground_appearance(eye_f, eye_p=None, face=None, gaze=None):
     """the look of what the fovea holds: the colour window's cells' mean opponent code less the scene's (the colour periphery's cells'
     mean; A202g: the whole 21-degree window against the room, so a toy anywhere in the window is the look, where the central 4 x 4
     against the window's own ring read a toy held 15 degrees off as its colour's negative); near zero on the empty floor -> [4].
-    Without the periphery (a test's), the window's centre against its ring as before"""
+    Without the periphery (a test's), the window's centre against its ring as before. A202p: `face` (yaw, pitch of her face from the
+    fovea's centre, when it lies within the window) and `gaze`: the window is hers and is not read; the look is the periphery cell that
+    stands out beyond FACE_EXCL_RAD of her face, or None"""
     n = W.FOVEA_PX // CELL_F
     c = np.asarray(eye_f, dtype=np.float64)[-n * n * GROUND_K:].reshape(n, n, GROUND_K)
     if eye_p is not None:
@@ -383,9 +386,19 @@ def ground_appearance(eye_f, eye_p=None):
         # (None), and the organ neither binds nor names on it
         cw = c.reshape(-1, GROUND_K)
         fig = float(np.max(np.linalg.norm(cw - cw.mean(axis=0), axis=1)))
-        if fig > GROUND_FIG and float(np.linalg.norm(win)) > GROUND_FLOOR_WIN:   # the fovea holds a figure: its look against the room
+        if face is None and fig > GROUND_FIG and float(np.linalg.norm(win)) > GROUND_FLOOR_WIN:   # the fovea holds a figure: its look against the room
             return win                                                      # (two toys in view: the one its eyes are on, not the brighter)
         loc = _local_contrast(cells_.reshape(rows, cols, GROUND_K))
+        loc = np.minimum(loc, np.linalg.norm(cells_ - scene, axis=1))     # (A202p: a cell stands out when it differs from its neighbours AND
+        if face is not None:                                                #  from the room: the floor beside a red cell lights up against its neighbours too)
+            # A202p (2026-10-07): HER FACE IS READ BY ITS OWN STREAM; THE OBJECT STREAM LOOKS BESIDE IT. Day 111's first ten minutes under
+            # A202o: 204 words heard, 180 met no look; nine names heard with a toy before its eyes, two met a look: at a show she holds
+            # the toy up beside her face and names it, her face lies in the fovea's window (it fills it at 40 cm), and A202o read the
+            # whole view as no thing. The window is hers and is not read; the cells within FACE_EXCL_RAD of her face are hers too; the
+            # look is the periphery cell beyond them that stands out against its neighbours (the toy at her cheek), or None
+            d_ = _cell_dirs(gaze if gaze is not None else (0.0, 0.0))
+            far_ = np.hypot(d_[:, 0] - float(face[0]), d_[:, 1] - float(face[1])) > FACE_EXCL_RAD
+            loc = np.where(far_, loc, -1.0)
         k_ = int(np.argmax(loc))
         if float(loc[k_]) > GROUND_SAL_FLOOR:
             return cells_[k_] - scene
@@ -404,12 +417,18 @@ def ground_periphery(eye_p, gaze):
     rows, cols = COL_CELLS                                               # (3, 5): retina_colour(imgs["C"], *COL_CELLS)'s rows and columns
     c = np.asarray(eye_p, dtype=np.float64)[-rows * cols * GROUND_K:].reshape(rows, cols, GROUND_K)
     feats = (c - c.reshape(-1, GROUND_K).mean(axis=0)).reshape(-1, GROUND_K)
+    return feats, _cell_dirs(gaze)
+
+
+def _cell_dirs(gaze):
+    """each colour periphery cell's direction from the fovea's centre (yaw, pitch, rad, + right / + up) -> [rows*cols, 2]"""
+    rows, cols = COL_CELLS
     dirs = np.zeros((rows * cols, 2))
     for r in range(rows):
         for k in range(cols):
             x, y = (k + 0.5) * G.COL_W / cols, (r + 0.5) * G.COL_H / rows
             dirs[r * cols + k] = (math.atan((x - G.COL_W / 2) / COL_F_PX) - float(gaze[0]), math.atan((G.COL_H / 2 - y) / COL_F_PX) - float(gaze[1]))
-    return feats, dirs
+    return dirs
 
 
 def window_corner(side, gaze):

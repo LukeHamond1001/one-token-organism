@@ -191,9 +191,15 @@ def test_the_speakers_face_is_not_a_referent():
     f2 = _frame(_eye_p((1, 2), RED, FLOOR), _eye_f(RED, FLOOR)); f2.obs["face_periph"] = np.array([1.0, 2.5 * FOVEA_HALF, 0.0])   # her face off to the side
     b._ground_learn(ball, f2)
     assert n[ball] == 1, n[ball]
+    f3 = _frame(_eye_p((0, 4), RED, FLOOR), _eye_f(RED, FLOOR)); f3.obs["face_periph"] = np.array([1.0, 0.0, 0.0])   # A202p: her face at the centre, the ball
+    look3 = b.anatomy.grounding.appearance(f3)                                                                      # up at the top right beyond her face
+    assert look3 is not None and look3[0] > 0.03, look3                     # (the red cell beside her face is the look, not her face)
+    b._ground_learn(ball, f3)
+    assert n[ball] == 2, n[ball]
     block = 41
     for _ in range(GR.GROUND_SAY_MIN_N):
         b._ground_learn(ball, f2)
         b._ground_learn(block, _frame(_eye_p((1, 2), BLUE, FLOOR), _eye_f(BLUE, FLOOR)))   # (a second word with another look: the shared look a mix)
     assert b._ground_say(f) is None and b._ground_say(f2) is not None and b._ground_say(f2)[0] == ball, (b._ground_say(f), b._ground_say(f2))
+    assert b._ground_say(f3) is not None and b._ground_say(f3)[0] == ball   # (A202p: the ball beside her face primes 'ball')
     print("A202o ok: a word heard with her face in the fovea binds nothing and primes nothing; with her face aside, the red ball binds and primes 'ball'")

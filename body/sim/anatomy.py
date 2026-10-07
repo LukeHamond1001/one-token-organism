@@ -102,6 +102,7 @@ def _ground_appearance(frame):
     if ef is None or len(ef) < 4:                                              # the eyes off (the night): no look (A202m: None, no thing)
         return None
     fp = frame.obs.get("face_periph")
+    face_ = None
     if fp is not None and len(fp) >= 3 and float(fp[0]) > 0.0 and abs(float(fp[1])) <= FOVEA_HALF and abs(float(fp[2])) <= FOVEA_HALF:
         # A202o (2026-10-07): THE SPEAKER'S FACE IS NOT A REFERENT. The rows rebuilt under the figure law (A202n, 40 minutes of day 110):
         # 'good' (17 hearings), 'the', 'see', 'oh', 'you', 'pip' all carried one look, [0.04, 0, 0, 0.03] on the opponent axes, her skin
@@ -109,9 +110,12 @@ def _ground_appearance(frame):
         # so her face is the figure at most hearings and every word becomes its name ('see' primed 69 times and said 16 in half an
         # hour). An infant maps a word onto an object, not onto the speaker (the whole-object and novel-name assumptions, Markman
         # 1990; the speaker is the source of the sound); her face is read by its own born cue, and while it lies within the fovea's
-        # window the look is no thing: nothing binds, nothing is named. (Her own name, 'mama', is the word-level mouth's road.)
-        return None
-    return _eyes.ground_appearance(ef, ep if ep is not None and len(ep) >= 4 else None)   # (A202g: against the scene; A202m: None with no figure)
+        # window the window is hers: not a thing. (Her own name, 'mama', is the word-level mouth's road.) A202p: the object stream
+        # looks beside her face (eyes.ground_appearance's `face`): the toy she holds up at her cheek as she names it is the look
+        face_ = (float(fp[1]), float(fp[2]))
+    body_ = frame.obs.get("body")
+    gaze_ = body_[GAZE_AT:GAZE_AT + 3] if body_ is not None and len(body_) >= GAZE_AT + 3 else (0.0, 0.0, 0.0)
+    return _eyes.ground_appearance(ef, ep if ep is not None and len(ep) >= 4 else None, face=face_, gaze=gaze_)   # (A202g: against the scene; A202m: None with no figure)
 
 
 def _ground_periphery(frame):
