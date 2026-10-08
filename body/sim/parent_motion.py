@@ -1133,7 +1133,7 @@ class ParentMotion:
                     child_pts=None if self.child_pts is None else [list(x) for x in self.child_pts],
                     written=None if self.written is None else [self.written[0].tolist(), self.written[1].tolist()],
                     drive=self.drive.state(),
-                    moving=self.moving, placed=self.placed, xfrc_bodies=list(self.xfrc_bodies), warm=_plain(self.warm), tick=self.tick, stats=_plain(self.stats), effort_peak=self.effort_peak,
+                    moving=self.moving, placed=self.placed, teleported=int(self.teleported), xfrc_bodies=list(self.xfrc_bodies), warm=_plain(self.warm), tick=self.tick, stats=_plain(self.stats), effort_peak=self.effort_peak,
                     proxies={int(g): [int(self.m.geom_contype[g]), int(self.m.geom_conaffinity[g])]
                              for g in list(self.hand_geom.values()) + self.finger_geoms["L"] + self.finger_geoms["R"] + [int(x) for x in self.body_geoms]})
 
@@ -1198,7 +1198,7 @@ class ParentMotion:
         self.written = None if s["written"] is None else (np.array(s["written"][0], dtype=np.float64), np.array(s["written"][1], dtype=np.float64))
         self.drive.load_state(s["drive"])
         self.start = self.end = None
-        self.moving = bool(s["moving"]); self.placed = bool(s["placed"]); self.xfrc_bodies = [int(b) for b in s["xfrc_bodies"]]
+        self.moving = bool(s["moving"]); self.placed = bool(s["placed"]); self.teleported = int(s.get("teleported", 0)); self.xfrc_bodies = [int(b) for b in s["xfrc_bodies"]]
         self.warm = _unplain(s["warm"]); self.tick = int(s["tick"])
         self.stats = _unplain(s["stats"]); self.effort_peak = float(s["effort_peak"])
         for g, (ct, ca) in s["proxies"].items():
@@ -1622,6 +1622,9 @@ class ParentMotion:
             if self.prev is not None:                                       # she stays as she was planned: her base and arms as they
                 self.base = _unplain(self.prev["base"]); self.base["dirty"] = True   # were when last planned
                 self.arms = _unplain(self.prev["arms"])
+                for sd_ in "LR":                                            # C331 amended: never back onto a hold that has ended
+                    if self.arms[sd_].get("mode") == "hold" and self._hold(self.arms[sd_].get("hold")) is None:
+                        self.arms[sd_] = dict(mode="relaxed")
                 for c in CHAINS:
                     self.offset[c] = self._offset_at_start[c].copy()
                 so = self.prev.get("standoff")                              # A108: and her standoff as it was when that pose was drawn
@@ -2320,6 +2323,11 @@ class ParentMotion:
         pose and with any hand target fixed in the room or on the child; her arm's own moves that hand. A hand holding the child is
         planned on its held point, open and flat on its surface (its touch keeps it outside, as the rest of her)"""
         a = self.arms[sd]
+        if a["mode"] == "hold" and self._hold(a.get("hold")) is None:
+            # C331 amended (2026-10-08, life tick 6,003,544): the jump guard's restore of her arms (self.prev) put an arm back on a hold
+            # that had ended in the meantime (a direct hold engages and ends within a tick or two), and the pose builder crashed the
+            # life on it (AttributeError: NoneType.body). An arm whose hold is gone is at rest
+            self.arms[sd] = a = dict(mode="relaxed")
         mode = a["mode"]
         oa = self.offset[f"arm_{sd}"]; oc = self.offset["core"]
         if mode == "relaxed":

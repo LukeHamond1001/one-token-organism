@@ -793,6 +793,7 @@ def test_her_hands_reach_and_touch():
           runs)
 
 
+@_scripted
 def test_exact_replay_across_a_solve():
     """parent 17 (the W2 verifier's fifth finding): a save taken while she shows a toy, before her trunk is solved again: restored
     in a new world, every frame, her state and the final save bit for bit (her solve's wall time is an instrument's, never her

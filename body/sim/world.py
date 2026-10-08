@@ -1836,6 +1836,7 @@ class G1World(SimWorld):
                               "words_out": self.words_out, "tract_pa": self.tract_pa, "tract_raw": self.tract_raw, "crying": self.crying, "night": self.night, "dawn_left": int(self.dawn_left),
                               "carried": [[int(t), list(a), list(b)] for t, a, b in self.carried], "door_open": bool(self.door_open),
                               "tidied": [[int(t), k, list(a), list(b)] for t, k, a, b in self.tidied],
+                              "pinned": {str(k): [list(map(float, v[0])), None if v[1] is None else list(map(float, v[1])), int(v[2])] for k, v in self.pinned.items()},   # C332
                               "lane": None if self.lane is None else self.lane.state()}),
                 "warnings": np.array([int(d.warning[i].number) for i in range(int(mujoco.mjtWarning.mjNWARNING))])}
         return pickle.dumps(st, protocol=4) if fast else st
@@ -1889,6 +1890,7 @@ class G1World(SimWorld):
         self.door_open = bool(s5.get("door_open", False))                    # (the door stage; older saves: closed)
         self.carried = [(int(t), [float(x) for x in a], [float(x) for x in b]) for t, a, b in s5.get("carried", [])]   # (A110; older saves: none)
         self.tidied = [(int(t), str(k), [float(x) for x in a], [float(x) for x in b]) for t, k, a, b in s5.get("tidied", [])]   # (A117; older saves: none)
+        self.pinned = {str(k): (np.asarray(v[0], float), None if v[1] is None else np.asarray(v[1], float), int(v[2])) for k, v in (s5.get("pinned") or {}).items()}   # (C332)
         if self.lane is not None and s5.get("lane") is not None:
             self.lane.load_state(s5["lane"])
         mujoco.mj_forward(m, d)
