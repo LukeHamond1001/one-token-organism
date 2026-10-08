@@ -1373,10 +1373,14 @@ class G1World(SimWorld):
                                                                         # it the settle writhed and rolled the laid child back onto its
                                                                         # front on the life's dawn-13 pair; the cerebellum writes it anew
                                                                         # each waking tick)
+        held = G.held_by_welds(m, d)                                    # C334 (2026-10-08): the toys welded to her hands ride still with
         for _ in range(int(round(G.BIRTH_SETTLE_S / m.opt.timestep))):  # where they are (no reset of the world)
             mujoco.mj_step(m, d)
             d.qpos[b.qadr] = her_q
             d.qvel[b.vadr] = 0.0
+            for adr_, dof_, q_ in held:                                 # her (a hand pinned in place under a live weld on a free toy
+                d.qpos[adr_:adr_ + 7] = q_; d.qvel[dof_:dof_ + 6] = 0.0   # blew the book to 170 m/s on the first settle step: life
+                                                                        # tick 6,005,091's replay, the fault behind two crashes)
         d.qvel[:] = 0.0
         mujoco.mj_forward(m, d)
         self.carried.append((int(self.tick), [float(xy[0]), float(xy[1])], [float(to[0]), float(to[1])]))   # back where it lies, too)

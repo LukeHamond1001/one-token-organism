@@ -252,6 +252,25 @@ BIRTH = dict(shoulder_pitch=0.0, shoulder_roll=0.35, shoulder_yaw=0.0, elbow=1.1
              hip_pitch=-0.35, hip_roll=0.12, hip_yaw=0.15, knee=0.55, ankle_pitch=-0.05)
 BIRTH_XY = (-0.05, -0.62)       # the pelvis on the mat; the head toward -x, its left toward +y
 BIRTH_SETTLE_S = 1.5            # settled under its servos holding the birth pose
+
+
+def held_by_welds(m, d):
+    """C334 (2026-10-08): the free-jointed bodies (toys) held by a live weld to one of the parent's bodies: [(qpos adr, dof adr, qpos
+    now)], to be written back each step of a settle that pins her joints (carry_to_mat, place_on_mat), so what her hand holds rides
+    with her pinned hand instead of fighting the weld"""
+    out = []
+    for e in range(m.neq):
+        if not d.eq_active[e] or int(m.eq_type[e]) != int(mujoco.mjtEq.mjEQ_WELD):
+            continue
+        for toy in (int(m.eq_obj1id[e]), int(m.eq_obj2id[e])):          # the held body: the weld's free-jointed toy (either end)
+            if not m.body(toy).name.startswith("toy_") or m.body_jntnum[toy] < 1:
+                continue
+            j = int(m.body_jntadr[toy])
+            if int(m.jnt_type[j]) != int(mujoco.mjtJoint.mjJNT_FREE):
+                continue
+            adr, dof = int(m.jnt_qposadr[j]), int(m.jnt_dofadr[j])
+            out.append((adr, dof, d.qpos[adr:adr + 7].copy()))
+    return out
 # THE PARENT AT BIRTH: standing by the door where the maker stands her (make_g1room.py builds her body there at rest),
 # her face drawn at its neutral expression, looking straight ahead, her hands at the Pose's default shape. The face's and the
 # hands' geoms have no place of their own in the file (the file's are placeholders inside the head and the hands): only
@@ -451,12 +470,15 @@ class Scene:
         mujoco.mj_forward(m, d)
         b = self.bmap                                                  # the parent is kept where she stands while the G1 settles
         her_q = d.qpos[b.qadr].copy()                                  # (no motion drives her yet: her body would fall)
+        held = held_by_welds(m, d)                                      # C334: what her hands hold rides still with her
         for _ in range(int(round(settle_s / m.opt.timestep))):
             if not hold:
                 self.hold_ctrl()
             mujoco.mj_step(m, d)
             d.qpos[b.qadr] = her_q
             d.qvel[b.vadr] = 0.0
+            for adr_, dof_, q_ in held:
+                d.qpos[adr_:adr_ + 7] = q_; d.qvel[dof_:dof_ + 6] = 0.0
         return d
 
     def birth(self):

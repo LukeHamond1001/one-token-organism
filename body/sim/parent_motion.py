@@ -4236,12 +4236,29 @@ class ParentMotion:
         """T2 (2026-10-08): her figure put beside the child at once, kneeling, facing it, her arms relaxed, her holds kept: the direct
         teacher's approach (the owner's word: the scripted teacher's failures are the bottleneck). An environment's act, disclosed:
         she does not walk, kneel down or shuffle; she is there"""
+        m, d = self.m, self.d
+        rides = []                                                          # C334 (2026-10-08, life tick 6,005,091): WHAT HER HANDS HOLD
+        for (sd, toy), e in self.toy_weld.items():                           # GOES WITH HER. Her figure set beside the child while the book
+            if not d.eq_active[e]:                                          # was welded to her right hand: her hand moved 2 m in a step, the
+                continue                                                    # weld (solref 6 ms) pulled the 150 g book after it at hundreds of
+            hb = self.bm.seg_body[f"hand_{sd}"]; tb = self.toys[toy]        # m/s and the integrator died ('FactorizeHessian: rank-deficient',
+            Rh = d.xmat[hb].reshape(3, 3); Rt = d.xmat[tb].reshape(3, 3)   # NaN in her lumbar's control), twice in an hour, the watchdog's
+            rel_p = Rh.T @ (d.xpos[tb] - d.xpos[hb]); rel_R = Rh.T @ Rt    # restarts replaying into it. Each toy welded to a hand is set
+            rides.append((toy, hb, rel_p, rel_R))                           # at the same pose from the hand after the placement, still
         self.base = dict(mode=mode, at=_lst(at), yaw=float(yaw), lean=0.0, spine=0.0, twist=0.0, dirty=True)
         for sd in "LR":
             if self.arms[sd].get("mode") != "hold" and self.holding.get(sd) is None:
                 self.arms[sd] = dict(mode="relaxed")
         self.trunk_kneel = False
         self._put(self._pose())                                             # drawn there at once
+        for toy, hb, rel_p, rel_R in rides:
+            b = self.toys[toy]; j = m.body_jntadr[b]; adr = m.jnt_qposadr[j]; dof = m.jnt_dofadr[j]
+            Rh = d.xmat[hb].reshape(3, 3)
+            d.qpos[adr:adr + 3] = d.xpos[hb] + Rh @ rel_p
+            d.qpos[adr + 3:adr + 7] = _mat_to_quat(Rh @ rel_R)
+            d.qvel[dof:dof + 6] = 0.0
+        if rides:
+            mujoco.mj_forward(m, d)
         self.teleported = 2                                                 # the jump guard measures from the old spot: off
         self.stats["teleports"] = self.stats.get("teleports", 0) + 1
 
@@ -4257,7 +4274,13 @@ class ParentMotion:
             if where is None and offs is None and b["mode"] == "heels" and self._beside_now():
                 return []
             ch = self.child; spot = None
-            for H, yaw, tag in self._spots(where, offs, alongs, need):
+            toys_xy = list(self._toys_xy().values())                        # C334: a spot whose floor (her heels, her knees 0.45 m before
+            def clear_of_toys(H_, yaw_):                                    # them) lies TOY_CLEAR_M from every toy comes first; her figure
+                fwd_ = np.array([math.cos(yaw_), math.sin(yaw_)])           # set over a toy (her shin 2.4 cm into the drum at 6,005,091) is
+                return all(min(float(np.linalg.norm(H_ - t)), float(np.linalg.norm(H_ + 0.45 * fwd_ - t))) >= K.TOY_CLEAR_M for t in toys_xy)
+            cands = list(self._spots(where, offs, alongs, need))            # a contact the physics has to resolve
+            cands = [c_ for c_ in cands if clear_of_toys(np.asarray(c_[0], float), float(c_[1]))] + [c_ for c_ in cands if not clear_of_toys(np.asarray(c_[0], float), float(c_[1]))]
+            for H, yaw, tag in cands:
                 H = np.asarray(H, float)
                 if self._in_plan(H) and ch.clearance_xy(H) >= 0.03:
                     spot = (H, float(yaw)); break

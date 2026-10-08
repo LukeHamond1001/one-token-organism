@@ -477,6 +477,7 @@ SHOW_BY_PLACEMENT = True        # T3 (2026-10-08): the show is the environment's
 DIRECT_LEAN_EXTRA_DEG = 20      # T4: deg of lean past LEAN_MAX_DEG the direct teacher's figure may take for a lean-in no pose in a woman's
                                 # range reaches (ours; an environment's act, disclosed)
 LEAN_SPOTS_PER_SIDE = 2         # C333: spots a side (its left, its right, its head) the direct teacher's lean-in searches (ours)
+TOY_CLEAR_M = 0.30              # C334: m her placed figure's floor (heels and knees) keeps from every toy, where a spot allows (ours)
 LEAN_FAIL_MEMO_TICKS = 60       # C333: ticks a failed lean-in search holds while the child lies as it lay (ours; 9 s)
 SHOW_DIST_M = 0.40              # m: a toy shown before the G1's eyes (4.2, 4.10)
 REFETCH_M = 1.0                 # C322: a toy farther than this from where she kneels when she grasps it has moved away: she fetches it again (ours: her reach from the tall kneel, about 0.9 m)
