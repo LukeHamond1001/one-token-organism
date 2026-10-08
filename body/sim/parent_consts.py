@@ -469,6 +469,7 @@ REPLAN_MOVED_M = 0.02           # m: the target has moved when it is this far fr
 FOCUS_TICKS = 3                 # ticks: a look "during the focus word" holds on the object this long, then the next look (ours:
                                 # a focus word lasts 2-3 ticks at her 3.6 words a second, 4.4)
 LOOK_TICKS = 2                  # her gaze reaches its target within 2 ticks (4.10's L1)
+NAME_GLANCE_TICKS = 4           # C327: her eyes on the thing she names for this long (0.6 s) as her line begins, then back to the child (ours)
 SHOW_SHAKE_M = 0.02             # m: a shown toy is shaken this far either way ... (4.10: "shaken for its sound"; ours)
 SHOW_SHAKE_HZ = 2.5             # ... at this rate (ours)
 SHOW_DIST_M = 0.40              # m: a toy shown before the G1's eyes (4.2, 4.10)

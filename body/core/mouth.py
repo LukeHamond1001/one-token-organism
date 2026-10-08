@@ -457,6 +457,14 @@ class MouthMixin:
                     add_ = ground_prior(logits, gs_[1])
                     self._ground_say_now = [int(gs_[0]), float(gs_[1]), float(add_), float(logits.max() - logits[int(gs_[0])])]
                     logits[int(gs_[0])] = logits[int(gs_[0])] + add_
+            if getattr(self.anatomy, "situation", None) is not None:
+                ss_ = self._situ_say()                                  # A214: the word whose situation is the situation now, a prior on its logit
+                self._situ_say_now = None
+                if ss_ is not None:
+                    from body.core.grounding import ground_prior
+                    add_ = ground_prior(logits, ss_[1])
+                    self._situ_say_now = [int(ss_[0]), float(ss_[1]), float(add_), float(logits.max() - logits[int(ss_[0])])]
+                    logits[int(ss_[0])] = logits[int(ss_[0])] + add_
             act_on = bool(int(self.cfg.get("actor", 0)) and stri and getattr(self, "_z_now", None) is not None)
             self._cands_now = None
             if int(self.cfg.get("actor", 0)) and str(self.cfg.get("actor_form", "add")) == "softmax":

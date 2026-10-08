@@ -545,6 +545,40 @@ def face_cue(m, d, gaze):
     return np.zeros(3)
 
 
+def gaze_cue(m, d, gaze, parent, face):
+    """A215 (2026-10-08): THE BORN GAZE-FOLLOWING CUE'S STAND-IN (the frame's gaze_periph; the anatomy's OrientCue "gaze", standing, after
+    the heard word's). Infants follow the direction of an adult's gaze to the thing looked at from about six months (Scaife and Bruner
+    1975; Butterworth and Jarrett 1991), and the words they learn are the words said over the thing the adult looks at (Tomasello and
+    Farrar 1986; Baldwin 1991). The G1's organ (A202) binds a word to the look in its fovea, and its fovea meets the thing she names on
+    few hearings (day 121: 'ball' 14 hearings, 8 with a look under A212). [1, yaw, pitch]: while her face is in its view (`face`, the
+    born face cue fired this tick) and her eyes are on a thing that is not the child (her look's point, parent._look_point: a toy, a
+    fixture, a place) that lies in the colour camera's field, that thing's direction from the fovea's centre (rad, + right / + up);
+    zeros otherwise. Read from the world (where her eyes are), as the face cue is, until a learned road works: disclosed"""
+    if parent is None or face is None or float(face[0]) <= 0.0:
+        return np.zeros(3)
+    try:
+        pt = parent._look_point()                                           # (her look's point: L1's glance at a thing she names, or her
+    except Exception:                                                       #  look act's target)
+        return np.zeros(3)
+    ch = getattr(parent, "child", None)
+    if pt is None or ch is None:
+        return np.zeros(3)
+    pt = np.asarray(pt, float)
+    if float(np.linalg.norm(pt - np.asarray(ch.eyes, float))) < GAZE_CUE_OFF_CHILD_M or \
+            float(np.linalg.norm(pt - np.asarray(ch.torso, float))) < GAZE_CUE_OFF_CHILD_M:   # her eyes on the child itself: no thing
+        return np.zeros(3)
+    cc = m.camera("eye_C").id
+    u = d.cam_xmat[cc].reshape(3, 3).T @ (np.asarray(pt, float) - d.cam_xpos[cc])
+    if u[2] >= -0.02:
+        return np.zeros(3)
+    px, py = G.COL_W / 2 + COL_F_PX * u[0] / -u[2], G.COL_H / 2 - COL_F_PX * u[1] / -u[2]
+    if not (0 <= px < G.COL_W and 0 <= py < G.COL_H):
+        return np.zeros(3)
+    ga = gaze_at(m, d, pt)
+    return np.array([1.0, float(ga[0] - gaze[0]), float(ga[1] - gaze[1])])
+
+
+GAZE_CUE_OFF_CHILD_M = 0.35     # A215: her look's point this far from the child's eyes and trunk is a thing, not the child (ours)
 HAND_BODIES = ("left_wrist_yaw_link", "right_wrist_yaw_link")   # A208: the Dex3 palms ride these (the URDF's hand_palm_link meshes)
 HAND_CUE_MPS = 0.15             # A208: a hand moving faster than this is reached with; its direction draws the eyes (ours)
 
@@ -795,6 +829,7 @@ class Eyes:
         _, eye_p, eye_f, cue, truth = self._cache                                         # last: the page reads it there, sim_page.py)
         return {"eye_p": eye_p.copy(), "eye_f": eye_f.copy(), "face_fovea": np.zeros(1), "face_periph": cue.copy(),
                 "onset_periph": self._onset(truth["periphery"]).copy(), "hand_periph": self._hand(), "salient_periph": self._salient(truth["images"]["C"], cue),
+                "gaze_periph": gaze_cue(self.m, self.world.d, self.world.gaze, getattr(self.world, "parent", None), cue),   # A215
                 "self_cells": self_cells(self.m, self.world.d, self.world.gaze), "truth": truth}
 
     def _salient(self, img, face):

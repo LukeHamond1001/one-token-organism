@@ -511,6 +511,16 @@ class Grounding:
     name_skip: tuple = ()     # A202q: the symbols the name never primes (a body's sub-word units: the G1's letters; a toy's name is not one letter)
 
 
+@dataclass(eq=False)
+class Situation:
+    """THE GROUNDING OF WORDS IN THE SITUATION, as a body declares it (A214; body/core/situation.py holds the organ): `band` the index of
+    the cortex's ladder band whose state (less its running mean) is the situation's code, `skip` the symbols never bound (the end the
+    offset teaches, the space), `name_skip` the symbols never primed (a body's sub-word units). The anatomy names them and holds no state."""
+    band: int = 3
+    skip: tuple = ()
+    name_skip: tuple = ()
+
+
 class Anatomy:
     """a body's senses, effectors and reward sources, each list in its order: the channels' order is the float order of the cortex's
     input sum (the ladder's bundle and the efference copy of its own acts joining after the first `inner_at` channels; by default
@@ -521,6 +531,7 @@ class Anatomy:
     None (the class's: the diary declares none, so its striatum and its life are as they were)"""
     cerebellar = None
     orienting = None                                  # step R6h: the born orienting cues (a list of OrientCue), none by default
+    situation = None                                  # A214: the grounding of words in the situation (a Situation), none by default
     proprio = ()                                      # A149: the names of its proprioceptive channels (the body's own numbers: joint positions,
                                                       # velocities, efforts), the striatum's sense line; none by default (the diary)
     events = None                                     # step R7a: the born event lines (a list of EventLine), none by default (the diary's)

@@ -60,6 +60,7 @@ import math
 
 import mujoco
 import numpy as np
+from body.sim import parent_consts as PK
 
 from body.sim import anatomy as AN
 from body.sim import ears as EA
@@ -751,6 +752,14 @@ class ParentLane:
             self.utt.cut(words, through=getattr(out, "cut_through", None))   # C316: through her line's name
         if out.line is not None:
             self.n_lines += 1
+            # C327 (2026-10-08): SHE LOOKS AT THE THING SHE NAMES. Her eyes rested on the child's eyes on every tick of the day-121 copy
+            # (400 of 400; L1's glance only at a sudden event), so a child following her gaze (A215) had nothing to follow. A parent naming
+            # a toy looks at it and back at the child (gaze alternation: Bakeman and Adamson 1984; the looking-while-naming that infants
+            # use for word learning: Baldwin 1991): her eyes go to the line's thing for NAME_GLANCE_TICKS as the line begins, then back
+            refs_ = list(getattr(out.line, "refs", None) or ())
+            pm_ = getattr(world, "parent", None)
+            if refs_ and pm_ is not None and refs_[0] in getattr(pm_, "toys", {}) and refs_[0] not in (p.child_holds or ()):
+                pm_.glance(refs_[0], ticks=PK.NAME_GLANCE_TICKS)
             if out.clip is not None:
                 if self.utt is not None and not self.utt.done:
                     self.utt.cut(words)                     # (the conduct says a line only when her voice is free)

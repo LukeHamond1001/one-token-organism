@@ -69,13 +69,14 @@ from .core.frames import FramesMixin
 from .core.amygdala import AmygdalaMixin
 from .core.sleep import SleepMixin
 from .core.grounding import GroundingMixin
+from .core.situation import SituationMixin
 
 # `from body.life import *` gives exactly the names it gave before the split (the mixins stay reachable as attributes)
 __all__ = ["collections", "math", "os", "time", "torch", "F", "Organs", "Store", "FastStore", "PHYSIOLOGY", "Life"]
 
 
 class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, ActorMixin, NightMixin, PersistenceMixin, InstrumentsMixin, TimingMixin,
-           CerebellumMixin, CordMixin, FramesMixin, AmygdalaMixin, SleepMixin, GroundingMixin):
+           CerebellumMixin, CordMixin, FramesMixin, AmygdalaMixin, SleepMixin, GroundingMixin, SituationMixin):
     def __init__(self, organs, tok, cfg=None, device="cpu", seed=0, save_path=None, world=None):
         unknown = sorted(k_ for k_ in (cfg or {}) if k_ not in PHYSIOLOGY and k_ not in SWITCHES and k_ not in MOTOR and k_ not in CEREB and k_ not in REFLEX
                          and k_ not in FRAMES and k_ not in AMYG and k_ not in SLEEP)   # the switches, the motor's, the cerebellum's, (R6h) the born patterns', (R7) the frames', (R7d) the amygdala's and (R8) the night's constants are known, absent unless given
@@ -422,6 +423,8 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         int_t = self._act(u, felt, stri, gam, delta, acted, nxt, p_act, p_choice, probs, feat, act_on, drew)
         if getattr(self.anatomy, "grounding", None) is not None:
             self._ground_learn(u, self.world.now)                 # A202: the word heard this tick bound to the fovea's look (body/core/grounding.py)
+        if getattr(self.anatomy, "situation", None) is not None:
+            self._situ_learn(u)                                   # A214: and to the situation (body/core/situation.py)
         self._feel_and_learn(delta, delta_slow, delta_long, feat, acted, int_t, p_act, drew)
         if self._frames_on():                               # step R7b: the frame's surprise, the event's end, the gated write, the record
             self._frame_tick(u, delta, r, nxt)

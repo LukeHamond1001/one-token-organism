@@ -92,7 +92,7 @@ import numpy as np
 
 from tokenizers import Tokenizer, models
 
-from body.core.anatomy import Cerebellar, Channel, EarChannel, Effector, EventLine, Grounding, Heading, LanguageAnatomy, OrientCue, RewardSource, VoiceEffector
+from body.core.anatomy import Cerebellar, Channel, EarChannel, Effector, EventLine, Grounding, Situation, Heading, LanguageAnatomy, OrientCue, RewardSource, VoiceEffector
 
 
 def _ground_appearance(frame):
@@ -490,6 +490,9 @@ class SimAnatomy(LanguageAnatomy):
                           # the born saccade turns the eyes to it and the orienting bias pulls while it stands; first among the standing
                           # cues (A208): a child hearing 'ball' looks at the ball before its hand or her face
                           OrientCue("named", "named_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF),
+                          # A215 (2026-10-08): where she looks draws the eyes next (gaze following, joint attention: the thing she names is
+                          # the thing her eyes are on; body/sim/eyes.py gaze_cue, a stand-in read from the world as the face cue is)
+                          OrientCue("gaze", "gaze_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF),
                           # A211 (2026-10-07): the thing that stands out in view draws the eyes next (bottom-up salience with inhibition of
                           # return, body/sim/eyes.py salience_cue): the eyes go from thing to thing and back to her; before its own hand
                           # (the day-116 copy: the hand cue led the saccade on 125 ticks of 300 and the eyes held a toy on 7%; in a reach
@@ -504,6 +507,9 @@ class SimAnatomy(LanguageAnatomy):
         # A202: THE GROUNDING OF WORDS IN JOINT ATTENTION: the G1's look is its colour (the colour window's and the colour periphery's
         # opponent code, body/sim/eyes.py: ground_appearance, ground_periphery; the gaze from the body channel, GAZE_AT); the end the
         # offset teaches and the space are never bound
+        # A214: the words for what is going on bind to the ladder's band 3 (its clock 64 ticks, about 10 s: an event's span)
+        self.situation = Situation(band=3, skip=tuple(int(x_) for x_ in (self.end_id, self.space_id) if x_ is not None),
+                                   name_skip=tuple(int(i_) for i_ in (tok.token_to_id(ch_) for ch_ in "abcdefghijklmnopqrstuvwxyz") if i_ is not None))
         self.grounding = Grounding("named_periph", 4, _ground_appearance, _ground_periphery,
                                    skip=tuple(int(x_) for x_ in (self.end_id, self.space_id) if x_ is not None),
                                    name_skip=tuple(int(i_) for i_ in (tok.token_to_id(ch_) for ch_ in "abcdefghijklmnopqrstuvwxyz") if i_ is not None))   # A202q: the letters
