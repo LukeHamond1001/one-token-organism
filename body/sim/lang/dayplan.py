@@ -329,7 +329,14 @@ class DayPlan:
             print(f"it stood alone {int(t - (self.free_from if self.free_from is not None else t))} ticks after she let go (C287)", flush=True)
             self.free_from = None
             mat_ = np.asarray(world.m.geom_pos[world.m.geom("mat").id][:2], float)
-            if getattr(world, "door_open", False):                          # the door stage: laid down where the walk ended (the way
+            # C328 (2026-10-08): THE WALK OVER, IT IS CARRIED BACK TO ITS MAT, NOT LEFT IN THE SECOND ROOM. Days 123 and 124: every tick
+            # of both days in the second room (laid on its rug after each held walk through the door, D1c and D1e, and carried back
+            # to the rug when her acts were blocked, D1b). Day 123 went as the mat's days do (stands 10 done, 2 refused; shows 21 and
+            # 13); day 124 on and about the rug did not (stands 2 and 13, shows 6 and 34, the refusals at the rug itself, 'no spot she
+            # can kneel at', its toys brought with it crowding the rug, C286). The mat is the teaching ground every stand and show was
+            # built and measured on for a hundred days; the owner's stage is walking and talking first, the door after: the door stays
+            # open and the walks still head for it, but it is laid on its mat afterwards; it goes through on its own legs or not at all
+            if False and getattr(world, "door_open", False):                # the door stage: laid down where the walk ended (the way
                 here_ = np.asarray(world.d.qpos[:2], float)                 # to the door is walked in several stands; carried back to
                 P_ = pm.plan                                                # its mat each time it never got there): the nearest clear
                 cx_, cy_ = P_.cell(here_)                                   # floor (0.6 m from any wall or thing) within a metre, or
@@ -393,8 +400,7 @@ class DayPlan:
             mat_ = world.m.geom_pos[world.m.geom("mat").id][:2]
             if float(np.hypot(pm.base["at"][0] - mat_[0], pm.base["at"][1] - mat_[1])) >= CARRY_CLEAR_M:
                 was_ = [round(float(x), 2) for x in world.d.qpos[:2]]
-                if world.carry_to_mat(to=(np.asarray(DOOR_RUG_XY, float) if getattr(world, "door_open", False) and (float(world.d.qpos[0]) > 2.75 or float(world.d.qpos[0]) > 1.5 and abs(float(world.d.qpos[1]) + 1.5) < 0.8)
-                                           else np.asarray(world.m.geom_pos[world.m.geom("mat").id][:2], float))):   # (D1b: or in the doorway, where her spots are blocked: on, not back.
+                if world.carry_to_mat(to=np.asarray(world.m.geom_pos[world.m.geom("mat").id][:2], float)):   # (C328: its mat always; D1b had laid it on the rug when past the door.
                     # C298 (2026-10-06): the mat's CENTRE named, not None: lying on the mat's far edge by the front wall (0.4, -2.0) the
                     # child counted as 'on the mat' and the carry declined; day 102: nine stands refused 'no spot she can kneel at'
                     # in a morning, six of them there, and no carry)   # (the door stage: in the second room, its rug)
