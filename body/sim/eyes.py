@@ -579,6 +579,8 @@ def hand_cue(m, d, gaze, prev):
 ADAPT_TAU = 0.5                 # A212: s, the retina's adaptation follows the scene's mean luminance this fast (ours: cone adaptation
                                 # settles within a second; Shapley and Enroth-Cugell 1984)
 ADAPT_FLOOR = 0.002             # A212: the least adaptation level (of full scale): a black scene is not amplified without end (ours)
+SAL_COMMIT_TICKS = 6            # A213: a chosen saccade target is kept this long at most (0.9 s: a saccade and a short fixation; ours)
+SAL_REACH_RAD = math.radians(4.0)   # A213: the fovea within this of the target has arrived (ours: the fovea's inner third)
 SAL_BLOCK = 4                   # A211: the salience map's unit, colour camera px (about 1.2 deg; ours: finer than the toy at 1 m, about 7 deg)
 SAL_CS = (1.0, 6.0)             # A211: its centre and surround, Gaussian sd in blocks (about 1.2 and 7 deg; ours: an object-sized centre)
 SAL_LUM_W = 0.5                 # A211: the luminance contrast's weight beside the two colour axes' (ours)
@@ -730,6 +732,7 @@ class Eyes:
         self.ior = np.zeros((G.COL_H // SAL_BLOCK, G.COL_W // SAL_BLOCK))   # A211: each place's inhibition of return
         self._sal_at = None
         self.adapt_sigma = None                                         # A212: the light the retina is adapted to (the scene's mean)
+        self.sal_target = None                                          # A213: the committed saccade's target (yaw, pitch in the head's frame, the tick chosen)
         world.eyes = self
 
     def set_shadows(self, shadows):
@@ -795,11 +798,28 @@ class Eyes:
                 "self_cells": self_cells(self.m, self.world.d, self.world.gaze), "truth": truth}
 
     def _salient(self, img, face):
-        """A211: the born salience cue once a world tick (salience_cue; its inhibition of return kept in the eyes' state)"""
+        """A211: the born salience cue once a world tick (salience_cue; its inhibition of return kept in the eyes' state). A213: THE
+        SACCADE IS COMMITTED. The day-121 copy under A212: the map's peak moved from tick to tick (her face's edges, her hands, the
+        shaken toy, the sibling), the cue fired on 80 to 95% of ticks toward a different place each time, and the eyes, stepping at
+        most orient_saccade_max toward each, wandered 20 to 70 degrees from the shown toy without arriving. A saccade is ballistic:
+        once the colliculus has chosen its target the eyes go there (Robinson 1975; Sparks 2002), and the choice is not remade on
+        the way. The cue's target is kept in the head's frame (the eyes' state, saved) and the cue points at it until the fovea is
+        within SAL_REACH_RAD of it or SAL_COMMIT_TICKS have passed; then the map is read again"""
         w = self.world
         if getattr(self, "_sal_at", None) == w.tick:
             return self._sal_out.copy()
-        self._sal_out = salience_cue(self.m, w.d, w.gaze, img, face, self.ior); self._sal_at = w.tick
+        g = w.gaze; tg = getattr(self, "sal_target", None); out = None
+        if tg is not None:
+            dy, dp = float(tg[0]) - float(g[0]), float(tg[1]) - float(g[1])
+            if w.tick - int(tg[2]) < SAL_COMMIT_TICKS and math.hypot(dy, dp) > SAL_REACH_RAD:
+                out = np.array([1.0, dy, dp])
+            else:
+                self.sal_target = None
+        if out is None:
+            out = salience_cue(self.m, w.d, g, img, face, self.ior)
+            if out[0] > 0:
+                self.sal_target = (float(g[0]) + float(out[1]), float(g[1]) + float(out[2]), int(w.tick))
+        self._sal_out = out; self._sal_at = w.tick
         return self._sal_out.copy()
 
     def adapt(self, imgs):
@@ -878,7 +898,8 @@ class Eyes:
                     prev_per=None if self.prev_per is None else {sd: self.prev_per[sd].copy() for sd in "LR"},
                     hab={sd: self.hab[sd].copy() for sd in "LR"}, onset=[self.onset[0], self.onset[1].copy()],
                     hand_prev={k_: v_.copy() for k_, v_ in self.hand_prev.items()},   # A208
-                    ior=self.ior.copy(), adapt_sigma=self.adapt_sigma)                  # A211, A212
+                    ior=self.ior.copy(), adapt_sigma=self.adapt_sigma,                  # A211, A212
+                    sal_target=None if getattr(self, "sal_target", None) is None else list(self.sal_target))   # A213
 
     def load_state(self, s):
         self.prev_per = None if s["prev_per"] is None else {sd: np.array(s["prev_per"][sd], dtype=np.float64) for sd in "LR"}
@@ -888,6 +909,7 @@ class Eyes:
         self.hand_prev = {k_: np.array(v_, dtype=np.float64) for k_, v_ in (s.get("hand_prev") or {}).items()}   # A208 (older saves: none)
         self.ior = np.array(s["ior"], dtype=np.float64) if s.get("ior") is not None else np.zeros((G.COL_H // SAL_BLOCK, G.COL_W // SAL_BLOCK))   # A211 (older saves: none)
         self.adapt_sigma = s.get("adapt_sigma")                                         # A212 (older saves: taken from the first tick)
+        self.sal_target = None if s.get("sal_target") is None else tuple(s["sal_target"])   # A213 (older saves: none)
         self._hand_at = None; self._sal_at = None
         self._cache = None
 
