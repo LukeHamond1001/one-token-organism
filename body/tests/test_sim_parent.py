@@ -68,6 +68,20 @@ def _opened(f):
     return g
 
 
+def _scripted(f):
+    """T1b-T4 (2026-10-08): a test of the scripted teacher's own way to the child (her walk, kneel, fetch, pose search: the code the
+    direct teacher stands in for, kept whole for the day the flags are turned off): run with the direct teacher's flags off"""
+    def g():
+        keep = (K.TEACHER_DIRECT, K.SHOW_BY_PLACEMENT)
+        K.TEACHER_DIRECT = False; K.SHOW_BY_PLACEMENT = False
+        try:
+            return f()
+        finally:
+            K.TEACHER_DIRECT, K.SHOW_BY_PLACEMENT = keep
+    g.__name__, g.__doc__ = f.__name__, f.__doc__
+    return g
+
+
 def _live(w, n, until=None):
     for k in range(n):
         w.apply({})
@@ -1375,6 +1389,7 @@ def test_she_keeps_her_side():
           f"and the next attend kept her on its {her_side(ch3)} side, done in {out2['ticks']} ticks through {sorted(set(modes))}, no walk round")
 
 
+@_scripted
 def test_a_toy_where_she_cannot_kneel():
     """parent 25 (A117, C102): a toy whose 0.45 m kneeling ring is furniture or a wall is fetched from the nearest farther ring her
     hand reaches it from: the cup under the low table (life days 13 and 14: 'nowhere to kneel by the cup' 12 times in a day, her

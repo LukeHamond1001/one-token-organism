@@ -705,6 +705,7 @@ class G1World(SimWorld):
         self.dawn_left = 0
         self.carried = []                                               # A110: the child carried to the mat at a dawn (tick, from, to)
         self.tidied = []                                                # A117 (B8): the lost toys put back at a dawn (tick, toy, from, to)
+        self.pinned = {}                                                # T3: the toys the environment holds in place: name -> (pos, quat, until tick)
         self.light_day = {f: getattr(m, f).copy() for f in ("light_diffuse", "light_ambient", "light_specular")}
         self._below_n = 0                                                    # sub-steps called this life (an instrument)
         # birth
@@ -1031,6 +1032,8 @@ class G1World(SimWorld):
                     t0 = time.perf_counter()
                     par.before_step(s)                                  # her segments drawn, her holds' capped springs (L0)
                     t_par += time.perf_counter() - t0
+                if self.pinned:
+                    self._apply_pins()                                  # T3: the toys the environment holds before its eyes
                 t0 = time.perf_counter()
                 mujoco.mj_step(m, d)
                 t_phys += time.perf_counter() - t0
@@ -1552,6 +1555,41 @@ class G1World(SimWorld):
             self.tidied.append((int(self.tick), k, [float(xy[0]), float(xy[1])], [float(place[0]), float(place[1])]))
             moved.append(k)
         return moved
+
+    # ---------------------------------------------------------------- T3: the environment's show
+    def pin_toy(self, toy, pos, quat=None, ticks=2):
+        """T3 (2026-10-08; the owner's word: the scripted teacher's failures are the bottleneck): the environment holds a toy where a show
+        wants it (before the child's eyes) for `ticks` ticks at most (the pin lapses if its act does not renew it): its free joint set
+        to the pose and its velocity to zero before every physics step, so the child's hands meet it as they meet a held toy. An
+        environment's act, disclosed (as the carry to the mat and the toys brought beside it are); never the child's"""
+        m = self.m
+        if self.parent is None or toy not in self.parent.toys:
+            return False
+        b = self.parent.toys[toy]; j = m.body_jntadr[b]; adr = m.jnt_qposadr[j]
+        q = np.asarray(m.qpos0[adr + 3:adr + 7] if quat is None else quat, float)
+        self.pinned[toy] = (np.asarray(pos, float).copy(), q.copy(), int(self.tick) + int(ticks))
+        return True
+
+    def unpin_toy(self, toy):
+        self.pinned.pop(toy, None)
+
+    def _apply_pins(self):
+        m, d = self.m, self.d
+        for toy in list(self.pinned):
+            pos, quat, until = self.pinned[toy]
+            if int(self.tick) > until:
+                self.pinned.pop(toy); continue
+            b = self.parent.toys[toy]; j = m.body_jntadr[b]; adr = m.jnt_qposadr[j]; dof = m.jnt_dofadr[j]
+            d.qpos[adr:adr + 3] = pos; d.qpos[adr + 3:adr + 7] = quat; d.qvel[dof:dof + 6] = 0.0
+
+    def toy_within_reach(self, toy, xy):
+        """T3: the shown toy set down on the floor at xy (the put's place beside its near hand), upright, still; its pin released"""
+        m, d = self.m, self.d
+        self.unpin_toy(toy)
+        b = self.parent.toys[toy]; j = m.body_jntadr[b]; adr = m.jnt_qposadr[j]; dof = m.jnt_dofadr[j]; home = m.qpos0[adr:adr + 7]
+        d.qpos[adr:adr + 2] = np.asarray(xy, float)[:2]; d.qpos[adr + 2] = home[2]; d.qpos[adr + 3:adr + 7] = home[3:7]; d.qvel[dof:dof + 6] = 0.0
+        mujoco.mj_forward(m, d)
+        self.tidied.append((int(self.tick), toy, "shown", [float(xy[0]), float(xy[1])]))
 
     def toys_far_back(self):
         """C311 (2026-10-07): THE FAR TOYS COME BACK TO IT AT DAWN. The child slept on the second room's rug through day 108 with its toys

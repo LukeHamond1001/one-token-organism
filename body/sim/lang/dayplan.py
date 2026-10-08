@@ -70,7 +70,8 @@ DEMO_GAP, DEMO_M = 900, 1.6             # C300: in floor play she shows walking 
 FREE_PELVIS_M, FREE_DEG, FREE_STAND_MAX = 0.62, 35.0, 400   # C287: let go, it stands alone while its pelvis is this high and its trunk within this of upright, this many ticks at most (60 s); ours
 CARRY_LAY_CLEAR_M = 1.3                # C281: it is laid this far from where she kneels at the least (its body is 1.3 m long); ours
 CARRY_CLEAR_M = 1.0                   # she carries it back to its mat (her own place this far from the mat's centre); ours
-FLOOR_STAND_GAP = 500           # C273: in floor play she stands it up this often when it lies on its back (75 s; ours: a stand takes
+STAND_SOON = 150                # C330: ticks before the floor stand is due during which her conduct asks no show (ours: a show's length)
+FLOOR_STAND_GAP = 250           # T1 (2026-10-08): 250 (a stand every 37 s of floor play; the owner's word: walking first, every second); was 500 #          # C273: in floor play she stands it up this often when it lies on its back (75 s; ours: a stand takes
                                 # about 250 ticks, so a third of her floor play is standing and stepping in her hands)
 STAND_AGAIN_GAP = 100           # C268: after a stand done, the next one this many ticks on (15 s of rest; ours)
 SIT_RETRY_GAP = 200             # C224: ... the next try this many ticks after the refusal (30 s: a parent tries again in a minute; ours)
@@ -474,7 +475,11 @@ class DayPlan:
                 self.next_ask = t + 10                                      # C286: nothing in its view now: asked as soon as something is
                                                                             # (the whole gap was waited each time, and a toy was in its
                                                                             # view on 40 ticks of 500: no ask in day 92's first 7,500)
-        c.quiet_shows = bool(kind == "motor" and self.sit_due)                # C315: a stand owed: her conduct asks no show of its own
+        # C330 (2026-10-08): IN FLOOR PLAY TOO, A STAND DUE COMES BEFORE HER SHOWS. Day 123: shows open on 46% of the day's ticks and
+        # stands on 25%, 10 stands done of 26 offered (the offer waits for her hands and an act-free tick); the owner's first goal is
+        # walking. From STAND_SOON ticks before the floor stand is due until it is asked, her conduct asks no show of its own (C315's rule)
+        c.quiet_shows = bool((kind == "motor" and self.sit_due) or
+                             (kind == "floor" and t >= int(getattr(self, "next_floor_stand", 0)) - STAND_SOON))   # C315: a stand owed: her conduct asks no show of its own
         busy = (c.pending is not None or c.trial is not None or not c.fast.voice_free(t)
                 or any(a[5] not in ("done", "refused", "cancelled") for a in c.acts_open))
         if kind == "wake":

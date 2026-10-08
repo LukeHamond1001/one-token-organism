@@ -1071,6 +1071,7 @@ class ParentMotion:
         self.hold_touch = {"L": 0.0, "R": 0.0}                              # a holding hand's contact with its held link, last step
         self.toy_touch = {"L": False, "R": False}                           # a toy in her hand touching the child, last step
         self.lag = False
+        self.teleported = 0
         self.push_on = {c: False for c in CHAINS}
         self.held_at = {c: None for c in CHAINS}                            # a still chain's pose as a push on it began (plain)
         self.on_child = {c: False for c in CHAINS}                          # a chain of hers resting its weight on the child
@@ -1555,6 +1556,9 @@ class ParentMotion:
         self._anchor_pressed()                                              # A4: pressed, she is where the child pushed her
         self.push_on = dict(self.yielding)                                  # the chains yielding as this tick begins
         self.lag = any(self.stopped.values())                               # a chain stopped last tick: her plan waits a tick for her
+        self.teleported = max(0, int(self.teleported) - 1)                  # T2: ticks left of the jump guard's leave after a teleport
+                                                                            # or a direct hold (set to 2: the tick it is planned in and
+                                                                            # the tick her figure is first drawn there)
         self._offset_at_start = {c: self.offset[c].copy() for c in CHAINS}
         self._standoff_at_start = self.standoff.copy()                     # A108: and her standoff (the guard's way back)
         planned0 = self.written
@@ -1591,7 +1595,11 @@ class ParentMotion:
         pos1 = np.array([segs[s][0] for s in kin.SEGS])
         mv = np.linalg.norm(pos1 - planned0[0], axis=1)
         jump = float(mv[0])
-        if (jump > MAX_JUMP_M or float(mv.max()) > MAX_LIMB_JUMP_M) and not self.lag:
+        direct_arm = False                                                  # T1b: a direct hold's arm appears at its point (an
+        if self.holds and (jump <= MAX_JUMP_M) and float(mv.max()) > MAX_LIMB_JUMP_M:   # environment's act): its draw is no fault
+            sd_ = kin.SEGS[int(np.argmax(mv))][-1]
+            direct_arm = sd_ in "LR" and any(getattr(h, "direct", False) and h.side == sd_ for h in self.holds)
+        if (jump > MAX_JUMP_M or float(mv.max()) > MAX_LIMB_JUMP_M) and not self.lag and not self.teleported and not direct_arm:
             self.stats["jumps_refused"] = self.stats.get("jumps_refused", 0) + 1   # never a teleport: a plan that would move
             seg_i = int(np.argmax(mv)); ph0 = self.phases[0] if self.phases else {}; sd_ = kin.SEGS[seg_i][-1]
             hi_ = kin.SEGS.index(f"hand_{sd_}") if sd_ in "LR" and f"hand_{sd_}" in kin.SEGS else seg_i
@@ -4214,11 +4222,42 @@ class ParentMotion:
         c = self.plan.cell(xy)
         return 0 <= c[0] < self.plan.nx and 0 <= c[1] < self.plan.ny and self.plan.dist[c] >= 0
 
+    def _teleport(self, mode, at, yaw):
+        """T2 (2026-10-08): her figure put beside the child at once, kneeling, facing it, her arms relaxed, her holds kept: the direct
+        teacher's approach (the owner's word: the scripted teacher's failures are the bottleneck). An environment's act, disclosed:
+        she does not walk, kneel down or shuffle; she is there"""
+        self.base = dict(mode=mode, at=_lst(at), yaw=float(yaw), lean=0.0, spine=0.0, twist=0.0, dirty=True)
+        for sd in "LR":
+            if self.arms[sd].get("mode") != "hold" and self.holding.get(sd) is None:
+                self.arms[sd] = dict(mode="relaxed")
+        self.trunk_kneel = False
+        self._put(self._pose())                                             # drawn there at once
+        self.teleported = 2                                                 # the jump guard measures from the old spot: off
+        self.stats["teleports"] = self.stats.get("teleports", 0) + 1
+
     def _plan_approach(self, a, where=None, offs=None, alongs=None, need=None):
         """her way to the child wherever it is (A6, B7): up if she kneels elsewhere, a walk around furniture, the child and toys,
         kneeling down a step back, the toys in her way cleared, a shuffle in on her knees, down onto her heels; to a spot from where
         the act can be done (need)"""
         b = self.base
+        if K.TEACHER_DIRECT:
+            # T2: the first of her spots (A6's order: beside its chest on the side it faces, the other side, its head, its feet) that
+            # lies on the floor she can plan on and clear of its body; failing every one, 0.9 m from its trunk on the side it faces.
+            # No path, no clearance from toys or furniture (her figure may overlap them: an environment's act), no need test
+            if where is None and offs is None and b["mode"] == "heels" and self._beside_now():
+                return []
+            ch = self.child; spot = None
+            for H, yaw, tag in self._spots(where, offs, alongs, need):
+                H = np.asarray(H, float)
+                if self._in_plan(H) and ch.clearance_xy(H) >= 0.03:
+                    spot = (H, float(yaw)); break
+            if spot is None:
+                side = unit(np.cross(ch.axis, [0, 0, 1.0])[:2]) if abs(ch.axis[2]) < 0.95 else np.array([1.0, 0.0])
+                H = np.asarray(ch.torso[:2], float) + 0.9 * side
+                spot = (H, float(math.atan2(ch.torso[1] - H[1], ch.torso[0] - H[0])))
+            self._teleport("heels", spot[0], spot[1])
+            a["info"]["spot"] = dict(H=_lst(spot[0]), yaw=float(spot[1]), direct=True)
+            return []
         if where is None and offs is None and b["mode"] == "heels" and self._beside_now() and \
                 self._need_ok(need, np.asarray(b["at"], float), float(b["yaw"])):
             return []                                                       # she already kneels beside it, clear of it: she stays
@@ -4948,6 +4987,27 @@ class ParentMotion:
                         kind=kind, cap=float(cap), brief=bool(brief), ctl=ctl or {}, shape=shape))
         return out
 
+    def _ph_hold_direct(self, a, ph):
+        """T1b (2026-10-08): a capped spring engaged at a held point of the child at once, her hand drawn to it as far as her arm
+        reaches (appearance): the direct teacher's hold. The spring never slips for her reach (Hold.direct); it ends as the kind's
+        controller ends it. An environment's act, disclosed"""
+        to, loc, nl, shape = self._hold_target(ph["side"], int(ph["body"]), ph.get("local"), ph.get("normal"))
+        h = Hold(ph["name"], ph["body"], loc, ph["side"], ph["cap"], False, ph["kind"], nl)
+        h.direct = True
+        h.ctl = dict(ph.get("ctl") or {}); h.ctl["t"] = 0
+        self.holds = [x for x in self.holds if x.name != h.name] + [h]
+        Rb = self.d.xmat[h.body].reshape(3, 3)
+        try:
+            g, Rh = self._grip_now(ph["side"], actual=True); Rl = _lst(Rb.T @ Rh)
+        except Exception:
+            Rl = _lst(np.eye(3))
+        self.arms[ph["side"]] = dict(mode="hold", hold=h.name, goff=[0.0, 0.0, 0.0], goff0=[0.0, 0.0, 0.0], goff_plan=[0.0, 0.0, 0.0],
+                                     Rl=Rl, shape1=shape)
+        he = self.stats.setdefault("holds_engaged", {}); he[ph["kind"]] = he.get(ph["kind"], 0) + 1
+        self.teleported = 2                                                 # her hand drawn to the point at once: the jump guard
+        self._start_ctl(a, h)                                               # (a planning fault's) is off this tick
+        return "next"
+
     def _ph_hold(self, a, ph):
         """a capped spring engaged at a held point (the hand is drawn there, its proxy off: the spring is its grip), then run by its
         kind's controller until it ends ('done'), stops at its cap ('stopped') or keeps holding after the act ('keep')"""
@@ -5125,6 +5185,8 @@ class ParentMotion:
                         off = 0.0
                 e = max(e or 0.0, off)
             slip = e is not None and e > K.HOLD_SLIP_M                      # the held point left her reach: it slipped from her grip
+            if getattr(h, "direct", False):
+                slip = False                                                # T1b: the direct teacher's hold never slips for her reach
             if slip and self._grasp(h) and e <= 2 * K.HOLD_SLIP_M and (self._trunk_coming() or h.kind == "stand"):   # (C268: she is shuffling after it)
                 slip = False                                                # C237: a grasp's slack while her trunk is on its way (below)
             if slip:
@@ -5773,6 +5835,20 @@ class ParentMotion:
 
     def _act_show(self, a, t):
         toy = self._toy(t)
+        if K.SHOW_BY_PLACEMENT:
+            # T3 (2026-10-08; the owner's word: the scripted teacher's failures are the bottleneck, walking and naming first). THE SHOW BY
+            # PLACEMENT: the environment puts the toy before its eyes (the show point, SHOW_DIST_M along its head's axis) and holds it
+            # there SHOW_HOLD_TICKS, shaken, while her lines name it (C308's line comes at the shake phase as before), then sets it down
+            # on the floor within its reach (the put's place); her figure comes beside it where it can and otherwise stays. No fetch,
+            # approach or set-down to refuse: days 123 and 124 refused 13 and 34 shows and each show cost 500 ticks for 2 s of
+            # naming. An environment's act, disclosed; her method, the lead's
+            if toy in NEVER_FETCHED:
+                raise Refuse(f"the {toy} stays where it stands: she does not carry it (C119)")
+            try:
+                near = self._near(a, need=None) if self.child.posture != "front" else self._near(a, where="head", offs=PUT_HEAD_OFFS)
+            except Refuse:
+                near = []
+            return near + [dict(type="shake", side="R", n=K.SHOW_HOLD_TICKS, world=toy), dict(type="plan", what="world_put", args=dict(toy=toy))]
         if self._kneel_plan(None, None, None, None) is None:                  # C175 (2026-10-01): no spot to kneel beside the child (a wall, a
             a["info"]["fallback"] = "set_down"                              # corner: day 46's west edge): the toy is set down within its
             return self._act_bring_back(a, t)                               # reach instead (the lure, C168, when that too is out of reach)
@@ -5803,8 +5879,28 @@ class ParentMotion:
                                                                                   # her hand (the rattle all of day 1: a hand lost to her,
                                                                                   # the toy to the child). The act ends as the toy is down
 
+    def _plan_world_put(self, a, toy):
+        """T3: the shown toy set down within its reach by the environment (the put's place beside its near hand, _put_xy)"""
+        w = self.w
+        try:
+            xy = np.asarray(self._put_xy(), float)[:2]
+        except Exception:
+            xy = np.asarray(self.child.torso[:2], float) + np.array([0.35, 0.0])
+        w.toy_within_reach(toy, xy)
+        a["info"]["put_xy"] = [float(xy[0]), float(xy[1])]
+        return []
+
     def _ph_shake(self, a, ph):
         """the shown toy shaken for its sound (4.10) for n ticks; she keeps shaking gently while it is shown"""
+        if ph.get("world"):                                                 # T3: the environment holds the toy before its eyes and shakes it
+            toy = ph["world"]; w = self.w
+            if ph.get("t", 0) == 0 or "p0" not in ph:
+                c_, _n = self._show_point("R"); ph["p0"] = _lst(c_)
+                ph["shake"] = _lst(unit(np.cross(self.child.axis, [0, 0, 1.0]) if abs(self.child.axis[2]) < 0.95 else self.child.cam_R["L"][:, 0]))
+            k_ = int(ph.get("t", 0))
+            off_ = K.SHOW_SHAKE_M * math.sin(2 * math.pi * K.SHOW_SHAKE_HZ * k_ * TICK_S)
+            w.pin_toy(toy, np.asarray(ph["p0"], float) + off_ * np.asarray(ph["shake"], float), ticks=2)
+            return "done" if k_ + 1 >= ph["n"] else "run"
         sd = ph["side"]
         arm = self.arms[sd]
         e_ = float(arm.get("err") or 0.0)
@@ -6688,6 +6784,10 @@ class ParentMotion:
             out.append(dict(type="kneel_down", at=_lst(np.asarray(b["at"], float) + fw * HEELS_BACK), yaw=b["yaw"], u0=3.0, u1=2.0))
         for sd, k in zip("LR", order):
             spec = sides[k]
+            if K.TEACHER_DIRECT:                                            # T1b: her hands on its chest at once (no reach to miss or slip)
+                out.append(dict(type="hold_direct", name=f"stand_{sd}", side=sd, body=int(torso), local=_lst(spec["local"]),
+                                normal=_lst(spec["normal"]), kind="stand", cap=float(K.CAP_TWO / 2), ctl={}))
+                continue
             ph = self._hold_phases(a, sd, torso, "stand", cap=K.CAP_TWO / 2, local=spec["local"], normal=spec["normal"], ctl={},
                                    tall_if_needed=False)
             out += ph[:-1] + [dict(ph[-1], wait=False)]
@@ -6850,6 +6950,31 @@ class ParentMotion:
         sol = self.face_reach(on_line=on_line)
         if sol is None and on_line:
             sol = self.face_reach()                                       # no pose on its line from here: its periphery, as before
+        if sol is None and K.TEACHER_DIRECT:
+            # T4 (2026-10-08): THE LEAN-IN BY PLACEMENT. The direct teacher's approach (T2) set her down at the first spot beside the
+            # child with no test of the lean; from there a face pose is often out of a woman's reach (the measured day: 14 of her 18
+            # refusals were the lean-in's). Her figure is set at the first of her spots (beside its chest, its head, its feet) from
+            # which a kneeling pose puts her face before its eyes; failing every one, the pose may bend past a woman's range
+            # (DIRECT_LEAN_EXTRA_DEG), her body still clear of the child's (the physics is real). An environment's act, disclosed
+            ch = self.child
+            spots = list(self._spots(alongs=K.LEAN_ALONG_M)) + list(self._spots(where="head"))
+            for strict in (True, False):
+                for H, yaw, tag in spots:
+                    H = np.asarray(H, float)
+                    if not self._in_plan(H) or ch.clearance_xy(H) < 0.03:
+                        continue
+                    s_ = self.face_reach(at=H, yaw=float(yaw), base_mode="heels", on_line=on_line, strict=strict)
+                    if s_ is None and on_line:
+                        s_ = self.face_reach(at=H, yaw=float(yaw), base_mode="heels", strict=strict)
+                    if s_ is not None:
+                        self._teleport("heels", H, float(yaw))
+                        a["info"]["spot"] = dict(H=_lst(H), yaw=float(yaw), direct=True, lean_spot=tag, strict=strict)
+                        sol = s_
+                        break
+                if sol is not None:
+                    break
+            if sol is None:
+                sol = self.face_reach(on_line=on_line, strict=False)
         a["info"]["face"] = sol
         if sol is None:
             raise Refuse("no pose inside human ranges puts her face where its eyes can reach from here (A22, C34)")
@@ -6982,7 +7107,7 @@ class ParentMotion:
             out[sd] = (bool(inside and dist >= K.FACE_MIN_M and turn <= E_FACE_TURN_DEG()), off, dist, turn)
         return out
 
-    def face_reach(self, at=None, yaw=None, modes=("heels", "tall"), base_mode=None, on_line=False):
+    def face_reach(self, at=None, yaw=None, modes=("heels", "tall"), base_mode=None, on_line=False, strict=True):
         """the kneeling trunk (mode, lean, spine, twist) at her spot that puts her mouth where the child's eyes can reach it with
         their foveae (A22): LEAN_DIST_M from its eyes (never nearer than FACE_MIN_M, A3), 15 deg or more off its fovea's current line
         (A3), her face turned within A1's 75 deg of the eye, her legs, trunk and head 3 cm clear of it (A4), her free hands too as
@@ -6994,8 +7119,9 @@ class ParentMotion:
         bm = b["mode"] if base_mode is None else base_mode
         fwd = np.array([math.cos(yaw), math.sin(yaw)])
         lo, hi = K.LEAN_DIST_M
-        cands = sorted((lean + spine + abs(twist), lean, spine, twist, mode) for mode in modes for lean in range(0, K.LEAN_MAX_DEG + 1, 10)
-                       for spine in (0, 15, 30, 45) for twist in (0, -15, 15, -30, 30))
+        lean_max = K.LEAN_MAX_DEG if strict else K.LEAN_MAX_DEG + K.DIRECT_LEAN_EXTRA_DEG   # T4: the direct teacher's figure may bend
+        cands = sorted((lean + spine + abs(twist), lean, spine, twist, mode) for mode in modes for lean in range(0, lean_max + 1, 10)
+                       for spine in (0, 15, 30, 45) for twist in (0, -15, 15, -30, 30))   # past a woman's range (an environment's act)
         either = None
         for bend, lean, spine, twist, mode in cands:
             if either is not None and bend > either["bend"]:
@@ -7013,7 +7139,7 @@ class ParentMotion:
                   and lo <= fv[s_][2] <= hi for s_ in "LR"}
             if not any(ok.values()) or (either is not None and not all(ok.values())):
                 continue
-            if any(r.get("violations") for r in p.report.values() if isinstance(r, dict)):
+            if strict and any(r.get("violations") for r in p.report.values() if isinstance(r, dict)):
                 continue
             if self._clearance(p) < K.CLEAR_M:
                 continue

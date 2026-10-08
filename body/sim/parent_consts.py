@@ -472,10 +472,17 @@ LOOK_TICKS = 2                  # her gaze reaches its target within 2 ticks (4.
 NAME_GLANCE_TICKS = 4           # C327: her eyes on the thing she names for this long (0.6 s) as her line begins, then back to the child (ours)
 SHOW_SHAKE_M = 0.02             # m: a shown toy is shaken this far either way ... (4.10: "shaken for its sound"; ours)
 SHOW_SHAKE_HZ = 2.5             # ... at this rate (ours)
+TEACHER_DIRECT = True           # T1b/T2 (2026-10-08): the direct teacher: she appears beside the child (no path or spot search) and her stand's holds engage at its chest without a reach (ours; the owner's word)
+SHOW_BY_PLACEMENT = True        # T3 (2026-10-08): the show is the environment's: the toy placed and held before its eyes, then set down within reach (ours; the owner's word)
+DIRECT_LEAN_EXTRA_DEG = 20      # T4: deg of lean past LEAN_MAX_DEG the direct teacher's figure may take for a lean-in no pose in a woman's
+                                # range reaches (ours; an environment's act, disclosed)
 SHOW_DIST_M = 0.40              # m: a toy shown before the G1's eyes (4.2, 4.10)
 REFETCH_M = 1.0                 # C322: a toy farther than this from where she kneels when she grasps it has moved away: she fetches it again (ours: her reach from the tall kneel, about 0.9 m)
 REFETCH_TRIES = 2               # C322: at most this many fetches again in one act (ours)
-SHOW_HOLD_TICKS = 14           # C321: ticks (2.1 s) she holds and shakes a shown toy before its eyes, her line said over it (ours: a
+SHOW_HOLD_TICKS = 40           # C321: ticks she holds and shakes a shown toy before its eyes, her line said over it; C329 (2026-10-08): 40
+                                # (6 s), so the show's set's later lines (its queue, said 6 ticks apart) come while the toy is still up:
+                                # the show's fetch, approach and set-down cost 500 ticks for 2 s of naming (shows took 31 to 46% of days
+                                # 123 and 124); a parent names the toy several times while she holds it up (ours). Was 14 (2.1 s; ours: a
                                # line of four words takes 10 to 14 ticks; the shake was 4, and the name was heard as the toy went down)
 HANDOVER_PALM_N = 0.3           # the hand-over's release: the child's palm touch at least 0.3 N ... (A4)
 HANDOVER_CLOSED_DEG = 30.0      # ... and its fingers closed at least 30 deg (A4) ...
@@ -528,7 +535,10 @@ LOWER_MPS = 0.10                # m/s: her hands lower its chest to sitting heig
 SIT_CHEST_M = 0.45              # m: its upper chest's height sitting on the mat (the G1's)
 STAND_SHUFFLE_MPS = 0.40        # m/s: her knee-shuffle beside the child while she raises and walks it (ours: the shuffle's own pace)
 STAND_LEAD_M = 0.15             # m: her hands' led point at most this far from its chest (ours: twice the cap's stretch at HOLD_K)
-STAND_CAP_SHARE = 0.8           # of the child's weight, both hands together, while she raises it to its feet (ours; see _ctl_stand)
+STAND_CAP_SHARE = 1.5           # of the child's weight, both hands together, while she raises it to its feet. T1 (2026-10-08, the owner's
+                                # word: the scripted teacher's failures are the bottleneck): 1.5, so the lift never stalls or slips at her
+                                # cap (the child weighs three toddlers; its legs take the weight as its feet meet the floor, the physics
+                                # real); was 0.8 (ours; see _ctl_stand)
 WALK_FAR_M = 1.0                # m: she walks it this far, then sits it down (ours)
 SIT_BACK_M = 0.55               # m: its chest is led this far behind its feet as she sits it down (the G1's sitting: its pelvis behind its heels)
 LOWER_MAX_TICKS = 120           # the sitting down's longest (18 s; ours)
