@@ -437,10 +437,12 @@ def test_no_lamp_at_the_eyes():
         w.frame()
         getattr(m, field)[sun] = keep
         assert ey.timing["renders"] == r0 + 1, field                    # the cache never serves a stale image
+    ey.adapt_sigma = None; ey._cache = None                                 # (A212: the retina re-adapted from fresh, as f0's was)
     assert np.array_equal(w.frame().truth["eyes"]["images"]["L"], f0.truth["eyes"]["images"]["L"])
     terms = {f: getattr(m, f).copy() for f in ("light_diffuse", "light_ambient", "light_specular")}
     for f in terms:
         getattr(m, f)[:] = 0.0
+    ey.adapt_sigma = None; ey._cache = None                                 # (A212: the retina adapts to the glow, as a dark-adapted eye)
     glow = w.frame().truth["eyes"]["images"]["L"].astype(float)          # the lights dark: only the emissive surfaces
     emis = m.mat_emission.copy(); m.mat_emission[:] = 0.0
     dark = w.frame().truth["eyes"]["images"]["L"].astype(float)
@@ -448,10 +450,13 @@ def test_no_lamp_at_the_eyes():
     for f, v in terms.items():
         getattr(m, f)[:] = v
     act = m.light_active.copy(); m.light_active[:] = 0
+    ey.adapt_sigma = None; ey._cache = None
     unlit = w.frame().truth["eyes"]["images"]["L"].astype(float)         # every light switched off: MuJoCo draws the scene unlit
     m.light_active[:] = act
     ey.close()
-    assert dark.max() == 0 and glow.mean() < img0.mean() and unlit.mean() > img0.mean(), (dark.max(), glow.mean(), unlit.mean(), img0.mean())
+    # A212: the retina adapts to the light there is, so the glow's image is not darker in its numbers than the lit room's (a
+    # dark-adapted eye sees by the emissive surfaces); with those too at zero, black; the unlit draw is MuJoCo's full-bright room
+    assert dark.max() == 0 and glow.max() > 0 and (glow > 0).mean() < (img0 > 0).mean() and unlit.mean() > img0.mean(), (dark.max(), glow.max(), (glow > 0).mean(), (img0 > 0).mean(), unlit.mean(), img0.mean())
     print(f"eyes 10: no headlight, and the eyes refuse one; a change of any light's ambient, specular, place or direction renders",
           f"them again; with every light's terms at zero the eyes see only the emissive surfaces (mean {glow.mean():.1f} of 255 against",
           f"{img0.mean():.1f} lit: the ceiling's, the window's, the lamp's, W5's night), with those too",

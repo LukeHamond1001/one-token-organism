@@ -576,6 +576,9 @@ def hand_cue(m, d, gaze, prev):
     return out
 
 
+ADAPT_TAU = 0.5                 # A212: s, the retina's adaptation follows the scene's mean luminance this fast (ours: cone adaptation
+                                # settles within a second; Shapley and Enroth-Cugell 1984)
+ADAPT_FLOOR = 0.002             # A212: the least adaptation level (of full scale): a black scene is not amplified without end (ours)
 SAL_BLOCK = 4                   # A211: the salience map's unit, colour camera px (about 1.2 deg; ours: finer than the toy at 1 m, about 7 deg)
 SAL_CS = (1.0, 6.0)             # A211: its centre and surround, Gaussian sd in blocks (about 1.2 and 7 deg; ours: an object-sized centre)
 SAL_LUM_W = 0.5                 # A211: the luminance contrast's weight beside the two colour axes' (ours)
@@ -726,6 +729,7 @@ class Eyes:
         self.hand_prev = {}                                             # A208: the hands' last positions (the hand cue's speed)
         self.ior = np.zeros((G.COL_H // SAL_BLOCK, G.COL_W // SAL_BLOCK))   # A211: each place's inhibition of return
         self._sal_at = None
+        self.adapt_sigma = None                                         # A212: the light the retina is adapted to (the scene's mean)
         world.eyes = self
 
     def set_shadows(self, shadows):
@@ -771,7 +775,7 @@ class Eyes:
             m.light_diffuse, m.light_ambient, m.light_specular, m.light_dir, m.light_pos, m.light_castshadow, m.mat_rgba,
             m.mat_emission, np.array([hl.active], float), hl.ambient, hl.diffuse, hl.specular))).digest()
         if self._cache is None or self._cache[0] != key:
-            imgs = self.render()
+            imgs = self.adapt(self.render())                                              # A212: the retina's light adaptation
             t0 = time.perf_counter()
             Lg = {s: grey(imgs[s]) for s in "LR"}
             per = {s: periphery(Lg[s]) for s in "LR"}
@@ -797,6 +801,30 @@ class Eyes:
             return self._sal_out.copy()
         self._sal_out = salience_cue(self.m, w.d, w.gaze, img, face, self.ior); self._sal_at = w.tick
         return self._sal_out.copy()
+
+    def adapt(self, imgs):
+        """A212 (2026-10-08): THE RETINA ADAPTS TO THE LIGHT. The day-121 copy's eyes: the three images' means 3 to 8 of 255 with the
+        room's lights on (the lights point down, the ceiling and the underside of a thing held over the child are lit by the room's
+        small indirect term alone, and the eyes read the render's raw values): the yellow duck shown 40 cm over its face read (19, 16,
+        2), its salience 0.05 under the floor, the fovea's look below GROUND_FLOOR, 'cup' heard 94 times and never with a look. A
+        photoreceptor's response is compressive about the light it is adapted to (Naka and Rushton 1966; Weber adaptation: Shapley and
+        Enroth-Cugell 1984), so a dark room and a lit one both read with contrast; the robot's camera auto-exposes to the same end.
+        Each image's value I (0-1 of full scale) becomes I / (I + sigma), sigma the scene's mean luminance (both grey imagers'
+        visible response, ADAPT_FLOOR at the least) followed with ADAPT_TAU (the eyes' state, saved); back to uint8 for the codes
+        and the page (what the body sees). Every code below reads the adapted images: the born bank, the retinas, the colour
+        window, the salience map and the onset cue"""
+        lum = float(np.mean([grey(imgs[s]).mean() for s in "LR"]))
+        if getattr(self, "adapt_sigma", None) is None:
+            self.adapt_sigma = lum
+        else:
+            a_ = 1.0 - math.exp(-W.TICK_S / ADAPT_TAU)
+            self.adapt_sigma += a_ * (lum - self.adapt_sigma)
+        sig = max(ADAPT_FLOOR, float(self.adapt_sigma))
+        out = {}
+        for k, im in imgs.items():
+            x = im.astype(np.float64) / 255.0
+            out[k] = np.clip(255.0 * x / (x + sig), 0, 255).astype(np.uint8)
+        return out
 
     def _hand(self):
         """A208: the born hand cue once a world tick (hand_cue; its memory of the hands' places kept in the eyes' state)"""
@@ -850,7 +878,7 @@ class Eyes:
                     prev_per=None if self.prev_per is None else {sd: self.prev_per[sd].copy() for sd in "LR"},
                     hab={sd: self.hab[sd].copy() for sd in "LR"}, onset=[self.onset[0], self.onset[1].copy()],
                     hand_prev={k_: v_.copy() for k_, v_ in self.hand_prev.items()},   # A208
-                    ior=self.ior.copy())                                                # A211
+                    ior=self.ior.copy(), adapt_sigma=self.adapt_sigma)                  # A211, A212
 
     def load_state(self, s):
         self.prev_per = None if s["prev_per"] is None else {sd: np.array(s["prev_per"][sd], dtype=np.float64) for sd in "LR"}
@@ -859,6 +887,7 @@ class Eyes:
         self.onset = (s["onset"][0], np.array(s["onset"][1], dtype=np.float64))
         self.hand_prev = {k_: np.array(v_, dtype=np.float64) for k_, v_ in (s.get("hand_prev") or {}).items()}   # A208 (older saves: none)
         self.ior = np.array(s["ior"], dtype=np.float64) if s.get("ior") is not None else np.zeros((G.COL_H // SAL_BLOCK, G.COL_W // SAL_BLOCK))   # A211 (older saves: none)
+        self.adapt_sigma = s.get("adapt_sigma")                                         # A212 (older saves: taken from the first tick)
         self._hand_at = None; self._sal_at = None
         self._cache = None
 

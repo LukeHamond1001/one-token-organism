@@ -88,14 +88,15 @@ class GroundingMixin:
             self._ground_s = torch.zeros(int(self.m.vocab), dtype=torch.float64)   # A202b: the sum of its hearings' look sizes
             self._ground_trace = [-1, 0]
             self._ground_stats = {"bind": 0, "cue": 0, "say": 0}
-        if getattr(self, "_ground_v", None) != 6:   # (3: A202e's weighted counts; 4: A202n; 5: A202o, the rows of her skin begun again; 6: A202r, her sweater's)              # A202d: the rows bound before the consistency law (A202b) carried
+        if getattr(self, "_ground_v", None) != 7:   # (3: A202e's weighted counts; 4: A202n; 5: A202o, the rows of her skin begun again; 6: A202r, her sweater's; 7: A212, the rows of the unadapted eyes)              # A202d: the rows bound before the consistency law (A202b) carried
             k = int(self.anatomy.grounding.size)                          # looks averaged with a recency weight and no record of their
             self._ground_A = torch.zeros((int(self.m.vocab), k), dtype=torch.float64)   # hearings' sizes, so 'good' read as consistent for
             self._ground_n = torch.zeros(int(self.m.vocab), dtype=torch.float64)        # hundreds of hearings to come: begun again, once
             self._ground_s = torch.zeros(int(self.m.vocab), dtype=torch.float64)        # (fast mapping rebuilds a day's rows in an hour).
             self._ground_h = None; self._ground_f = None                                # (A202r: the hearing counts begun again with the rows)
+            self._ground_last = None; self._ground_line_n = 0                           # (A212: a line's last look of the old eyes dropped)
             self._ground_mu = None                                                      # A202n (2026-10-07): the rows bound before the figure law
-            self._ground_v = 6                                                          # (A202m) carried her sweater as the look of 'the', 'see',
+            self._ground_v = 7                                                          # (A202m) carried her sweater as the look of 'the', 'see',
                                                                                         # 'you', 'oh', 'good' (190 hearings of 'see'): begun again, once
         if getattr(self, "_ground_h", None) is None or int(self._ground_h.shape[0]) != int(self._ground_A.shape[0]):
             self._ground_h = torch.zeros(int(self._ground_A.shape[0]), dtype=torch.float64)   # A202q: each word's hearings with a thing in view
