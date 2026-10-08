@@ -3570,6 +3570,23 @@ class ParentMotion:
         sd, toy = ph["side"], ph["toy"]
         g, _ = self._grip_now(sd, actual=True)
         c = self._grasp_point(toy)                                          # (C138: a container's rim)
+        far_ = float(np.linalg.norm(np.asarray(c, float)[:2] - np.asarray(self.base["at"], float)[:2]))
+        if a is not None and self.holding.get(sd) is None and far_ > K.REFETCH_M and int(a["info"].get("refetch", 0)) < K.REFETCH_TRIES:
+            # C322 (2026-10-07): A TOY THAT MOVED AWAY IS FETCHED AGAIN. The far misses (C312's instrument, day 114: 'the ball was not under
+            # her hand (140 cm off)', the drum 157 cm) and the jump guard's 0.6 to 1.0 m snaps were one fault: she knelt for the toy, the
+            # child rolled it or the sibling carried it off, and her grasp went on reaching where it now lay, 1.4 to 1.7 m from her kneel
+            # (her arm's error 1.37 m), until the grasp refused it or the next act snapped her drawn hand back. A parent whose toy has
+            # rolled away gets up and goes to it: the grasp and its lift give way to the fetch planned again from where the toy is,
+            # REFETCH_TRIES times an act
+            a["info"]["refetch"] = int(a["info"].get("refetch", 0)) + 1
+            self.stats["refetch"] = self.stats.get("refetch", 0) + 1
+            i = self.phases.index(ph); k = i + 1
+            if k < len(self.phases) and self.phases[k].get("type") == "plan" and self.phases[k].get("what") == "ease_out":
+                k += 1
+                if k < len(self.phases) and self.phases[k].get("type") == "reach":
+                    k += 1
+            self.phases[i:k] = [dict(type="relax", sides=sd), dict(type="plan", what="fetch", args=dict(toy=toy))]
+            return "next"
         if float(np.linalg.norm(c - g)) > 0.08:
             if ph.get("waited", 0) < K.ARRIVE_WAIT_TICKS:                   # her hand is a body: it may still be on its way (her aim
                 ph["waited"] = ph.get("waited", 0) + 1                      # by sight brings it: _aim_fix)
