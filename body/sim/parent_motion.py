@@ -1133,7 +1133,7 @@ class ParentMotion:
                     child_pts=None if self.child_pts is None else [list(x) for x in self.child_pts],
                     written=None if self.written is None else [self.written[0].tolist(), self.written[1].tolist()],
                     drive=self.drive.state(),
-                    moving=self.moving, placed=self.placed, teleported=int(self.teleported), xfrc_bodies=list(self.xfrc_bodies), warm=_plain(self.warm), tick=self.tick, stats=_plain(self.stats), effort_peak=self.effort_peak,
+                    moving=self.moving, placed=self.placed, teleported=int(self.teleported), lean_fail=_plain(getattr(self, "_lean_fail", None)), xfrc_bodies=list(self.xfrc_bodies), warm=_plain(self.warm), tick=self.tick, stats=_plain(self.stats), effort_peak=self.effort_peak,
                     proxies={int(g): [int(self.m.geom_contype[g]), int(self.m.geom_conaffinity[g])]
                              for g in list(self.hand_geom.values()) + self.finger_geoms["L"] + self.finger_geoms["R"] + [int(x) for x in self.body_geoms]})
 
@@ -1198,7 +1198,7 @@ class ParentMotion:
         self.written = None if s["written"] is None else (np.array(s["written"][0], dtype=np.float64), np.array(s["written"][1], dtype=np.float64))
         self.drive.load_state(s["drive"])
         self.start = self.end = None
-        self.moving = bool(s["moving"]); self.placed = bool(s["placed"]); self.teleported = int(s.get("teleported", 0)); self.xfrc_bodies = [int(b) for b in s["xfrc_bodies"]]
+        self.moving = bool(s["moving"]); self.placed = bool(s["placed"]); self.teleported = int(s.get("teleported", 0)); lf_ = s.get("lean_fail"); self._lean_fail = None if lf_ is None else (int(lf_[0]), (str(lf_[1][0]), tuple(float(x) for x in lf_[1][1]), bool(lf_[1][2]))); self.xfrc_bodies = [int(b) for b in s["xfrc_bodies"]]
         self.warm = _unplain(s["warm"]); self.tick = int(s["tick"])
         self.stats = _unplain(s["stats"]); self.effort_peak = float(s["effort_peak"])
         for g, (ct, ca) in s["proxies"].items():
@@ -1221,6 +1221,8 @@ class ParentMotion:
         self.live.append(i)
         if kind not in KINDS:
             self._end(a, "refused", f"no such act: {kind}")
+        elif kind == "lean_in" and any(self._act(j)["kind"] == "lean_in" for j in list(self.queue["body"]) + ([self.cur["body"]] if self.cur["body"] is not None else [])):
+            self._end(a, "refused", "request: a lean-in is under way: one at a time (C333; life day 125: five and six queued at once, each planned afresh)")
         elif kind in NOT_AT_BIRTH and not _OPENED[0]:
             self._end(a, "refused", f"not at birth: she never moves its body through a movement or a posture it did not make (A25c)")
         else:
@@ -6965,24 +6967,33 @@ class ParentMotion:
             # which a kneeling pose puts her face before its eyes; failing every one, the pose may bend past a woman's range
             # (DIRECT_LEAN_EXTRA_DEG), her body still clear of the child's (the physics is real). An environment's act, disclosed
             ch = self.child
-            spots = list(self._spots(alongs=K.LEAN_ALONG_M)) + list(self._spots(where="head"))
-            for strict in (True, False):
-                for H, yaw, tag in spots:
+            key = (str(ch.posture), tuple(np.round(np.asarray(ch.eyes, float), 1).tolist()), bool(on_line))
+            memo = getattr(self, "_lean_fail", None)                        # C333 (life day 125): a search that found nothing is not run
+            if memo is not None and memo[1] == key and self.w.tick - memo[0] < K.LEAN_FAIL_MEMO_TICKS:   # again while the child lies the
+                raise Refuse(f"no pose puts her face before its eyes from any of her spots (found {self.w.tick - memo[0]} ticks ago; "   # same (6.5 s
+                             f"it lies as it lay)")                                                      # a tick of searching, at 372 ms)
+            spots = []; per_ = {}                                           # the first LEAN_SPOTS_PER_SIDE spots of each side (L, R, head)
+            for sp in list(self._spots(alongs=K.LEAN_ALONG_M)) + list(self._spots(where="head")):
+                if per_.get(sp[2], 0) >= K.LEAN_SPOTS_PER_SIDE or not self._in_plan(np.asarray(sp[0], float)) or ch.clearance_xy(np.asarray(sp[0], float)) < 0.03:
+                    continue
+                per_[sp[2]] = per_.get(sp[2], 0) + 1; spots.append(sp)
+            for strict, coarse in ((True, True), (True, False), (False, True)):   # the coarse grid first (96 poses a spot); the fine
+                for H, yaw, tag in spots:                                   # grid (320) only when it finds nothing; then past her range
                     H = np.asarray(H, float)
-                    if not self._in_plan(H) or ch.clearance_xy(H) < 0.03:
-                        continue
-                    s_ = self.face_reach(at=H, yaw=float(yaw), base_mode="heels", on_line=on_line, strict=strict)
+                    s_ = self.face_reach(at=H, yaw=float(yaw), base_mode="heels", on_line=on_line, strict=strict, coarse=coarse)
                     if s_ is None and on_line:
-                        s_ = self.face_reach(at=H, yaw=float(yaw), base_mode="heels", strict=strict)
+                        s_ = self.face_reach(at=H, yaw=float(yaw), base_mode="heels", strict=strict, coarse=coarse)
                     if s_ is not None:
                         self._teleport("heels", H, float(yaw))
-                        a["info"]["spot"] = dict(H=_lst(H), yaw=float(yaw), direct=True, lean_spot=tag, strict=strict)
+                        a["info"]["spot"] = dict(H=_lst(H), yaw=float(yaw), direct=True, lean_spot=tag, strict=strict, coarse=coarse)
                         sol = s_
                         break
                 if sol is not None:
                     break
             if sol is None:
-                sol = self.face_reach(on_line=on_line, strict=False)
+                sol = self.face_reach(on_line=on_line, strict=False, coarse=True)
+            if sol is None:
+                self._lean_fail = (int(self.w.tick), key)
         a["info"]["face"] = sol
         if sol is None:
             raise Refuse("no pose inside human ranges puts her face where its eyes can reach from here (A22, C34)")
@@ -7115,7 +7126,7 @@ class ParentMotion:
             out[sd] = (bool(inside and dist >= K.FACE_MIN_M and turn <= E_FACE_TURN_DEG()), off, dist, turn)
         return out
 
-    def face_reach(self, at=None, yaw=None, modes=("heels", "tall"), base_mode=None, on_line=False, strict=True):
+    def face_reach(self, at=None, yaw=None, modes=("heels", "tall"), base_mode=None, on_line=False, strict=True, coarse=False):
         """the kneeling trunk (mode, lean, spine, twist) at her spot that puts her mouth where the child's eyes can reach it with
         their foveae (A22): LEAN_DIST_M from its eyes (never nearer than FACE_MIN_M, A3), 15 deg or more off its fovea's current line
         (A3), her face turned within A1's 75 deg of the eye, her legs, trunk and head 3 cm clear of it (A4), her free hands too as
@@ -7128,8 +7139,9 @@ class ParentMotion:
         fwd = np.array([math.cos(yaw), math.sin(yaw)])
         lo, hi = K.LEAN_DIST_M
         lean_max = K.LEAN_MAX_DEG if strict else K.LEAN_MAX_DEG + K.DIRECT_LEAN_EXTRA_DEG   # T4: the direct teacher's figure may bend
+        spines = (0, 30) if coarse else (0, 15, 30, 45); twists = (0, -30, 30) if coarse else (0, -15, 15, -30, 30)   # C333: the direct
         cands = sorted((lean + spine + abs(twist), lean, spine, twist, mode) for mode in modes for lean in range(0, lean_max + 1, 10)
-                       for spine in (0, 15, 30, 45) for twist in (0, -15, 15, -30, 30))   # past a woman's range (an environment's act)
+                       for spine in spines for twist in twists)              # teacher's spot search is coarse (96 poses a spot, not 320)
         either = None
         for bend, lean, spine, twist, mode in cands:
             if either is not None and bend > either["bend"]:

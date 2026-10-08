@@ -476,6 +476,8 @@ TEACHER_DIRECT = True           # T1b/T2 (2026-10-08): the direct teacher: she a
 SHOW_BY_PLACEMENT = True        # T3 (2026-10-08): the show is the environment's: the toy placed and held before its eyes, then set down within reach (ours; the owner's word)
 DIRECT_LEAN_EXTRA_DEG = 20      # T4: deg of lean past LEAN_MAX_DEG the direct teacher's figure may take for a lean-in no pose in a woman's
                                 # range reaches (ours; an environment's act, disclosed)
+LEAN_SPOTS_PER_SIDE = 2         # C333: spots a side (its left, its right, its head) the direct teacher's lean-in searches (ours)
+LEAN_FAIL_MEMO_TICKS = 60       # C333: ticks a failed lean-in search holds while the child lies as it lay (ours; 9 s)
 SHOW_DIST_M = 0.40              # m: a toy shown before the G1's eyes (4.2, 4.10)
 REFETCH_M = 1.0                 # C322: a toy farther than this from where she kneels when she grasps it has moved away: she fetches it again (ours: her reach from the tall kneel, about 0.9 m)
 REFETCH_TRIES = 2               # C322: at most this many fetches again in one act (ours)
