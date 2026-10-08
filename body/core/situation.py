@@ -23,6 +23,9 @@ import torch
 
 from . import grounding as GR
 
+SITU_GAP = 200          # A218: ticks (30 s) within which a word's hearings are one occasion (ours)
+SITU_REPEAT_W = 0.1     # A218: the weight of a hearing within an occasion (ours: a tenth; ten repeats in a show count as one more hearing)
+
 
 class SituationMixin:
     def _situ_on(self):
@@ -41,6 +44,7 @@ class SituationMixin:
             self._situ_mu = torch.zeros(d, dtype=torch.float64); self._situ_mu_n = 0.0
             self._situ_stats = {"bind": 0, "say": 0}
             self._situ_last = None; self._situ_line_n = 0; self._situ_v = 1
+            self._situ_last_t = torch.full((int(self.m.vocab),), -10 ** 9, dtype=torch.float64)
         return self._situ_A.numpy(), self._situ_n.numpy()
 
     def _situ_code(self):
@@ -72,16 +76,27 @@ class SituationMixin:
         if u == int(getattr(self, "end_id", -1)) or u == int(getattr(self, "eot", -1)):
             last_ = getattr(self, "_situ_last", None)
             if last_ is not None and int(getattr(self, "_situ_line_n", 0)) >= 2:
-                self._situ_bind(int(last_[0]), np.asarray(last_[1], dtype=np.float64), GR.GROUND_FINAL - 1.0)
-                self._situ_f.numpy()[int(last_[0])] += 1.0
+                w_ = float(last_[2]) if len(last_) > 2 else 1.0
+                self._situ_bind(int(last_[0]), np.asarray(last_[1], dtype=np.float64), (GR.GROUND_FINAL - 1.0) * w_)
+                self._situ_f.numpy()[int(last_[0])] += w_
             self._situ_last = None; self._situ_line_n = 0
             return
         if self._situ_skip(u):
             return
         T = self._situ_code()
-        self._situ_bind(u, T, 1.0); self._situ_h.numpy()[u] += 1.0
+        # A218 (2026-10-08): A SITUATION IS LEARNED ACROSS OCCASIONS. Day 123: 'block' passed the gate (268 hearings, consistency 1.08)
+        # and was primed 358 times in half a day; its hearings come in bursts ('the block. look at the block.' ten times in a show),
+        # one occasion counted as many. Cross-situational learning needs separate situations (Yu and Smith 2007; spacing: Smith and
+        # Yu 2008): a hearing within SITU_GAP ticks of the word's last weighs SITU_REPEAT_W, so a burst is one occasion and the gate's
+        # GROUND_SAY_MIN_N hearings are eight occasions
+        lt = getattr(self, "_situ_last_t", None)
+        if lt is None or int(lt.shape[0]) != int(self.m.vocab):
+            lt = torch.full((int(self.m.vocab),), -10 ** 9, dtype=torch.float64); self._situ_last_t = lt
+        now = float(getattr(self, "ticks", 0)); w_ = SITU_REPEAT_W if now - float(lt[u]) < SITU_GAP else 1.0
+        lt[u] = now
+        self._situ_bind(u, T, w_); self._situ_h.numpy()[u] += w_
         self._situ_line_n = int(getattr(self, "_situ_line_n", 0)) + 1
-        self._situ_last = (u, T.astype(np.float32).tolist())
+        self._situ_last = (u, T.astype(np.float32).tolist(), w_)
 
     def _situ_consist(self):
         A, n = self._situ_state(); s_ = self._situ_s.numpy()

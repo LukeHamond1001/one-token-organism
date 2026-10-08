@@ -15,7 +15,7 @@ class _Body(SituationMixin):
     def __init__(self, d=16, vocab=40):
         self.anatomy = types.SimpleNamespace(situation=Situation(band=1, skip=(1,), name_skip=(5,)))
         self.m = types.SimpleNamespace(vocab=vocab, band_mu=torch.zeros(3, d))
-        self.bands = torch.zeros(3, d); self.sil = 0; self.bans = (); self.end_id = 1
+        self.bands = torch.zeros(3, d); self.sil = 0; self.bans = (); self.end_id = 1; self.ticks = 0
 
 
 def test_the_word_for_what_is_going_on():
@@ -29,6 +29,7 @@ def test_the_word_for_what_is_going_on():
     rng = np.random.default_rng(0)
     for k in range(GR.GROUND_SAY_MIN_N + 2):
         for st, w in ((S, up), (Lz, down)):
+            b.ticks += 500                                                   # (A218: each line on a new occasion)
             b.bands[1] = st + 0.05 * torch.tensor(rng.standard_normal(d), dtype=torch.float32)
             b._situ_learn(look); b._situ_learn(the); b._situ_learn(w); b._situ_learn(b.end_id)   # 'look the up.' / 'look the down.'
             b._situ_learn(xl); b._situ_learn(xl); b._situ_learn(b.end_id)                        # a spelled word's letters
@@ -47,6 +48,11 @@ def test_the_word_for_what_is_going_on():
     assert f_[look] == 0 and f_[up] > 0 and f_[xl] > 0, (f_[look], f_[up], f_[xl])            # 'look' never ends a line; the letter does, and is name_skip
     b.bands[1] = S * 0.0 + 0.3 * torch.tensor(rng.standard_normal(d), dtype=torch.float32)       # a situation like neither
     assert b._situ_say() is None or b._situ_say()[1] < 1.0
+    b.ticks += 500                                                           # A218: a burst of 'up' within one occasion counts as one hearing more
+    n_up = float(n[up]); b.bands[1] = S
+    for _ in range(10):
+        b._situ_learn(up); b._situ_learn(b.end_id)
+    assert n[up] - n_up < 2.5, (n_up, n[up])
     r = b.situ_report()
     assert r["bind"] > 0 and r["say"] >= 2 and r["words"] >= 2, r
     print(f"A214 ok: standing primes 'up' (margin {say[1]:.2f}), lying 'down' ({say2[1]:.2f}); 'the' inconsistent ({cons[the]:.2f}), 'look' never final, the letter never primed; {r}")

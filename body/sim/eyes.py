@@ -706,43 +706,40 @@ _HER_GEOMS = {}
 
 def her_cells(m, d, gaze):
     """A217 (2026-10-08): WHERE HER BODY IS IN ITS VIEW (the frame's her_cells): [15 colour periphery cells, 64 fovea window cells]: 1
-    where one of her drawn shapes (every geom of hers, its bounding sphere as the image holds it) covers the cell's centre. Day 122 live
-    under the adapted eyes: 'block' (65 hearings) and 'drum' passed the name gate with one look, her sweater's blue-green (she holds the
-    toy she names at her chest), 'block' was primed 1,550 times with the block in view on 10% and said 651 times. The speaker is not
-    the referent (A202o masked her face; her body, which fills the window below it, was not masked): the organ's look leaves out
-    the cells her body covers, as it leaves out its own (A202s). Read from the world, as the face cue is; never a channel"""
+    where the surface seen at the cell's centre is hers (a ray from the colour camera through the cell's centre over the geoms the eyes
+    render meets one of her geoms first). Day 122 live under the adapted eyes: 'block' (65 hearings) and 'drum' passed the name gate
+    with one look, her sweater's blue-green (she holds the toy she names at her chest), 'block' was primed 1,550 times with the block in
+    view on 10% and said 651 times. The speaker is not the referent (A202o masked her face; her body, which fills the window below it,
+    was not masked): the organ's look leaves out the cells her body covers, as it leaves out its own (A202s). By rays, not bounding
+    spheres (the first form: her chest's sphere at 40 cm covered the window and the toy held before it with it; day 123's hearings with
+    a look fell from 44% to 14%). Read from the world, as the face cue is; never a channel"""
     gids = _HER_GEOMS.get(id(m))
     if gids is None:
-        gids = [g_ for g_ in range(m.ngeom) if m.body(int(m.geom_bodyid[g_])).name.startswith("parent") and int(m.geom_group[g_]) <= 2 and float(m.geom_rbound[g_]) > 0]
+        gids = set(g_ for g_ in range(m.ngeom) if m.body(int(m.geom_bodyid[g_])).name.startswith("parent"))
         _HER_GEOMS[id(m)] = gids
     rows, cols = COL_CELLS; n = W.FOVEA_PX // CELL_F
     out = np.zeros(rows * cols + n * n)
     if not gids:
         return out
     cc = m.camera("eye_C").id
-    Rc, pc = d.cam_xmat[cc].reshape(3, 3), d.cam_xpos[cc]
+    Rc, pc = d.cam_xmat[cc].reshape(3, 3), d.cam_xpos[cc].copy()
     cx, cy = window_centre("L", gaze); cl = m.camera("eye_L").id
     v = d.cam_xmat[cl].reshape(3, 3) @ np.array([(cx - G.EYE_W / 2) / W.EYE_F_PX, -(cy - G.EYE_H / 2) / W.EYE_F_PX, -1.0])
     u = Rc.T @ v
+    pts = [((k_ + 0.5) * G.COL_W / cols, (r_ + 0.5) * G.COL_H / rows) for r_ in range(rows) for k_ in range(cols)]   # the periphery cells' centres (px)
     if u[2] < 0:
         wx, wy = G.COL_W / 2 + COL_F_PX * u[0] / -u[2], G.COL_H / 2 - COL_F_PX * u[1] / -u[2]
-    else:
-        wx = wy = None
-    pcx = (np.arange(cols) + 0.5) * G.COL_W / cols; pcy = (np.arange(rows) + 0.5) * G.COL_H / rows   # the periphery cells' centres
-    cellw = COL_WIN / n
-    wcx = None if wx is None else wx - COL_WIN / 2 + (np.arange(n) + 0.5) * cellw                 # the window cells' centres
-    wcy = None if wy is None else wy - COL_WIN / 2 + (np.arange(n) + 0.5) * cellw
-    for g_ in gids:
-        q = Rc.T @ (d.geom_xpos[g_] - pc)
-        if q[2] >= -0.02:
+        cellw = COL_WIN / n
+        pts += [(wx - COL_WIN / 2 + (k_ + 0.5) * cellw, wy - COL_WIN / 2 + (r_ + 0.5) * cellw) for r_ in range(n) for k_ in range(n)]
+    gid = np.zeros(1, dtype=np.int32)
+    for i_, (px, py) in enumerate(pts):
+        if not (0 <= px < G.COL_W and 0 <= py < G.COL_H):
             continue
-        px, py = G.COL_W / 2 + COL_F_PX * q[0] / -q[2], G.COL_H / 2 - COL_F_PX * q[1] / -q[2]
-        r2 = (float(m.geom_rbound[g_]) * COL_F_PX / -q[2]) ** 2
-        hit = (pcy[:, None] - py) ** 2 + (pcx[None, :] - px) ** 2 <= r2
-        out[:rows * cols] = np.maximum(out[:rows * cols], hit.reshape(-1))
-        if wcx is not None:
-            hw = (wcy[:, None] - py) ** 2 + (wcx[None, :] - px) ** 2 <= r2
-            out[rows * cols:] = np.maximum(out[rows * cols:], hw.reshape(-1))
+        ray = Rc @ np.array([(px - G.COL_W / 2) / COL_F_PX, -(py - G.COL_H / 2) / COL_F_PX, -1.0])
+        ray = ray / np.linalg.norm(ray)
+        dist = mujoco.mj_ray(m, d, pc, ray, EYE_GROUPS, 1, -1, gid)
+        if dist >= 0 and int(gid[0]) in gids:
+            out[i_] = 1.0
     return out
 
 
