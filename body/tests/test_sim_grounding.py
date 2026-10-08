@@ -256,3 +256,23 @@ def test_its_own_hand_is_not_a_thing_named():
     own2 = np.zeros(rows * cols + 1); own2[-1] = 1.0
     assert E.ground_appearance(_eye_f(RED, FLOOR), _eye_p((1, 2), FLOOR, FLOOR), own=own2) is None   # (its hand in the window, nothing else stands out)
     print("A202s ok: the red cell is the look; marked as its own hand, no look; its own hand in the window, the window not read")
+
+
+def test_the_salient_thing_draws_the_eyes():
+    """A211 (2026-10-07): the born salience cue. A red disk on the beige floor of a camera image, off to the right of the fovea: the cue
+    fires toward it (+ yaw); inside the fovea's window it draws no saccade; a place inhibited (inhibition of return) does not fire"""
+    import mujoco
+    m = mujoco.MjModel.from_xml_string('<mujoco><worldbody><camera name="eye_C" pos="0 0 1"/><camera name="eye_L" pos="0 0 1"/>'
+                                       '</worldbody></mujoco>')
+    d = mujoco.MjData(m); mujoco.mj_forward(m, d)
+    img = np.zeros((G.COL_H, G.COL_W, 3), np.uint8); img[:] = (214, 196, 170)                    # the beige floor
+    yy, xx = np.mgrid[:G.COL_H, :G.COL_W]
+    cx, cy = int(G.COL_W * 0.8), G.COL_H // 2
+    img[(xx - cx) ** 2 + (yy - cy) ** 2 <= 8 ** 2] = (235, 30, 25)                                # the red ball, right of centre
+    ior = np.zeros((G.COL_H // E.SAL_BLOCK, G.COL_W // E.SAL_BLOCK))
+    cue = E.salience_cue(m, d, (0.0, 0.0, 0.0), img, None, ior.copy())
+    assert cue[0] == 1.0 and cue[1] > 0.2 and abs(cue[2]) < 0.1, cue
+    yaw_ball = math.atan((cx - G.COL_W / 2) / E.COL_F_PX)
+    assert E.salience_cue(m, d, (yaw_ball, 0.0, 0.0), img, None, ior.copy())[0] == 0.0           # the eyes on it: no saccade
+    assert E.salience_cue(m, d, (0.0, 0.0, 0.0), img, None, np.ones_like(ior))[0] == 0.0          # every place just looked at
+    print(f"A211 ok: the red ball draws the eyes {np.round(cue, 3).tolist()}; on it, none; inhibited, none")

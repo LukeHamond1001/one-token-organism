@@ -369,7 +369,11 @@ class DayPlan:
                 except Exception:
                     why_ = ""
                 if "no spot" in why_ or "every side is blocked" in why_ or "cannot get up without touching the child" in why_ \
-                        or "did not arrive on it" in why_ or "cannot reach it from here" in why_:   # (C280; D1c: her hand stopped short where it lies)
+                        or "did not arrive on it" in why_ or "cannot reach it from here" in why_ \
+                        or "no path on the floor" in why_:                     # (C280; D1c: her hand stopped short where it lies)
+                    # C325 (2026-10-07): no path on the floor is a block too. Day 116: she stood at (2.97, -2.15) beyond the doorway with
+                    # the child laid across its mouth (2.54, -1.09) after a held walk, every way back closed by the child's clearance, and
+                    # 107 of her acts were refused 'no path on the floor to there' over 1,500 ticks with no carry (shows 10 done, 102 refused)
                     self.blocked_at.append(t)
         self.blocked_at = [x for x in self.blocked_at if x > t - CARRY_WINDOW]
         # C278: A CHILD HURTING ON ITS FRONT IS LAID ON ITS BACK. Day 89's last 4,000 ticks: on its front 1,084 of them after a slipped
@@ -678,8 +682,9 @@ class DayPlan:
 
     def _play(self, t, lane, kind, world=None):
         c, p = lane.conduct, lane._p
-        if kind == "floor" and t >= getattr(self, "next_floor_stand", 0) and self._lying_on_back(lane) and \
-                not [v for v in getattr(c.motion, "holding", {}).values() if v is not None]:
+        # C323 (2026-10-07): the stand is offered whatever her hands hold (C319: the stand sets a held toy aside first). Day 116: 9 stands
+        # in 13,261 ticks of floor play where FLOOR_STAND_GAP offers 26; she held a toy from her shows on most offers
+        if kind == "floor" and t >= getattr(self, "next_floor_stand", 0) and self._lying_on_back(lane):
             # C273: THE STAND IS PART OF HER FLOOR PLAY. Day 88: 8,000 ticks of floor play before the day's first motor block, the
             # stand (C268) not offered once; standing and stepping are learned by doing them, and the owner's word is walking first.
             # Every FLOOR_STAND_GAP, with the child on its back and her hands empty, her play's offer is the stand

@@ -2265,7 +2265,14 @@ class Conduct:
                     not any(a_[1] == "show" and a_[5] not in ENDED for a_ in self.acts_open):
                 held_ = [v_ for v_ in (getattr(self.motion, "holding", None) or {}).values() if v_ is not None and v_ not in NEVER_FETCHED]
                 toy_ = held_[0] if held_ else o.id
-                if toy_ not in NEVER_FETCHED:
+                # C324 (2026-10-07): HER FOLLOW-IN NAMES WHAT ITS HAND REACHES FOR, NOT WHAT SHE HOLDS. Day 116: 'rattle', 'duck', 'box',
+                # 'ring' reached for and a show of the ball in her hand each time (C309's 'shows that'), the ball heard 879 times against
+                # the duck's 55; following the child's focus teaches words and redirecting it to another thing does not (Tomasello and
+                # Farrar 1986). With another toy in her hand the reach is not followed in (her hand is not free to show it)
+                if held_ and held_[0] != o.id:
+                    f.last_set[o.id] = t
+                    f.refused.append((t, "label", f"follow-in: {o.id!r} reached for while she holds {held_[0]!r}: not redirected (C324)"))
+                elif toy_ not in NEVER_FETCHED:
                     f.last_set[o.id] = t
                     self.request("show", o=toy_)
                     f.refused.append((t, "label", f"follow-in: {o.id!r} reached for, not looked at: a show of {toy_!r} instead (C306, C309)"))

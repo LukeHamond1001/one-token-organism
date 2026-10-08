@@ -490,7 +490,12 @@ class SimAnatomy(LanguageAnatomy):
                           # the born saccade turns the eyes to it and the orienting bias pulls while it stands; first among the standing
                           # cues (A208): a child hearing 'ball' looks at the ball before its hand or her face
                           OrientCue("named", "named_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF),
-                          # A208 (2026-10-07): its own moving hand draws the eyes next (hand regard, visually guided reaching: the thing reached
+                          # A211 (2026-10-07): the thing that stands out in view draws the eyes next (bottom-up salience with inhibition of
+                          # return, body/sim/eyes.py salience_cue): the eyes go from thing to thing and back to her; before its own hand
+                          # (the day-116 copy: the hand cue led the saccade on 125 ticks of 300 and the eyes held a toy on 7%; in a reach
+                          # guided by the eye the eye is on the target, not the hand: Johansson et al. 2001)
+                          OrientCue("salient", "salient_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF),
+                          # A208 (2026-10-07): its own moving hand draws the eyes (hand regard, visually guided reaching: the thing reached
                           # for enters the fovea with the hand; body/sim/eyes.py hand_cue), a standing cue the born saccade turns to (A186)
                           OrientCue("hand", "hand_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF),
                           OrientCue("face", "face_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF),

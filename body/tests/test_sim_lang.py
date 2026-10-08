@@ -7313,6 +7313,10 @@ def test_one_show_at_a_time():
     con2.quiet_shows = True; con2.fast.last_set["duck"] = con2.fast.last_named["duck"] = 0
     reach_run(con2, 6, 200)
     assert not [a for a in con2.acts_open if a[1] == "show"] and not any("C306" in r[2] for r in con2.fast.refused[-6:]), (con2.acts_open, con2.fast.refused[-6:])
+    con3 = _pair_con(); _run_to(con3, 200)                                 # C324: the block in her hand, the duck reached for: not redirected
+    con3.motion.holding = {"L": "block", "R": None}; con3.fast.last_set["duck"] = con3.fast.last_named["duck"] = 0
+    reach_run(con3, 6, 200)
+    assert not [a for a in con3.acts_open if a[1] == "show"] and any("not redirected (C324)" in r[2] for r in con3.fast.refused[-6:]), (con3.acts_open, con3.fast.refused[-6:])
     print(f"lang 74 (C309): with the block's show open the duck's and the bucket's shows were dropped ({[r[2][:40] for r in con.fast.refused[-8:] if 'C309' in r[2]][:3]}), "
           f"the reach for the duck named nothing; the show ended, the duck's show asked")
 

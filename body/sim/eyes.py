@@ -576,7 +576,80 @@ def hand_cue(m, d, gaze, prev):
     return out
 
 
+SAL_BLOCK = 4                   # A211: the salience map's unit, colour camera px (about 1.2 deg; ours: finer than the toy at 1 m, about 7 deg)
+SAL_CS = (1.0, 6.0)             # A211: its centre and surround, Gaussian sd in blocks (about 1.2 and 7 deg; ours: an object-sized centre)
+SAL_LUM_W = 0.5                 # A211: the luminance contrast's weight beside the two colour axes' (ours)
+SAL_FLOOR = 0.10                # A211: the least salience that draws the eyes (ours, measured on the day-116 copy: the peak on a toy near
+                                # it 0.34 median, 0.1 to 0.2 at 1.2 to 1.9 m; on its own limbs 0.08, on the empty room 0.09)
+IOR_TAU = 3.0                   # A211: s, inhibition of return's decay (it lasts about 3 s: Posner and Cohen 1984; Klein 2000)
+IOR_RATE = 0.25                 # A211: the inhibition a place gains each tick it lies in the fovea's window (ours: full in about 2 s)
+
+
+def salience_map(img):
+    """A211: THE BORN SALIENCE MAP over the colour camera's image (the superior colliculus's priority map of conspicuity: Itti and Koch
+    2001; Fecteau and Munoz 2006): the image averaged over SAL_BLOCK px blocks, each of red-green, blue-yellow and luminance taken
+    centre less surround (a difference of Gaussians, SAL_CS) and the three summed in quadrature -> [rows, cols]"""
+    from scipy.ndimage import gaussian_filter
+    c = img.astype(np.float64) / 255.0
+    h, w = c.shape[0] // SAL_BLOCK * SAL_BLOCK, c.shape[1] // SAL_BLOCK * SAL_BLOCK
+    c = c[:h, :w].reshape(h // SAL_BLOCK, SAL_BLOCK, w // SAL_BLOCK, SAL_BLOCK, 3).mean(axis=(1, 3))
+    out = np.zeros(c.shape[:2])
+    for ch_, wt in ((c[..., 0] - c[..., 1], 1.0), (c[..., 2] - (c[..., 0] + c[..., 1]) / 2, 1.0), (c @ LUMA, SAL_LUM_W)):
+        dog = gaussian_filter(ch_, SAL_CS[0], mode="nearest") - gaussian_filter(ch_, SAL_CS[1], mode="nearest")
+        out += wt * dog ** 2
+    return np.sqrt(out)
+
+
+def salience_cue(m, d, gaze, img, face, ior):
+    """A211 (2026-10-07): THE BORN SALIENCE CUE (the frame's salient_periph; the anatomy's OrientCue "salient", standing). Day 116's copy:
+    the fovea's centre on a toy 9 ticks in 1,500 (the room 869, her 443, its own body 179) with a toy in the colour camera's view on 40%;
+    the born saccade turned the eyes to a heard word's look, its moving hand and her face, and nothing turned them to a thing that stands
+    out, so the eyes were on a toy almost never and the toy's name had no look to bind. Infants' eyes go to what is conspicuous, colour
+    and contrast against its surround, by the colliculus's road (bottom-up salience: Itti and Koch 2001; infants' preference for
+    saturated colour and contrast: Adams 1987; Banks and Salapatek 1981), and a place just looked at is passed over for a while
+    (inhibition of return, from three to six months: Posner and Cohen 1984; Clohessy, Posner, Rothbart and Vecera 1991), so the eyes
+    move from thing to thing. The map (salience_map) less its own body (each of its own drawn shapes' bounding sphere as the image holds it: the body
+    schema, as A202s) and her face (FACE_EXCL_RAD about the born face cue's direction: her face has its own cue), times one less each place's
+    inhibition (`ior`: the eyes' state, [rows, cols], raised while the place lies in the fovea's window, IOR_RATE a tick, decaying with
+    IOR_TAU); its peak past SAL_FLOOR fires -> [1, yaw, pitch] from the fovea's centre (rad, + right / + up), else zeros. Read from the
+    body's own camera; the mask from its own kinematics, as the hand cue is"""
+    S = salience_map(img)
+    rows, cols = S.shape
+    gids = _SELF_GEOMS.get(id(m))
+    if gids is None:                                                       # its own drawn shapes (the eyes' groups), every link of its own
+        own_b = {b for b in range(m.nbody) if m.body(b).name.startswith(("left_", "right_", "pelvis", "torso", "head", "waist", "logo"))}
+        gids = [g_ for g_ in range(m.ngeom) if int(m.geom_bodyid[g_]) in own_b and int(m.geom_group[g_]) <= 2 and float(m.geom_rbound[g_]) > 0]
+        _SELF_GEOMS[id(m)] = gids
+    cc = m.camera("eye_C").id
+    Rc, pc = d.cam_xmat[cc].reshape(3, 3), d.cam_xpos[cc]
+    ys, xs = (np.arange(rows) + 0.5) * SAL_BLOCK, (np.arange(cols) + 0.5) * SAL_BLOCK
+    for g_ in gids:                                                        # each shape's bounding sphere as the image holds it
+        q = Rc.T @ (d.geom_xpos[g_] - pc)
+        if q[2] >= -0.02:
+            continue
+        px, py = G.COL_W / 2 + COL_F_PX * q[0] / -q[2], G.COL_H / 2 - COL_F_PX * q[1] / -q[2]
+        r_ = float(m.geom_rbound[g_]) * COL_F_PX / -q[2] + SAL_BLOCK / 2
+        S[(ys[:, None] - py) ** 2 + (xs[None, :] - px) ** 2 <= r_ * r_] = 0.0
+    yaw_ = np.arctan((xs - G.COL_W / 2) / COL_F_PX)[None, :] - float(gaze[0])   # each block's direction from the fovea's centre
+    pit_ = np.arctan((G.COL_H / 2 - ys) / COL_F_PX)[:, None] - float(gaze[1])
+    yaw_, pit_ = np.broadcast_to(yaw_, S.shape), np.broadcast_to(pit_, S.shape)
+    if face is not None and float(face[0]) > 0:
+        S[np.hypot(yaw_ - float(face[1]), pit_ - float(face[2])) <= FACE_EXCL_RAD] = 0.0
+    half = math.atan((W.FOVEA_PX / 2) / W.EYE_F_PX)
+    inside = (np.abs(yaw_) <= half) & (np.abs(pit_) <= half)              # the fovea's window: looked at now
+    if ior is not None:
+        ior *= math.exp(-W.TICK_S / IOR_TAU)
+        ior[inside] += IOR_RATE * (1.0 - ior[inside])
+        S = S * (1.0 - ior)
+    S[inside] = 0.0                                                        # (what the fovea holds draws no saccade)
+    k = int(np.argmax(S))
+    if float(S.flat[k]) <= SAL_FLOOR:
+        return np.zeros(3)
+    return np.array([1.0, float(yaw_.flat[k]), float(pit_.flat[k])])
+
+
 _SELF_IDS = {}
+_SELF_GEOMS = {}
 
 
 def self_cells(m, d, gaze):
@@ -651,6 +724,8 @@ class Eyes:
         self.hab = {sd: np.zeros((G.EYE_H // POOL, G.EYE_W // POOL)) for sd in "LR"}   # its habituation per place,
         self.onset = (None, np.zeros(3))                                # and this tick's reading (world tick, [fired, yaw, pitch])
         self.hand_prev = {}                                             # A208: the hands' last positions (the hand cue's speed)
+        self.ior = np.zeros((G.COL_H // SAL_BLOCK, G.COL_W // SAL_BLOCK))   # A211: each place's inhibition of return
+        self._sal_at = None
         world.eyes = self
 
     def set_shadows(self, shadows):
@@ -712,7 +787,16 @@ class Eyes:
             self._cache = (key, eye_p, eye_f, face_cue(self.m, w.d, w.gaze), truth)      # A157: the born face cue's stand-in (the truth
         _, eye_p, eye_f, cue, truth = self._cache                                         # last: the page reads it there, sim_page.py)
         return {"eye_p": eye_p.copy(), "eye_f": eye_f.copy(), "face_fovea": np.zeros(1), "face_periph": cue.copy(),
-                "onset_periph": self._onset(truth["periphery"]).copy(), "hand_periph": self._hand(), "self_cells": self_cells(self.m, self.world.d, self.world.gaze), "truth": truth}
+                "onset_periph": self._onset(truth["periphery"]).copy(), "hand_periph": self._hand(), "salient_periph": self._salient(truth["images"]["C"], cue),
+                "self_cells": self_cells(self.m, self.world.d, self.world.gaze), "truth": truth}
+
+    def _salient(self, img, face):
+        """A211: the born salience cue once a world tick (salience_cue; its inhibition of return kept in the eyes' state)"""
+        w = self.world
+        if getattr(self, "_sal_at", None) == w.tick:
+            return self._sal_out.copy()
+        self._sal_out = salience_cue(self.m, w.d, w.gaze, img, face, self.ior); self._sal_at = w.tick
+        return self._sal_out.copy()
 
     def _hand(self):
         """A208: the born hand cue once a world tick (hand_cue; its memory of the hands' places kept in the eyes' state)"""
@@ -765,7 +849,8 @@ class Eyes:
         return dict(prev_ex=None if self.prev_ex is None else {sd: self.prev_ex[sd].copy() for sd in "LR"},
                     prev_per=None if self.prev_per is None else {sd: self.prev_per[sd].copy() for sd in "LR"},
                     hab={sd: self.hab[sd].copy() for sd in "LR"}, onset=[self.onset[0], self.onset[1].copy()],
-                    hand_prev={k_: v_.copy() for k_, v_ in self.hand_prev.items()})   # A208
+                    hand_prev={k_: v_.copy() for k_, v_ in self.hand_prev.items()},   # A208
+                    ior=self.ior.copy())                                                # A211
 
     def load_state(self, s):
         self.prev_per = None if s["prev_per"] is None else {sd: np.array(s["prev_per"][sd], dtype=np.float64) for sd in "LR"}
@@ -773,7 +858,8 @@ class Eyes:
         self.prev_ex = None if s.get("prev_ex") is None else {sd: np.array(s["prev_ex"][sd], dtype=bool) for sd in "LR"}
         self.onset = (s["onset"][0], np.array(s["onset"][1], dtype=np.float64))
         self.hand_prev = {k_: np.array(v_, dtype=np.float64) for k_, v_ in (s.get("hand_prev") or {}).items()}   # A208 (older saves: none)
-        self._hand_at = None
+        self.ior = np.array(s["ior"], dtype=np.float64) if s.get("ior") is not None else np.zeros((G.COL_H // SAL_BLOCK, G.COL_W // SAL_BLOCK))   # A211 (older saves: none)
+        self._hand_at = None; self._sal_at = None
         self._cache = None
 
     def close(self):
