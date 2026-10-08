@@ -276,3 +276,20 @@ def test_the_salient_thing_draws_the_eyes():
     assert E.salience_cue(m, d, (yaw_ball, 0.0, 0.0), img, None, ior.copy())[0] == 0.0           # the eyes on it: no saccade
     assert E.salience_cue(m, d, (0.0, 0.0, 0.0), img, None, np.ones_like(ior))[0] == 0.0          # every place just looked at
     print(f"A211 ok: the red ball draws the eyes {np.round(cue, 3).tolist()}; on it, none; inhibited, none")
+
+
+def test_her_body_is_not_a_thing_named():
+    """A217 (2026-10-08): the cells her body covers are left out of the look. The red figure at the window's centre with her body over
+    the centre: no look (the window is hers); her body over one corner: the figure's look stands; her body over a periphery cell: that
+    cell is never the look"""
+    rows, cols = E.COL_CELLS; n = W.FOVEA_PX // E.CELL_F
+    ef = _eye_f(RED, FLOOR); ep = _eye_p((1, 2), FLOOR, FLOOR)
+    her = np.zeros(rows * cols + n * n); w_ = her[rows * cols:].reshape(n, n); w_[1:7, 1:7] = 1.0      # her chest fills the window's middle
+    assert E.ground_appearance(ef, ep, her=her) is None
+    her2 = np.zeros(rows * cols + n * n); her2[rows * cols:].reshape(n, n)[0:2, 0:2] = 1.0           # a corner
+    look = E.ground_appearance(ef, ep, her=her2); look0 = E.ground_appearance(ef, ep)
+    assert look is not None and look[0] > 0.1 and abs(look[0] - look0[0]) < 0.05, (look, look0)   # (the figure's look, within a cell's share of the unmasked)
+    her3 = np.zeros(rows * cols + n * n); her3[1 * cols + 3] = 1.0                                      # a periphery cell of hers
+    assert E.ground_appearance(_eye_f(FLOOR, FLOOR), _eye_p((1, 3), RED, FLOOR), her=her3) is None
+    assert E.ground_appearance(_eye_f(FLOOR, FLOOR), _eye_p((1, 3), RED, FLOOR)) is not None
+    print("A217 ok: her body over the window's middle, no look; over a corner, the red figure's look; her periphery cell never the look")

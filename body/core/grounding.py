@@ -200,6 +200,16 @@ class GroundingMixin:
             mu += max(w / tot, GROUND_RATE * w / 10.0) * (np.asarray(T, dtype=np.float64) - mu)   # a tenth of a row's: the baseline
             self._ground_mu_n = tot                                                                 # moves slower than any word)
 
+    def _ground_name_ok(self):
+        """A216: the words the look organ would name (A202l, A202q's gates): a thing's names, as the organ holds them now"""
+        A, n, _ = self._ground_state(); cons = self._ground_consist()
+        h_ = self._ground_h.numpy(); f_ = self._ground_f.numpy()
+        ok = (n >= GROUND_SAY_MIN_N) & (cons >= GROUND_CONSIST) & (h_ >= GROUND_MIN_N) & (f_ >= GROUND_FINAL_SHARE * np.maximum(h_, 1.0))
+        for i_ in tuple(getattr(self.anatomy.grounding, "name_skip", ()) or ()):
+            if 0 <= int(i_) < ok.shape[0]:
+                ok[int(i_)] = False
+        return ok
+
     def _ground_say(self, frame):
         """(3) THE NAME, at the voice's choice: (the word whose look fills the fovea, its margin), or None"""
         g = getattr(self.anatomy, "grounding", None)

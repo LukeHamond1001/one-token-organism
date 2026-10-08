@@ -100,6 +100,12 @@ class SituationMixin:
         for i_ in tuple(getattr(self.anatomy.situation, "name_skip", ()) or ()):
             if 0 <= int(i_) < ok.shape[0]:
                 ok[int(i_)] = False
+        if getattr(self.anatomy, "grounding", None) is not None and hasattr(self, "_ground_name_ok"):
+            # A216 (2026-10-08): A THING'S NAME IS NOT A WORD FOR THE SITUATION. Day 122 live, the organ's first hours: 'ball' primed 628
+            # times, 'drum' 393, 'cup' 151, all on its back in floor play (the situation every noun is heard in), 'block' said 651 times.
+            # A word bound to a thing's look is the thing's name (the whole-object assumption: Markman 1990) and its road is the look;
+            # the situation primes the words the look organ does not name
+            ok = ok & ~self._ground_name_ok()
         if int(ok.sum()) < 1:
             return None
         Ac = A - self._situ_mu.numpy(); na = GR._norm(Ac, axis=1)

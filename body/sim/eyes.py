@@ -340,6 +340,7 @@ GROUND_SAL_FLOOR = 0.06 # A202h: the least colour contrast of a periphery cell a
                         # the beige room's cells read 0.02 to 0.04 against their mean)
 
 
+HER_MIN_CELLS = 16      # A217: the window's cells not covered by her body for the window to be read (a quarter of 64; ours)
 FACE_EXCL_RAD = math.radians(8.0)   # A202p: the periphery cells within this of her face's direction are hers, not a thing's (ours: a face's half-width at arm's length)
 GROUND_FIG = 0.02       # A202m: the least departure of a fovea window cell from the window's mean for the window to hold a figure (ours)
 
@@ -355,7 +356,7 @@ def _local_contrast(c):
     return out
 
 
-def ground_appearance(eye_f, eye_p=None, face=None, gaze=None, own=None):
+def ground_appearance(eye_f, eye_p=None, face=None, gaze=None, own=None, her=None):
     """the look of what the fovea holds: the colour window's cells' mean opponent code less the scene's (the colour periphery's cells'
     mean; A202g: the whole 21-degree window against the room, so a toy anywhere in the window is the look, where the central 4 x 4
     against the window's own ring read a toy held 15 degrees off as its colour's negative); near zero on the empty floor -> [4].
@@ -385,7 +386,16 @@ def ground_appearance(eye_f, eye_p=None, face=None, gaze=None, own=None):
         # neighbours (its local contrast past GROUND_SAL_FLOOR), not merely against the room's mean; a view with neither is no thing
         # (None), and the organ neither binds nor names on it
         cw = c.reshape(-1, GROUND_K)
-        fig = float(np.max(np.linalg.norm(cw - cw.mean(axis=0), axis=1)))
+        her_ = None if her is None else np.asarray(her, dtype=np.float64)   # A217: her body's cells are hers, not a thing's
+        keep = np.ones(n * n, dtype=bool)
+        if her_ is not None and her_.size == rows * cols + n * n:
+            keep = her_[rows * cols:] <= 0
+        if keep.sum() >= HER_MIN_CELLS:
+            cw = cw[keep]
+            win = cw.mean(axis=0) - scene
+            fig = float(np.max(np.linalg.norm(cw - cw.mean(axis=0), axis=1)))
+        else:
+            fig = -1.0                                                      # (the window is hers: not a thing)
         own_ = None if own is None else np.asarray(own, dtype=np.float64)   # A202s: its own hands are part of itself, not a thing named
         own_win = bool(own_ is not None and own_.size == rows * cols + 1 and own_[-1] > 0)
         if face is None and not own_win and fig > GROUND_FIG and float(np.linalg.norm(win)) > GROUND_FLOOR_WIN:   # the fovea holds a figure: its look against the room
@@ -403,6 +413,8 @@ def ground_appearance(eye_f, eye_p=None, face=None, gaze=None, own=None):
             loc = np.where(far_, loc, -1.0)
         if own_ is not None and own_.size == rows * cols + 1:
             loc = np.where(own_[:rows * cols] > 0, -1.0, loc)              # (A202s: a cell its own hand lies in)
+        if her_ is not None and her_.size == rows * cols + n * n:
+            loc = np.where(her_[:rows * cols] > 0, -1.0, loc)              # (A217: a cell her body lies in)
         k_ = int(np.argmax(loc))
         if float(loc[k_]) > GROUND_SAL_FLOOR:
             return cells_[k_] - scene
@@ -689,6 +701,49 @@ def salience_cue(m, d, gaze, img, face, ior):
 
 _SELF_IDS = {}
 _SELF_GEOMS = {}
+_HER_GEOMS = {}
+
+
+def her_cells(m, d, gaze):
+    """A217 (2026-10-08): WHERE HER BODY IS IN ITS VIEW (the frame's her_cells): [15 colour periphery cells, 64 fovea window cells]: 1
+    where one of her drawn shapes (every geom of hers, its bounding sphere as the image holds it) covers the cell's centre. Day 122 live
+    under the adapted eyes: 'block' (65 hearings) and 'drum' passed the name gate with one look, her sweater's blue-green (she holds the
+    toy she names at her chest), 'block' was primed 1,550 times with the block in view on 10% and said 651 times. The speaker is not
+    the referent (A202o masked her face; her body, which fills the window below it, was not masked): the organ's look leaves out
+    the cells her body covers, as it leaves out its own (A202s). Read from the world, as the face cue is; never a channel"""
+    gids = _HER_GEOMS.get(id(m))
+    if gids is None:
+        gids = [g_ for g_ in range(m.ngeom) if m.body(int(m.geom_bodyid[g_])).name.startswith("parent") and int(m.geom_group[g_]) <= 2 and float(m.geom_rbound[g_]) > 0]
+        _HER_GEOMS[id(m)] = gids
+    rows, cols = COL_CELLS; n = W.FOVEA_PX // CELL_F
+    out = np.zeros(rows * cols + n * n)
+    if not gids:
+        return out
+    cc = m.camera("eye_C").id
+    Rc, pc = d.cam_xmat[cc].reshape(3, 3), d.cam_xpos[cc]
+    cx, cy = window_centre("L", gaze); cl = m.camera("eye_L").id
+    v = d.cam_xmat[cl].reshape(3, 3) @ np.array([(cx - G.EYE_W / 2) / W.EYE_F_PX, -(cy - G.EYE_H / 2) / W.EYE_F_PX, -1.0])
+    u = Rc.T @ v
+    if u[2] < 0:
+        wx, wy = G.COL_W / 2 + COL_F_PX * u[0] / -u[2], G.COL_H / 2 - COL_F_PX * u[1] / -u[2]
+    else:
+        wx = wy = None
+    pcx = (np.arange(cols) + 0.5) * G.COL_W / cols; pcy = (np.arange(rows) + 0.5) * G.COL_H / rows   # the periphery cells' centres
+    cellw = COL_WIN / n
+    wcx = None if wx is None else wx - COL_WIN / 2 + (np.arange(n) + 0.5) * cellw                 # the window cells' centres
+    wcy = None if wy is None else wy - COL_WIN / 2 + (np.arange(n) + 0.5) * cellw
+    for g_ in gids:
+        q = Rc.T @ (d.geom_xpos[g_] - pc)
+        if q[2] >= -0.02:
+            continue
+        px, py = G.COL_W / 2 + COL_F_PX * q[0] / -q[2], G.COL_H / 2 - COL_F_PX * q[1] / -q[2]
+        r2 = (float(m.geom_rbound[g_]) * COL_F_PX / -q[2]) ** 2
+        hit = (pcy[:, None] - py) ** 2 + (pcx[None, :] - px) ** 2 <= r2
+        out[:rows * cols] = np.maximum(out[:rows * cols], hit.reshape(-1))
+        if wcx is not None:
+            hw = (wcy[:, None] - py) ** 2 + (wcx[None, :] - px) ** 2 <= r2
+            out[rows * cols:] = np.maximum(out[rows * cols:], hw.reshape(-1))
+    return out
 
 
 def self_cells(m, d, gaze):
@@ -830,7 +885,7 @@ class Eyes:
         return {"eye_p": eye_p.copy(), "eye_f": eye_f.copy(), "face_fovea": np.zeros(1), "face_periph": cue.copy(),
                 "onset_periph": self._onset(truth["periphery"]).copy(), "hand_periph": self._hand(), "salient_periph": self._salient(truth["images"]["C"], cue),
                 "gaze_periph": gaze_cue(self.m, self.world.d, self.world.gaze, getattr(self.world, "parent", None), cue),   # A215
-                "self_cells": self_cells(self.m, self.world.d, self.world.gaze), "truth": truth}
+                "self_cells": self_cells(self.m, self.world.d, self.world.gaze), "her_cells": her_cells(self.m, self.world.d, self.world.gaze), "truth": truth}
 
     def _salient(self, img, face):
         """A211: the born salience cue once a world tick (salience_cue; its inhibition of return kept in the eyes' state). A213: THE
