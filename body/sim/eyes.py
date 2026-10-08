@@ -581,12 +581,13 @@ _SELF_IDS = {}
 
 def self_cells(m, d, gaze):
     """A202s (2026-10-07): WHERE ITS OWN HANDS ARE IN ITS VIEW (the frame's self_cells): [15 colour periphery cells, the fovea window]: 1
-    where a link of its own hands or wrists projects into the colour camera's cell, or within the colour window (its half-size and a
+    where a link of its own limbs (hands, arms, legs) projects into the colour camera's cell, or within the colour window (its half-size and a
     quarter more for the hand's own extent). The body schema: an infant knows where its own hand is from its body sense, and its hand is
     part of itself (hand regard; the born hand cue's projection, A208, read from the body's own kinematics); never a channel"""
     ids = _SELF_IDS.get(id(m))
     if ids is None:
-        ids = [b for b in range(m.nbody) if (m.body(b).name.startswith(("left_", "right_")) and ("hand" in m.body(b).name or "wrist" in m.body(b).name))]
+        ids = [b for b in range(m.nbody) if m.body(b).name.startswith(("left_", "right_"))]   # (C321's amendment: every limb link of its own, its legs too:
+                                                                                                # the show copy's looks fell on its knee and hip 7 times in 48)
         _SELF_IDS[id(m)] = ids
     rows, cols = COL_CELLS
     out = np.zeros(rows * cols + 1)

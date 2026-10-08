@@ -5779,7 +5779,7 @@ class ParentMotion:
         ch = self.child
         shake = unit(np.cross(ch.axis, [0, 0, 1.0]) if abs(ch.axis[2]) < 0.95 else ch.cam_R["L"][:, 0])
         return [dict(type="reach", hands={sd: dict(k="show")}, shape={sd: dict(curl=.9, thumb=.8, index=None)}, stay=True, shake=_lst(shake)),
-                dict(type="shake", side=sd, n=4), dict(type="relax", sides=sd),  # back before her (P3's contract as it was), then
+                dict(type="shake", side=sd, n=K.SHOW_HOLD_TICKS), dict(type="relax", sides=sd),  # C321: held while her line names it; back before her (P3's contract as it was), then
                 dict(type="plan", what="put_near", args=dict(toy=toy))]          # A100 (C84): set down within its reach ("here"),
                                                                                   # beside its near hand at her lesson's distance, as the
                                                                                   # reach lesson does; until A100 the shown toy stayed in

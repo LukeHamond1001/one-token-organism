@@ -472,6 +472,8 @@ LOOK_TICKS = 2                  # her gaze reaches its target within 2 ticks (4.
 SHOW_SHAKE_M = 0.02             # m: a shown toy is shaken this far either way ... (4.10: "shaken for its sound"; ours)
 SHOW_SHAKE_HZ = 2.5             # ... at this rate (ours)
 SHOW_DIST_M = 0.40              # m: a toy shown before the G1's eyes (4.2, 4.10)
+SHOW_HOLD_TICKS = 14           # C321: ticks (2.1 s) she holds and shakes a shown toy before its eyes, her line said over it (ours: a
+                               # line of four words takes 10 to 14 ticks; the shake was 4, and the name was heard as the toy went down)
 HANDOVER_PALM_N = 0.3           # the hand-over's release: the child's palm touch at least 0.3 N ... (A4)
 HANDOVER_CLOSED_DEG = 30.0      # ... and its fingers closed at least 30 deg (A4) ...
 HANDOVER_HOLD_TICKS = 2         # ... for 2 ticks, ...
