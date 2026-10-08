@@ -1587,9 +1587,10 @@ class G1World(SimWorld):
         m, d = self.m, self.d
         self.unpin_toy(toy)
         b = self.parent.toys[toy]; j = m.body_jntadr[b]; adr = m.jnt_qposadr[j]; dof = m.jnt_dofadr[j]; home = m.qpos0[adr:adr + 7]
+        from_ = [float(d.qpos[adr]), float(d.qpos[adr + 1])]               # the ledger's row: (tick, toy, from, to), as every tidy's
         d.qpos[adr:adr + 2] = np.asarray(xy, float)[:2]; d.qpos[adr + 2] = home[2]; d.qpos[adr + 3:adr + 7] = home[3:7]; d.qvel[dof:dof + 6] = 0.0
         mujoco.mj_forward(m, d)
-        self.tidied.append((int(self.tick), toy, "shown", [float(xy[0]), float(xy[1])]))
+        self.tidied.append((int(self.tick), toy, from_, [float(xy[0]), float(xy[1])]))   # (C332 amended: a 'shown' tag here crashed the
 
     def toys_far_back(self):
         """C311 (2026-10-07): THE FAR TOYS COME BACK TO IT AT DAWN. The child slept on the second room's rug through day 108 with its toys
@@ -1889,7 +1890,12 @@ class G1World(SimWorld):
         self.night, self.dawn_left = bool(s5["night"]), int(s5["dawn_left"])
         self.door_open = bool(s5.get("door_open", False))                    # (the door stage; older saves: closed)
         self.carried = [(int(t), [float(x) for x in a], [float(x) for x in b]) for t, a, b in s5.get("carried", [])]   # (A110; older saves: none)
-        self.tidied = [(int(t), str(k), [float(x) for x in a], [float(x) for x in b]) for t, k, a, b in s5.get("tidied", [])]   # (A117; older saves: none)
+        def _xy_(v):                                                        # C332 amended: a row saved with a tag where a point goes
+            try:
+                return [float(x) for x in v]                                # (checkpoints 6,003,000 to 6,005,000 hold 'shown' there)
+            except (TypeError, ValueError):
+                return [float("nan"), float("nan")]
+        self.tidied = [(int(t), str(k), _xy_(a), _xy_(b)) for t, k, a, b in s5.get("tidied", [])]   # (A117; older saves: none)
         self.pinned = {str(k): (np.asarray(v[0], float), None if v[1] is None else np.asarray(v[1], float), int(v[2])) for k, v in (s5.get("pinned") or {}).items()}   # (C332)
         if self.lane is not None and s5.get("lane") is not None:
             self.lane.load_state(s5["lane"])
