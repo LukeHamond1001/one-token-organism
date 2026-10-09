@@ -5619,21 +5619,22 @@ class ParentMotion:
             lead = near(lead)
             c["lead"] = _lst(lead); h.next = lead + off
             if pz < K.STAND_FALL_M:
-                c["mode"] = "lower"; c["why"] = "it sank while walking"
+                c["mode"] = "lower"; c["why"] = "it sank while walking"; c["walk_end"] = "sank"
             elif self._standing_clear_m(feet[:2] + fwd_c * K.WALK_WALL_M) < K.WALK_WALL_M:
                 # C345 (2026-10-09, 04:30): SHE DOES NOT WALK IT INTO A WALL. Day 129 at 6,194,250: a held walk carried the child into the
                 # half-metre pocket between the arch's posts and the second room's far wall, the walk stalled there ('walked 0.04 m'),
                 # it was laid down in the pocket and lay thrashing against the posts and the wall, a dozen joints at their load lines,
                 # its stress at the cap and she unable to reach it. A step ahead within WALK_WALL_M of anything standing, the walk is
                 # over where it is (the settle, the free stand and the carry back as at every walk's end)
-                c["mode"] = "settle"; c["settle_t"] = 0; c["why"] = None; c["walled"] = True
+                c["mode"] = "settle"; c["settle_t"] = 0; c["why"] = None; c["walled"] = True; c["walk_end"] = "walled"
             elif (getattr(self, "walk_goal", None) is None and c["walked"] >= K.WALK_FAR_M) or c["walk_t"] >= K.WALK_MAX_TICKS \
                     or (getattr(self, "walk_goal", None) is not None and float(np.linalg.norm(np.asarray(self.walk_goal, float) - feet[:2])) < 0.5):   # (the door stage: to its destination)
                 c["mode"] = "settle"; c["settle_t"] = 0; c["why"] = None
+                c["walk_end"] = "max" if c["walk_t"] >= K.WALK_MAX_TICKS else ("goal" if getattr(self, "walk_goal", None) is not None else "far")
             elif c["walked"] >= float(c.get("far", 0.0)) + 0.02:            # still going: 2 cm more since she last looked
                 c["far"] = float(c["walked"]); c["far_t"] = int(c["walk_t"])
             elif c["walk_t"] - int(c.get("far_t", 0)) >= K.WALK_STALL_TICKS:   # it has stopped stepping: she sits it down while it
-                c["mode"] = "settle"; c["settle_t"] = 0; c["why"] = None   # still stands (the first walk: 0.40 m, then 8 s of
+                c["mode"] = "settle"; c["settle_t"] = 0; c["why"] = None; c["walk_end"] = "stalled"   # still stands (the first walk: 0.40 m, then 8 s of
                                                                             # standing still, then it sank at her cap)
         elif mode == "settle":
             # C287: BEFORE SHE LETS GO SHE STANDS IT STILL OVER ITS FEET (STAND_SETTLE_TICKS), her hold easing to nothing over the second half:
@@ -6938,7 +6939,9 @@ class ParentMotion:
                 return "next"
             if a is not None and ph["kind"] == "stand":
                 a["info"]["walked_m"] = round(max(float(h.ctl.get("walked", 0.0)) for h in hs), 2)
-                a["why"] = f"stood on its own legs in her hands and walked {a['info']['walked_m']:.2f} m (C268)"
+                ends_ = sorted({str(h.ctl.get("walk_end")) for h in hs if h.ctl.get("walk_end")} | ({"no walk"} if not any("walk_t" in h.ctl for h in hs) else set()))
+                a["info"]["walk_end"] = ",".join(ends_)
+                a["why"] = f"stood on its own legs in her hands and walked {a['info']['walked_m']:.2f} m ({a['info']['walk_end'] or 'lowered'}; C268)"   # (the walk's end named: an instrument, 2026-10-09)
                 self.stats["stands"] = self.stats.get("stands", 0) + 1
             if a is not None and any(h.ctl.get("turned") for h in hs):
                 a["why"] = "turned from its front past its side within her caps (A7, A101)"
