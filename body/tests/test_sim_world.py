@@ -2710,3 +2710,44 @@ def test_a_tick_the_physics_could_not_live_is_lived_again():
         assert w.tick == t0 + 1
     finally:
         W.mujoco.mj_step = real
+
+
+def test_the_ghost_stands_it_leads_it_and_lets_it_down():
+    """world W7 (C350): THE ROOM'S GUIDANCE FIELD. On a born body lying on its mat the ghost's hold lifts the torso to the G1's
+    own standing height within its lift (the soles loaded, the standing reflex on), its lead carries the body a metre and more at its
+    pace with the pelvis at standing height, its wrench is the outside force the observer's truth sees, the strength and the metres
+    are in its record and its save; let down, it is off within LOWER_TICKS and the body is low again; a loaded world applies afresh"""
+    import pickle
+    from body.sim import ghost as GH
+    w = G1World(seed=1)
+    m, d = w.m, w.d
+    g = w.ghost
+    assert not g.on and g.rec is None and abs(g.pelvis_stand - 0.793) < 0.01 and abs(g.z_stand - (1.022 - GH.HOLD_DROP)) < 0.01   # the G1's qpos0 standing
+    w.frame()
+    assert d.xpos[g.pelvis][2] < 0.2
+    g.on_(w)
+    for _ in range(GH.LIFT_TICKS + 15):
+        w.frame(); w.apply({})
+    tf = w._sensed["touch_force"]
+    assert d.xpos[g.pelvis][2] >= 0.70 and max(float(tf[w.sole_zones[0]].sum()), float(tf[w.sole_zones[1]].sum())) >= 20.0, (d.xpos[g.pelvis][2])
+    assert 0.98 <= g.rec[0] <= 1.0 and 0.0 <= g.rec[1] <= 1.6                 # (the strength fades as it bears its weight)
+    out_ = w._outside()
+    assert np.abs(out_[len(W.JOINTS):len(W.JOINTS) + 3]).sum() > 1.0                 # the hold is in the outside force on the base
+    p0 = d.xpos[g.pelvis][:2].copy(); up_ = 0; refl_ = 0
+    for _ in range(200):
+        w.frame(); w.apply({})
+        up_ += int(d.xpos[g.pelvis][2] >= 0.70)
+        refl_ += int(w._spinal.get("leg_l") in ("stand", "step"))        # the standing reflex on its loaded soles (A193)
+    assert np.linalg.norm(d.xpos[g.pelvis][:2] - p0) >= 0.8 and up_ >= 120 and refl_ >= 60 and g.metres >= 1.0, (np.linalg.norm(d.xpos[g.pelvis][:2] - p0), up_, refl_, g.metres)
+    raw = w._capture(fast=True); st = pickle.loads(raw)
+    assert st["s5"]["ghost"]["on"] and st["s5"]["ghost"]["s"] == g.s and 0.8 <= g.s <= 1.0 and st["s5"]["ghost"]["metres"] == g.metres
+    s_ = g.s
+    g.off_(w)
+    assert g.on and g.lower == GH.LOWER_TICKS
+    for _ in range(GH.LOWER_TICKS + 5):
+        w.frame(); w.apply({})
+    assert not g.on and g.rec is None and not d.xfrc_applied[g.b].any() and not d.xfrc_applied[g.pelvis].any() and d.xpos[g.pelvis][2] < 0.6, d.xpos[g.pelvis][2]
+    w._restore(w._from_fast(raw))
+    assert g.on and g.s == s_ and not g.last.any() and not g.last_p.any()                            # (the wrench applied afresh: xfrc is not in the state)
+    w2 = G1World(seed=1); w2.frame()
+    assert w2.ghost.load_state(None) is None and not w2.ghost.on

@@ -305,6 +305,8 @@ def main():
                    stress=round(float(L.stress), 3), mood=round(float(L.mood), 3), cry=bool(world.crying),
                    pain=None if pain is None else [int(i) for i in np.nonzero(pain)[0]])
         rec["acts"] = {k: int(v) for k, v in (getattr(world, "_last_acts", None) or {}).items()}   # C117's instrument: the effectors' flat acts this tick
+        if getattr(world, "ghost", None) is not None and world.ghost.rec is not None:
+            rec["ghost"] = list(world.ghost.rec)                        # W7: [strength, the weight's share carried, heading, falls caught, metres]
         rec["ptop"] = [[round(float(p_.max()), 2) for p_ in ((st.get("now") or {}).get("probs") or [])] for st in L.motor]   # C117: each joint's top probability
         rec["pbig"] = [[round(float(p_[0] + p_[-1]), 3) for p_ in ((st.get("now") or {}).get("probs") or [])][5:7] for st in L.motor[3:5]]   # C146: each arm's
                                                                                     # actor's probability of a big step (either way) at its wrist pitch and yaw: the

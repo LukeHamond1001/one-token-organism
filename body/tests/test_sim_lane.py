@@ -178,7 +178,7 @@ def test_a_toy_falls():
 
 def test_the_days_layout():
     """lane 7: her day (4.7) over 200 seeds: floor play opens it, the absences are never first, last or two running, every block of
-    4.7's table is there in its count (3 floor, 4 motor (the walking day), 1 show, 2-4 away, 1 tasks), and the blocks fill the time from the wake to
+    4.7's table is there in its count (3 floor, 4 ghost (C350: the walking day's motor blocks, the room's), 1 show, 2-4 away, 1 tasks), and the blocks fill the time from the wake to
     the winding down exactly; a short day scales every length"""
     counts = set()
     for seed in range(1, 201):
@@ -188,7 +188,7 @@ def test_the_days_layout():
         assert d.blocks[0][0] == DP.WAKE and d.blocks[-1][1] == DP.DAY_TICKS - DP.WIND
         assert all(a[1] == b[0] for a, b in zip(d.blocks, d.blocks[1:]))
         n = {k: ks.count(k) for k in set(ks)}
-        assert n["floor"] == 3 and n["motor"] == 4 and n["show"] == 1 and n["tasks"] == 1 and n["away"] == 1, n   # (the training day, 2026-09-29: away once)
+        assert n["floor"] == 3 and n["ghost"] == 4 and n["show"] == 1 and n["tasks"] == 1 and n["away"] == 1, n   # (the training day, 2026-09-29: away once)
         counts.add(n["away"])
         assert 2 <= len(d.focus) <= 3 and set(d.focus) <= set(DP.BIRTH_TOYS)
     d = DP.DayPlan(1, day_ticks=2400); d.lay_out(0)

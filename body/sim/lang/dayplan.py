@@ -51,10 +51,16 @@ DAY_TICKS = 24000                      # a life day (4.7)
 WAKE = 300                             # the wake episode (4.7)
 WIND = 1000                            # the winding down (4.7)
 GOODNIGHT = 300                        # goodnight (4.7)
-BLOCKS = (("floor", 3, 4000, 5000), ("motor", 4, 1500, 2000), ("show", 1, 1500, 1500), ("away", 1, 400, 600),
+BLOCKS = (("floor", 3, 4000, 5000), ("ghost", 4, 2500, 3000), ("show", 1, 1500, 1500), ("away", 1, 400, 600),
           ("tasks", 1, 600, 600))      # 4.7's table: kind, how many, shortest, longest. TRAINING MODE (2026-09-29, the owner's word: fix
                                        # fast; her pace is the lead's): away 2-4 x 400-1,200 and her own tasks 3,000 cut to one short block
                                        # each, so the play blocks (drawn, then scaled to the day) carry about a quarter more of the day
+HER_HANDS = False               # C350 (2026-10-09, the owner's word at 15:00: her scripts the bottleneck, the ghost holds it): her hands' lessons for
+                                # standing and walking (the floor stand C273, the turn for it C338, the carry for it C349, the motor block's
+                                # pull-to-sit A161) are off; the ghost blocks (GHOST_FOLLOW_M, GHOST_FOLLOW_GAP; body/sim/ghost.py) replace the
+                                # motor blocks: 4 x 2,500-3,000 ticks of the room's hold, lead and fade, the lure a step ahead (C348), her voice
+                                # and face as before (she follows at a distance; a step is paid by her smile, C284). Her shows and hand-overs stay
+GHOST_FOLLOW_M, GHOST_FOLLOW_GAP = 2.0, 100   # C350: in a ghost block she walks to the child when farther than this, this often at most (ours)
 PLAY_GAP = (30, 60)                    # ticks between her floor play's offers (ours). C341 (2026-10-08) tried (15, 30) and withdrew it the same day: no more acts done a tick, the child's stress up. C269 (2026-10-04, the owner's word: the teacher wastes
                                        # not a second): 150-300 until then (22 to 45 s between offers); life day 85's audit: she neither
                                        # acted nor spoke on 33% of the day's ticks, 6,009 of them in stretches of 3 s or more
@@ -270,6 +276,8 @@ class DayPlan:
                 self.sit_due = True                                         # (C254: owed whatever its posture; a prone child is turned first)
                 self.log.append((t, "motor block two: a sit owed again (C220)" + ("" if self._lying_on_back(lane) else "; the child not on its back: turned over first (C254)")))
             self.block_i = bi
+        if kind == "ghost":
+            self._ghost_tick(t, lane, world)
         if any(k == "pain" for k, _o in p.events):
             self.last_pain = t
         if p.child_sounding and self.away:
@@ -554,6 +562,21 @@ class DayPlan:
         """an episode begins"""
         c, feel = lane.conduct, lane.feel
         self.log.append((t, "episode", kind))
+        if self.kind == "ghost" and kind != "ghost" and getattr(world, "ghost", None) is not None:   # C350: the ghost block over: the field
+            rec_ = list(world.ghost.rec or [])                      # off at once and the body laid on its back where it stands (the
+            world.ghost.off_(world, at_once=True)                   # environment's laying, C338 amended; her carry's rules for the mat)
+            try:
+                world.carry_to_mat(to=np.asarray(world.d.qpos[:2], float))
+            except Exception as e_:
+                self.log.append((t, "ghost block over: the laying failed (C350)", repr(e_)[:80]))
+            if getattr(self, "lure", None) is not None:
+                try:
+                    world.unpin_toy(self.lure)
+                except Exception:
+                    pass
+                self.lure = None
+            self.log.append((t, "ghost block over: laid down (C350)", rec_))
+            print(f"ghost block over at tick {t}: {rec_} [strength, carried, heading, falls, metres] (C350)", flush=True)
         feel.set_engagement(TASKS_ATTENTION if kind == "tasks" else 1.0)
         feel.set_wind_down(1.0 if kind in ("wind", "goodnight") else 0.0)
         if kind == "away":
@@ -569,6 +592,16 @@ class DayPlan:
         elif kind == "tasks":
             c.routine = None
             c.motion.request(_Plain("walk", "sofa"))
+        elif kind == "ghost":
+            # C350: THE GHOST BLOCK. The room's field stands it and leads it (body/sim/ghost.py); no play of hers (her hands off it), her
+            # voice and face as ever, the lure a step ahead (C348), she follows at a distance. The strength and the metres in the record
+            c.routine = None
+            self.next_play = t + 10 ** 9
+            self.lure = None; self.ghost_follow = t
+            if getattr(world, "ghost", None) is not None:
+                world.ghost.on_(world)
+                self.log.append((t, "ghost block: the room holds it (C350)"))
+                print(f"ghost block at tick {t}: the room holds it (C350)", flush=True)
         elif kind in ("floor", "motor", "show", "wind"):
             c.routine = None
             self.next_play = t + int(self.rng.integers(*PLAY_GAP))
@@ -577,6 +610,38 @@ class DayPlan:
                 self.sit_turns = 0                                      # whatever its posture (a child on its front is turned over first)
                 if not self._lying_on_back(lane):
                     self.log.append((t, "motor block: the child not on its back: turned over first for the sit (C254)"))
+
+    def _ghost_tick(self, t, lane, world):
+        """C350: a tick of the ghost block: the lure a step ahead of its feet (C348), she follows at a distance"""
+        c = lane.conduct; pm = c.motion
+        gh = getattr(world, "ghost", None)
+        if gh is None or not gh.on:
+            return
+        try:
+            lure_ = getattr(self, "lure", None)
+            if lure_ is None:
+                held_ = {v for v in pm.holding.values() if v is not None}
+                cands_ = [o for o in list(self.focus) + sorted(pm.toys) if o not in TP.OPEN_CONTAINERS and o not in held_]
+                lure_ = cands_[0] if cands_ else None
+                if lure_ is not None:
+                    self.lure = lure_
+                    self.log.append((t, "ghost block: the toy a step ahead (C348)", lure_))
+            if lure_ is not None and gh.ticks > 0:
+                ch_ = pm.child
+                feet_ = np.asarray(pm._feet_mid(), float)
+                fwd_ = np.array([np.cos(gh.heading), np.sin(gh.heading), 0.0])
+                pos_ = np.array([feet_[0] + fwd_[0] * LURE_AHEAD_M, feet_[1] + fwd_[1] * LURE_AHEAD_M, LURE_Z_M])
+                world.pin_toy(lure_, pos_, ticks=2)
+        except Exception as e_:
+            self.log.append((t, "ghost lure failed (C350)", repr(e_)[:80])); self.lure = None
+        if t - int(getattr(self, "ghost_follow", 0)) >= GHOST_FOLLOW_GAP and not pm.holds:
+            try:
+                ch_xy = np.asarray(world.d.qpos[:2], float); her_ = np.asarray(pm.base["at"], float)[:2]
+                if float(np.linalg.norm(ch_xy - her_)) > GHOST_FOLLOW_M:
+                    c.motion.request(_Plain("walk", "child"))
+                    self.ghost_follow = t
+            except Exception as e_:
+                self.log.append((t, "ghost follow failed (C350)", repr(e_)[:80])); self.ghost_follow = t
 
     def _away_tick(self, t, t_day, lane, world, kind):
         c = lane.conduct
@@ -738,7 +803,7 @@ class DayPlan:
         c, p = lane.conduct, lane._p
         # C323 (2026-10-07): the stand is offered whatever her hands hold (C319: the stand sets a held toy aside first). Day 116: 9 stands
         # in 13,261 ticks of floor play where FLOOR_STAND_GAP offers 26; she held a toy from her shows on most offers
-        if kind == "floor" and t >= getattr(self, "next_floor_stand", 0) and self._posture(lane) in ("front", "side") \
+        if HER_HANDS and kind == "floor" and t >= getattr(self, "next_floor_stand", 0) and self._posture(lane) in ("front", "side") \
                 and getattr(self, "next_floor_turn", 0) <= t and not c.motion.holding.get("L") and not c.motion.holding.get("R"):
             # C338 (2026-10-08): A PRONE CHILD IS TURNED ONTO ITS BACK FOR THE FLOOR STAND. Day 125: the child lay on its front or side 53% of
             # the day (tummy time and its own rolling), and the floor stand is offered only from its back, so half the day's floor play gave
@@ -761,7 +826,7 @@ class DayPlan:
             self.log.append((t, "floor play: the child on its front, turned onto its back for the stand (C338)"))
             self.next_play = t + int(self.rng.integers(*PLAY_GAP))
             return
-        if kind == "floor" and t >= getattr(self, "next_floor_stand", 0) and self._lying_on_back(lane):
+        if HER_HANDS and kind == "floor" and t >= getattr(self, "next_floor_stand", 0) and self._lying_on_back(lane):
             # C349 (2026-10-09, 13:35): STOOD UP CLEAR OF THE WALLS. Day 133's morning: two held walks of thirteen ended 'walled' at once (C345's
             # stop), the child stood up where it lay 0.4 m from the front wall; a parent carries a child to the open floor before walking it.
             # Lying within STAND_CLEAR_M of anything standing it is laid on its back at its mat first (the environment's carry, C277), the stand

@@ -106,6 +106,7 @@ from body.sim.voice.synth import PA_PER_UNIT  # noqa: E402  (the tract's engine 
 from body.sim import ears as EA  # noqa: E402  (the ears, P2)
 from body.sim import observer as OBS  # noqa: E402  (the born momentum observer: contact from the robot's own sensors, A37)
 from body.sim import sounds as SND  # noqa: E402  (the room's sounds from its physics, W5)
+from body.sim import ghost as GH  # noqa: E402  (the room's guidance field, fading, W7)
 
 R = None                        # body/sim/reflexes.py, the body's spinal cord: bound at the first world's birth (it imports this module)
 
@@ -679,6 +680,7 @@ class G1World(SimWorld):
         self.base_dof = int(m.jnt_dofadr[m.joint("floating_base_joint").id])
         self.pelvis_id = m.body("pelvis").id
         self.g1_bodies = np.array([b for b in range(m.nbody) if int(m.body_rootid[b]) == int(m.body_rootid[m.body('pelvis').id])], dtype=np.int64)
+        self.ghost = GH.Ghost(self)                                     # W7: the room's guidance field (off until the day plan's ghost block)
         self.cereb_idx = np.array([JOINTS.index(j) for j in AN.CEREB_JOINTS])
         self.weight = self.body_mass * float(np.linalg.norm(m.opt.gravity))
         self.armature = m.dof_armature[self.dof].copy()                     # each joint's rotor inertia through its gear (the model's)
@@ -841,7 +843,7 @@ class G1World(SimWorld):
                 | (ty == int(mujoco.mjtConstraint.mjCNSTR_CONTACT_ELLIPTIC))
             if cm.any():
                 mujoco.mj_mulJacTVec(m, d, qf, np.where(cm, d.efc_force, 0.0))
-        if self.parent is not None and self.parent.holds:               # her holds: the outside forces on the G1's links, as MuJoCo
+        if self.ghost.on or (self.parent is not None and self.parent.holds):   # her holds (and the ghost's, W7): the outside forces on the G1's links, as MuJoCo
             qh = np.zeros(m.nv)                                         # applies xfrc_applied (at each body's centre of mass)
             for bb in self.g1_bodies:
                 fr = d.xfrc_applied[bb]
@@ -896,6 +898,7 @@ class G1World(SimWorld):
                     pass
             par.holds = []; par.phases = []; par.arms = {sd: dict(mode="relaxed") for sd in "LR"}
         self.d.xfrc_applied[:] = 0.0; self.d.qfrc_applied[:] = 0.0
+        self.ghost.clear()
         print(f"world fault lived through at tick {self.tick}: {getattr(e, 'reason', e)}: her acts cancelled, her holds let go, the tick lived again (W6)", flush=True)
         return True
 
@@ -1060,6 +1063,8 @@ class G1World(SimWorld):
                     t0 = time.perf_counter()
                     par.before_step(s)                                  # her segments drawn, her holds' capped springs (L0)
                     t_par += time.perf_counter() - t0
+                if self.ghost.on:
+                    self.ghost.before_step(self)                        # W7: the ghost's hold, righting and lead on the torso
                 if self.pinned:
                     self._apply_pins()                                  # T3: the toys the environment holds before its eyes
                 t0 = time.perf_counter()
@@ -1174,6 +1179,8 @@ class G1World(SimWorld):
             f_ = NIGHT_LIGHT + (1.0 - NIGHT_LIGHT) * (DAWN_TICKS - self.dawn_left) / DAWN_TICKS
             for fld, v in self.light_day.items():
                 getattr(m, fld)[...] = v * f_
+        if self.ghost.on:
+            self.ghost.tick_end(self, acts, act_digits, SETTINGS)       # W7: the lead advanced, the strength's fade, the catch
         if self.lane is not None:
             self.lane.after_apply(self)                                 # her conduct's tick, on what the world just did
         self.tick += 1
@@ -1208,6 +1215,7 @@ class G1World(SimWorld):
         m = self.m
         self.night = True
         self.dawn_left = 0
+        self.ghost.off_(self, at_once=True)                             # W7: the ghost lets go at dusk
         for fld, v in self.light_day.items():
             getattr(m, fld)[...] = v * NIGHT_LIGHT
         if self.parent is not None:
@@ -1877,6 +1885,7 @@ class G1World(SimWorld):
                               "carried": [[int(t), list(a), list(b)] for t, a, b in self.carried], "door_open": bool(self.door_open),
                               "tidied": [[int(t), k, list(a), list(b)] for t, k, a, b in self.tidied],
                               "pinned": {str(k): [list(map(float, v[0])), None if v[1] is None else list(map(float, v[1])), int(v[2])] for k, v in self.pinned.items()},   # C332
+                              "ghost": self.ghost.state(),                                   # W7
                               "lane": None if self.lane is None else self.lane.state()}),
                 "warnings": np.array([int(d.warning[i].number) for i in range(int(mujoco.mjtWarning.mjNWARNING))])}
         return pickle.dumps(st, protocol=4) if fast else st
@@ -1936,6 +1945,7 @@ class G1World(SimWorld):
                 return [float("nan"), float("nan")]
         self.tidied = [(int(t), str(k), _xy_(a), _xy_(b)) for t, k, a, b in s5.get("tidied", [])]   # (A117; older saves: none)
         self.pinned = {str(k): (np.asarray(v[0], float), None if v[1] is None else np.asarray(v[1], float), int(v[2])) for k, v in (s5.get("pinned") or {}).items()}   # (C332)
+        self.ghost.load_state(s5.get("ghost"))                                   # (W7; older saves: off)
         if self.lane is not None and s5.get("lane") is not None:
             self.lane.load_state(s5["lane"])
         mujoco.mj_forward(m, d)
