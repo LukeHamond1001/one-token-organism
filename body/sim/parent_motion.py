@@ -5963,6 +5963,28 @@ class ParentMotion:
         a["info"]["put_xy"] = [float(xy[0]), float(xy[1])]
         return []
 
+    def _ph_world_drop(self, a, ph):
+        """C340: the toy carried by the world from where it is shown in an arc over the bucket's rim (n ticks) and let go into it"""
+        toy = ph["world"]; w = self.w; m, d = self.m, self.d
+        if "bucket" not in self.toys:
+            return "no bucket in the room to hide it in"
+        k_ = int(ph.get("t", 0)); n_ = max(2, int(ph["n"]))
+        if k_ == 0 or "p0" not in ph:
+            ph["p0"] = _lst(d.xpos[self.toys[toy]])
+        c = d.xpos[self.toys["bucket"]].copy()                              # the bucket where it stands now (the child may shove it)
+        top = c + np.array([0.0, 0.0, X.BUCKET_H + 2.0 * float(self.toy_rest.get(toy, 0.05)) + 0.04])
+        u = min(1.0, (k_ + 1) / n_)
+        p0 = np.asarray(ph["p0"], float)
+        pos = p0 + (top - p0) * u + np.array([0.0, 0.0, 0.15 * math.sin(math.pi * u)])   # an arc: up over the rim and down
+        if u >= 1.0:
+            w.pin_toy(toy, top, ticks=1)                                    # over the tub's middle for a step, then let go: it falls in
+            w.unpin_toy(toy)
+            if a is not None:
+                a["info"]["dropped_at"] = _lst(top)
+            return "done"
+        w.pin_toy(toy, pos, ticks=2)
+        return "run"
+
     def _ph_world_hand(self, a, ph):
         """C335: the toy held at the child's palm by the world until A4's release (the palm pressed, the fingers closed, for
         HANDOVER_HOLD_TICKS) or n ticks; 'taken' in the act's info when its hand closed on it"""
@@ -6395,6 +6417,23 @@ class ParentMotion:
             raise Refuse("the bucket is what hides, not what is hidden")
         c = self.d.xpos[self.toys["bucket"]]
         near = min(float(np.linalg.norm(c[:2] - self.child.grasp[x][:2])) for x in "LR")
+        if K.SHOW_BY_PLACEMENT:
+            # C340 (2026-10-08): THE HIDE BY PLACEMENT. Eight hides asked since day 124, one done (the fetch's misses, 'no path on the
+            # floor', the bucket's set-down refused). The environment shows the toy before its eyes (HIDE_SHOW_TICKS, shaken), carries it
+            # in an arc over the bucket's rim in its view (HIDE_ARC_TICKS, world_drop) and lets it go into the tub: gone from its eyes and
+            # still there (A129's object-permanence test); a bucket beyond HIDE_REACH_M of its hands is set within its reach first
+            # (world_put). Her figure beside it where a spot allows, her hands emptied first. An environment's act, disclosed
+            if toy in NEVER_FETCHED:
+                raise Refuse(f"the {toy} stays where it stands: she does not carry it (C119)")
+            try:
+                near_ = self._near(a, need=None) if self.child.posture != "front" else self._near(a, where="head", offs=PUT_HEAD_OFFS)
+            except Refuse:
+                near_ = []
+            out = self._hands_emptied(a) + near_
+            if near > HIDE_REACH_M:
+                out.append(dict(type="plan", what="world_put", args=dict(toy="bucket")))
+            out += [dict(type="shake", side="R", n=K.HIDE_SHOW_TICKS, world=toy), dict(type="world_drop", world=toy, n=K.HIDE_ARC_TICKS)]
+            return out
         if near > HIDE_REACH_M:                                             # C138: the bucket out of the child's reach (it crawled off, or
             a["info"]["carry_ok"] = "bucket"                                # the bucket was shoved): she brings the bucket beside it first,
             if self.child.posture == "front":                               # carried by its rim, set within its reach as a lesson's toy
