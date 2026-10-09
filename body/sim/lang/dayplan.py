@@ -55,7 +55,7 @@ BLOCKS = (("floor", 3, 4000, 5000), ("motor", 4, 1500, 2000), ("show", 1, 1500, 
           ("tasks", 1, 600, 600))      # 4.7's table: kind, how many, shortest, longest. TRAINING MODE (2026-09-29, the owner's word: fix
                                        # fast; her pace is the lead's): away 2-4 x 400-1,200 and her own tasks 3,000 cut to one short block
                                        # each, so the play blocks (drawn, then scaled to the day) carry about a quarter more of the day
-PLAY_GAP = (15, 30)                    # ticks between her floor play's offers (ours). C341 (2026-10-08): (15, 30), 2 to 4.5 s (day 126: 34% of the day's ticks with no act of hers running; the owner's word: every second); was (30, 60). C269 (2026-10-04, the owner's word: the teacher wastes
+PLAY_GAP = (30, 60)                    # ticks between her floor play's offers (ours). C341 (2026-10-08) tried (15, 30) and withdrew it the same day: no more acts done a tick, the child's stress up. C269 (2026-10-04, the owner's word: the teacher wastes
                                        # not a second): 150-300 until then (22 to 45 s between offers); life day 85's audit: she neither
                                        # acted nor spoke on 33% of the day's ticks, 6,009 of them in stretches of 3 s or more
 SIT_TRIES_PER_BLOCK = 3         # C224: the pull-to-sit offered this many times a motor block when her reach or her hold refused it (ours)
