@@ -72,6 +72,7 @@ DOOR_THROUGH_XY, DOOR_RUG_XY, DOOR_ARCH_XY = (2.9, -1.5), (4.1, -1.5), (4.4, -2.
 SIB_NARRATE_GAP, SIB_DEG, SIB_M = 300, 30.0, 4.0   # D2: she names the sibling's walking when the child's head camera is on it (within this many degrees, this near), this often; ours
 DEMO_GAP, DEMO_M = 900, 1.6             # C300: in floor play she shows walking this often (135 s), a walk this far in its view and back; ours
 FREE_PELVIS_M, FREE_DEG, FREE_STAND_MAX = 0.62, 35.0, 400   # C287: let go, it stands alone while its pelvis is this high and its trunk within this of upright, this many ticks at most (60 s); ours
+LURE_AHEAD_M, LURE_Z_M = 0.35, 0.85   # C348: the toy held this far ahead of its feet, this high, while it stands alone (ours: a step, a little under its chest)
 CARRY_LAY_CLEAR_M = 1.3                # C281: it is laid this far from where she kneels at the least (its body is 1.3 m long); ours
 CARRY_CLEAR_M = 1.0                   # she carries it back to its mat (her own place this far from the mat's centre); ours
 STAND_SOON = 150                # C330: ticks before the floor stand is due during which her conduct asks no show (ours: a show's length)
@@ -339,7 +340,34 @@ class DayPlan:
             free_ = float(ch_.pelvis[2]) >= FREE_PELVIS_M and float(ch_.trunk_deg) <= FREE_DEG and t - self.free_from < FREE_STAND_MAX
             if free_:
                 self.next_play = max(self.next_play, t + 20)                # (her next play waits for the carry)
+                # C348 (2026-10-09, 13:30): COME TO ME. Standing alone after her release, a toy is held a step ahead of its feet at its chest's
+                # height (the environment's pin, as the show's, T3) and kept a step ahead as its feet advance: a child leaning and reaching
+                # for a toy just out of reach is what the stepping strategy (A196) catches, and the step is its own (the stepping reflex
+                # on the stance hip it extends in the lean, A193), paid by her smile as every step is. Unaided steps before: one a day
+                try:
+                    lure_ = getattr(self, "lure", None)
+                    if lure_ is None:
+                        held_ = {v for v in pm.holding.values() if v is not None}
+                        cands_ = [o for o in list(self.focus) + sorted(pm.toys) if o not in TP.OPEN_CONTAINERS and o not in held_]
+                        lure_ = cands_[0] if cands_ else None
+                        if lure_ is not None:
+                            self.lure = lure_; self.lure_steps0 = int(getattr(lane, "_steps_n", 0))
+                            self.log.append((t, "come to me: the toy a step ahead (C348)", lure_))
+                    if lure_ is not None:
+                        feet_ = np.asarray(pm._feet_mid(), float)
+                        fwd_ = np.asarray(ch_.torso_R[:, 0], float); fwd_[2] = 0.0
+                        nf_ = float(np.linalg.norm(fwd_)); fwd_ = fwd_ / nf_ if nf_ > 1e-6 else np.array([1.0, 0.0, 0.0])
+                        pos_ = np.array([feet_[0] + fwd_[0] * LURE_AHEAD_M, feet_[1] + fwd_[1] * LURE_AHEAD_M, LURE_Z_M])
+                        world.pin_toy(lure_, pos_, ticks=2)
+                except Exception as e_:
+                    self.log.append((t, "come to me failed (C348)", repr(e_)[:80])); self.lure = None
         if cp_ is not None and not on_ and not free_:
+            if getattr(self, "lure", None) is not None:                     # C348: the free stand over, the toy is let be where it hangs
+                try:
+                    world.unpin_toy(self.lure)
+                except Exception:
+                    pass
+                self.lure = None
             self.log.append((t, "it stood alone (C287)", int(t - (self.free_from if self.free_from is not None else t))))
             print(f"it stood alone {int(t - (self.free_from if self.free_from is not None else t))} ticks after she let go (C287)", flush=True)
             self.free_from = None
