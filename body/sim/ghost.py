@@ -70,6 +70,12 @@ EXPERT_DECIMATION, EXPERT_DT, EXPERT_PERIOD = 10, 0.002, 0.8   # the policy ever
 EXPERT_V = float(__import__('os').environ.get('GHOST_EXPERT_V', 0.4))   # m/s: the walk commanded (ours; Unitree's deploy walks at 0.5)
 EXPERT_TURN, EXPERT_WZ_MAX = 1.0, 0.5    # the turn command per rad of heading error, and its cap (ours)
 EXPERT_DROP = 0.08                       # m: the torso hold's slack under the standing height with the expert on (ours: the policy's stance)
+EXPERT_LOOK_M = 1.5                      # m: with the expert on, the walls are looked for this far ahead (ours: 4 s of its walk; at 0.8 m it
+                                         # turned too late at 0.4 m/s and walked through the second room's wall into the void, day 135, 6,499,0xx)
+TURN_DONE = 0.3                          # rad: a turn in place is over when the pelvis faces within this of the heading (ours)
+LAY_CLEAR_M = 1.0                        # m: the catch lays it where it fell only this clear of anything standing, else on its mat (ours: C281's rule)
+ROOMS = ((-2.6, 2.6, -2.3, 2.3), (2.7, 5.9, -3.3, 0.3))   # the rooms' floor plans (make_g1room ROOM_X/ROOM_Y; g1scene ROOM2), x0, x1, y0, y1
+ROOM_SLACK = 0.3                         # m: beyond the plans by this the child has left the rooms: carried to its mat (ours)
 
 
 def _wrap(a):
@@ -96,6 +102,7 @@ class Ghost:
         self.e_kp = np.array(EXPERT_KP); self.e_kd = np.array(EXPERT_KD); self.e_default = np.array(EXPERT_DEFAULT)
         self.e_aid = np.asarray(w.aid)[self.e_idx]; self.e_lo = np.asarray(w.lo, float)[self.e_idx]; self.e_hi = np.asarray(w.hi, float)[self.e_idx]
         self.use_expert = bool(int(__import__('os').environ.get('GHOST_EXPERT', '1')))
+        self.turning = False; self.left_room = 0
         self.base = int(w.base_dof)
 
     def _policy(self):
@@ -197,7 +204,9 @@ class Ghost:
             omega = np.asarray(d.qvel[self.base + 3:self.base + 6], float) * EXPERT_ANG_VEL_SCALE
             R = d.xmat[self.pelvis].reshape(3, 3); yaw = math.atan2(float(R[1, 0]), float(R[0, 0]))
             wz = min(max(EXPERT_TURN * _wrap(self.heading - yaw), -EXPERT_WZ_MAX), EXPERT_WZ_MAX)
-            cmd = np.array([EXPERT_V, 0.0, wz]) * np.array(EXPERT_CMD_SCALE)
+            if self.turning and abs(_wrap(self.heading - yaw)) < TURN_DONE:
+                self.turning = False
+            cmd = np.array([0.0 if self.turning else EXPERT_V, 0.0, wz]) * np.array(EXPERT_CMD_SCALE)
             phase = (self.e_count * EXPERT_DT) % EXPERT_PERIOD / EXPERT_PERIOD
             obs = np.concatenate([omega, grav, cmd, (q - self.e_default), dq * EXPERT_DOF_VEL_SCALE, self.e_action,
                                   [math.sin(2 * math.pi * phase), math.cos(2 * math.pi * phase)]]).astype(np.float32)
@@ -227,16 +236,32 @@ class Ghost:
                 self.off_(w, at_once=True)
                 return
         elif self.ticks > LIFT_TICKS:
+            x_, y_ = float(pxy[0]), float(pxy[1])
+            inside = any(x0 - ROOM_SLACK <= x_ <= x1 + ROOM_SLACK and y0 - ROOM_SLACK <= y_ <= y1 + ROOM_SLACK for x0, x1, y0, y1 in ROOMS)
+            if not inside and getattr(w, "carry_to_mat", None) is not None:   # W7b: out of the rooms (day 135: 80 m into the void): back to its mat
+                try:
+                    w.carry_to_mat()
+                except Exception:
+                    pass
+                self.last[:] = 0.0; self.last_p[:] = 0.0; self.left_room += 1; self.ticks = 0; self.s = 1.0
+                self.z_from = float(d.xipos[self.b][2]); self.z_to = self.z_stand; self.lead = np.asarray(d.xipos[self.b][:2], float).copy(); self.turning = False
+                print(f"the ghost's walk left the rooms at ({x_:.1f}, {y_:.1f}) at tick {w.tick}: carried to its mat (W7b)", flush=True)
+                self.win = []; self.pxy = np.asarray(d.xpos[self.pelvis][:2], float).copy()
+                self.rec = [round(self.s, 4), round(share, 3), round(self.heading, 2), int(self.falls), round(self.metres, 2)]
+                return
             up = d.xmat[self.b].reshape(3, 3)[:, 2]
             fallen = pz < FALL_Z or float(up[2]) < FALL_UP
             if fallen:                                                      # the catch: the harness takes it again. The first catch
                 self.s = 1.0; self.ticks = 0; self.falls += 1               # (16:05) restarted the lift from the fallen pose and hauled a
                 lay = getattr(w, "carry_to_mat", None)                   # child on its front up by the chest, head down (the copy: pain 13
                 if lay is not None:                                         # ticks in 30); the environment lays it on its back where it fell
-                    try:                                                    # first (its laying, C338 amended), and the lift is from lying
-                        lay(to=np.asarray(d.qpos[:2], float))
+                    try:                                                    # first (its laying, C338 amended), and the lift is from lying;
+                        clear_ = getattr(getattr(w, "parent", None), "_standing_clear_m", None)   # near a wall, on its mat (a lying body
+                        here_ = np.asarray(d.qpos[:2], float)                                       # is 1.3 m long: laid across a wall it
+                        lay(to=here_ if (clear_ is None or float(clear_(here_)) >= LAY_CLEAR_M) else None)   # came up on the far side)
                     except Exception:
                         pass
+                    self.turning = False
                     self.last[:] = 0.0; self.last_p[:] = 0.0                # (the laying clears the applied forces)
                 self.z_from = float(d.xipos[self.b][2]); self.z_to = self.z_stand; self.lead = np.asarray(d.xipos[self.b][:2], float).copy()
             else:
@@ -245,16 +270,18 @@ class Ghost:
                 self.lead = self.lead + SPEED * TICK_S * fwd
                 ahead = float((self.lead - txy) @ fwd)
                 self.lead = txy + fwd * min(max(ahead, 0.0), LEAD_M)          # along the heading, a step ahead at most
-                probe = txy + fwd * (LEAD_M + CLEAR_M)
+                expert_ = self.use_expert and self.expert is not None
+                look = (EXPERT_LOOK_M if expert_ else LEAD_M + CLEAR_M)
+                probe = txy + fwd * look
                 par = getattr(w, "parent", None)
                 clear = getattr(par, "_standing_clear_m", None)
-                if clear is not None:
+                if clear is not None and not self.turning:
                     for _ in range(3):
                         if float(clear(probe)) >= CLEAR_M:
                             break
-                        self.heading = _wrap(self.heading + math.pi / 2); self.turns += 1
+                        self.heading = _wrap(self.heading + math.pi / 2); self.turns += 1; self.turning = expert_   # (the expert turns in place)
                         fwd = np.array([math.cos(self.heading), math.sin(self.heading)])
-                        probe = txy + fwd * (LEAD_M + CLEAR_M); self.lead = txy.copy()
+                        probe = txy + fwd * look; self.lead = txy.copy()
                 if share > HANG:
                     self.s = min(1.0, self.s + RISE)
                 elif share < BEARS:
@@ -273,7 +300,7 @@ class Ghost:
         return dict(on=bool(self.on), s=float(self.s), heading=float(self.heading), lead=[float(x) for x in self.lead],
                     ticks=int(self.ticks), lower=int(self.lower), falls=int(self.falls), turns=int(self.turns), z_from=float(self.z_from), z_to=float(self.z_to),
                     last=[float(x) for x in self.last], metres=float(self.metres),
-                    e_action=[float(x) for x in self.e_action], e_target=[float(x) for x in self.e_target], e_count=int(self.e_count), e_steps=int(self.e_steps),
+                    e_action=[float(x) for x in self.e_action], e_target=[float(x) for x in self.e_target], e_count=int(self.e_count), e_steps=int(self.e_steps), turning=bool(self.turning), left_room=int(self.left_room),
                     pxy=None if self.pxy is None else [float(x) for x in self.pxy])
 
     def load_state(self, st):
@@ -286,5 +313,5 @@ class Ghost:
                                                                                         # physics state: a loaded world applies afresh)
         self.pxy = None if st.get("pxy") is None else np.asarray(st["pxy"], float).copy()
         self.e_action = np.asarray(st.get("e_action", np.zeros(12)), float).copy(); self.e_target = np.asarray(st.get("e_target", EXPERT_DEFAULT), float).copy()
-        self.e_count = int(st.get("e_count", 0)); self.e_steps = int(st.get("e_steps", 0))
+        self.e_count = int(st.get("e_count", 0)); self.e_steps = int(st.get("e_steps", 0)); self.turning = bool(st.get("turning", False)); self.left_room = int(st.get("left_room", 0))
         self.rec = None
