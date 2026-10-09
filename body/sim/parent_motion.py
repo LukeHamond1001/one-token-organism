@@ -5042,7 +5042,7 @@ class ParentMotion:
         reaches (appearance): the direct teacher's hold. The spring never slips for her reach (Hold.direct); it ends as the kind's
         controller ends it. An environment's act, disclosed"""
         to, loc, nl, shape = self._hold_target(ph["side"], int(ph["body"]), ph.get("local"), ph.get("normal"))
-        h = Hold(ph["name"], ph["body"], loc, ph["side"], ph["cap"], False, ph["kind"], nl)
+        h = Hold(ph["name"], ph["body"], loc, ph["side"], ph["cap"], bool(ph.get("brief", False)), ph["kind"], nl)
         h.direct = True
         h.ctl = dict(ph.get("ctl") or {}); h.ctl["t"] = 0
         self.holds = [x for x in self.holds if x.name != h.name] + [h]
@@ -6459,6 +6459,17 @@ class ParentMotion:
         toy = self._toy(t)
         ch = self.child
         far, lat, xy, sh = self._far_xy()
+        if K.SHOW_BY_PLACEMENT:
+            # C336 (2026-10-08): THE FAR SET-DOWN BY PLACEMENT. Day 125 under the direct teacher: bring-fars 5 done, 6 refused (the fetch's
+            # misses, 'the book was not under her hand', 'could not be set down where she meant it'). The environment sets the toy beside its
+            # far shoulder (A109's place, ROLL_BEYOND_M past the arm's reach) at once; her figure on the child's far side where a spot allows
+            if toy in NEVER_FETCHED:
+                raise Refuse(f"the {toy} stays where it stands: she does not carry it (C119)")
+            try:
+                near = self._near(a, where=far, need=None)
+            except Refuse:
+                near = []
+            return self._hands_emptied(a) + near + [dict(type="plan", what="world_put_far", args=dict(toy=toy))]
         mid = (ch.torso[:2] + ch.pelvis[:2]) / 2
         d = float((xy - mid) @ lat)                                          # the spot's distance out from the child's middle
         a0 = float((sh - mid) @ ch.len_axis[:2])                             # and its place along the body (its shoulder's)
@@ -6466,6 +6477,16 @@ class ParentMotion:
         alongs = (a0, a0 + 0.10, a0 - 0.10)                                  # her pelvis, as set_near's toy lies (A90)
         return self._fetch(a, toy) + self._near(a, where=far, offs=offs, alongs=alongs) + \
             [dict(type="plan", what="put_far", args=dict(toy=toy))]
+
+    def _plan_world_put_far(self, a, toy):
+        """C336: the toy set beside its far shoulder by the environment (A109's place), where the mat and the furniture leave room"""
+        ch = self.child
+        far, lat, xy, sh = self._far_xy()
+        if not self._in_plan(xy) or self.plan.dist[self.plan.cell(xy)] < 0.10 or ch.clearance_xy(xy) < 0.05:
+            raise Refuse(f"no room for the {toy} beside its far shoulder (A109: the mat's edge or the furniture)")
+        self.w.toy_within_reach(toy, xy)
+        a["info"]["put_xy"] = [float(xy[0]), float(xy[1])]
+        return []
 
     def _plan_put_far(self, a, toy):
         ch = self.child
@@ -6992,6 +7013,20 @@ class ParentMotion:
             holds.append(dict(type="hold", name=f"turn_{sd}", side=sd, body=int(b), local=_lst(loc), normal=_lst(nl), goff=_lst(goff),
                               kind="turn", cap=0.0, brief=True, ctl=dict(toward=_lst(toward)), shape=shape, wait=False))
         out = []
+        if K.TEACHER_DIRECT:
+            # C336: THE TURN BY DIRECT HOLDS (as the stand's, C331): her hands' springs engaged at its far shoulder and hip at once, the turn's
+            # controller (A101, A7's caps and seconds) as before. Day 125: turns 4 done, 5 refused ('her right hand did not arrive on it: it
+            # moved', 'cannot reach it from here')
+            if self.base["mode"] == "heels":
+                b_ = self.base; fw = np.array([math.cos(b_["yaw"]), math.sin(b_["yaw"])])
+                out.append(dict(type="kneel_down", at=_lst(np.asarray(b_["at"], float) + fw * HEELS_BACK), yaw=b_["yaw"], u0=3.0, u1=2.0))
+            for h_ in holds:
+                out.append(dict(type="hold_direct", name=h_["name"], side=h_["side"], body=h_["body"], local=h_["local"], normal=h_["normal"],
+                                kind="turn", cap=0.0, brief=True, ctl=dict(h_["ctl"])))
+            out.append(dict(type="holds_wait", kind="turn"))
+            out.append(dict(type="plan", what="let_go", args=dict(names=["turn_L", "turn_R"])))
+            out.append(dict(type="relax", sides="LR"))
+            return out
         if int(a["info"].get("turn_retry") or 0) < K.TURN_REPLANS and any(not self._reachable(sd, onto[sd]) for sd in onto):
             # A136 (C98): the child moved while she came (a rocking child crawls a hand's breadth a second): the grips she planned from
             # the spot are out of her reach from where she now kneels (the rig's misses: 30 to 74 cm short). Once, she approaches again

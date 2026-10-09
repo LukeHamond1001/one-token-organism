@@ -437,6 +437,7 @@ def test_the_prop_and_the_catch():
           f"engaged {caught - crossed} ticks later ({K.REACTION_TICKS} ticks: her 300 ms reaction)")
 
 
+@_scripted
 def test_the_turn():
     """parent 9: the brief turn from its front (A7), by its near shoulder and its near hip (the W2 verifier's finding: W2 lifted its
     pelvis at its middle, which rolls nothing): at most 2 s of pushing, within 200 N; it rolls toward its side (its chest turned
@@ -456,6 +457,7 @@ def test_the_turn():
           f"its centre of mass rose {g['com_rise_cm']} cm; after: {out['posture_after']}")
 
 
+@_scripted
 def test_the_turn_from_its_side():
     """parent 9b (A170): a child lying on its side is turned onto its back by the brief turn (its upper shoulder and the upper side of
     its torso pushed toward its back), within her caps; the child ends on its back, or its chest's normal past TURN_PAST_Z"""
