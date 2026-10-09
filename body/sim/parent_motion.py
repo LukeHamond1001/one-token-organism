@@ -4288,6 +4288,23 @@ class ParentMotion:
                 side = unit(np.cross(ch.axis, [0, 0, 1.0])[:2]) if abs(ch.axis[2]) < 0.95 else np.array([1.0, 0.0])
                 H = np.asarray(ch.torso[:2], float) + 0.9 * side
                 spot = (H, float(math.atan2(ch.torso[1] - H[1], ch.torso[0] - H[0])))
+            if not clear_of_toys(spot[0], spot[1]):
+                # C334 amended (2026-10-08, life tick 6,014,827): THE TOYS UNDER HER PLACED FIGURE ARE SET ASIDE. With every spot near a
+                # toy her figure was set over one (her shin 2.4 cm into the drum, her thigh on the duck): a contact the physics resolves
+                # with her support's whole force on the toy, the second class of physics fault this evening. Each toy within TOY_CLEAR_M of
+                # her floor (heels, knees) is set TOY_ASIDE_M from it, away from her, upright (the tidy's ledger marks it), unless the
+                # child has it in hand. An environment's act, disclosed (as the carry's tidy, C286)
+                fwd_ = np.array([math.cos(spot[1]), math.sin(spot[1])]); H_ = np.asarray(spot[0], float)
+                for toy_, xy_ in self._toys_xy().items():
+                    near_ = min(float(np.linalg.norm(H_ - xy_)), float(np.linalg.norm(H_ + 0.45 * fwd_ - xy_)))
+                    if near_ >= K.TOY_CLEAR_M or any(float(np.linalg.norm(np.asarray(ch.grasp[x_][:2], float) - xy_)) < 0.12 for x_ in "LR"):
+                        continue
+                    away_ = xy_ - (H_ + 0.25 * fwd_)
+                    away_ = unit(away_) if float(np.linalg.norm(away_)) > 1e-6 else -fwd_
+                    to_ = H_ + 0.25 * fwd_ + away_ * K.TOY_ASIDE_M
+                    if self.w.toy_within_reach(toy_, to_):
+                        a["info"].setdefault("set_aside", []).append(toy_)
+                        self.stats["direct_aside"] = int(self.stats.get("direct_aside", 0)) + 1
             self._teleport("heels", spot[0], spot[1])
             a["info"]["spot"] = dict(H=_lst(spot[0]), yaw=float(spot[1]), direct=True)
             return []

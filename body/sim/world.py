@@ -1569,6 +1569,12 @@ class G1World(SimWorld):
         m = self.m
         if self.parent is None or toy not in self.parent.toys:
             return False
+        for sd_, held_ in list(self.parent.holding.items()):              # C335 amended (life tick 6,014,827): a toy welded to her hand is
+            if held_ == toy:                                                # never pinned against its weld (the pin and the weld fought and
+                self.scene.weld(f"hold_{sd_}_{toy}", False)                 # the integrator died): the weld is let go first, her hand empty
+                self.parent.holding[sd_] = None
+                if self.parent.arms.get(sd_, {}).get("mode") == "at":
+                    self.parent.arms[sd_] = dict(mode="relaxed")
         b = self.parent.toys[toy]; j = m.body_jntadr[b]; adr = m.jnt_qposadr[j]
         q = np.asarray(m.qpos0[adr + 3:adr + 7] if quat is None else quat, float)
         self.pinned[toy] = (np.asarray(pos, float).copy(), q.copy(), int(self.tick) + int(ticks))
@@ -1595,6 +1601,7 @@ class G1World(SimWorld):
         d.qpos[adr:adr + 2] = np.asarray(xy, float)[:2]; d.qpos[adr + 2] = home[2]; d.qpos[adr + 3:adr + 7] = home[3:7]; d.qvel[dof:dof + 6] = 0.0
         mujoco.mj_forward(m, d)
         self.tidied.append((int(self.tick), toy, from_, [float(xy[0]), float(xy[1])]))   # (C332 amended: a 'shown' tag here crashed the
+        return True
 
     def toys_far_back(self):
         """C311 (2026-10-07): THE FAR TOYS COME BACK TO IT AT DAWN. The child slept on the second room's rug through day 108 with its toys
