@@ -5866,6 +5866,22 @@ class ParentMotion:
                     return T2, yaw
         return None
 
+    def _hands_emptied(self, a):
+        """C335 amended (2026-10-08, life tick 6,012,091): a toy still in her hand (a put refused before a placement act, the old
+        hand-over's 'could not be set down where she meant it') is let go and set within the child's reach by the environment before
+        the placement; she holds nothing through a placement lesson. (The block stayed in her hand 2,000 ticks and C324's follow-in
+        labels were refused 13 times for it: 'reached for while she holds block')"""
+        out = []
+        for sd in "LR":
+            toy = self.holding.get(sd)
+            if toy is None:
+                continue
+            if a is not None:
+                a["info"]["emptied"] = toy
+            out += [dict(type="release", side=sd), dict(type="proxy", side=sd, on=True), dict(type="relax", sides=sd),
+                    dict(type="plan", what="world_put", args=dict(toy=toy))]
+        return out
+
     def _act_show(self, a, t):
         toy = self._toy(t)
         if K.SHOW_BY_PLACEMENT:
@@ -5881,7 +5897,7 @@ class ParentMotion:
                 near = self._near(a, need=None) if self.child.posture != "front" else self._near(a, where="head", offs=PUT_HEAD_OFFS)
             except Refuse:
                 near = []
-            return near + [dict(type="shake", side="R", n=K.SHOW_HOLD_TICKS, world=toy), dict(type="plan", what="world_put", args=dict(toy=toy))]
+            return self._hands_emptied(a) + near + [dict(type="shake", side="R", n=K.SHOW_HOLD_TICKS, world=toy), dict(type="plan", what="world_put", args=dict(toy=toy))]
         if self._kneel_plan(None, None, None, None) is None:                  # C175 (2026-10-01): no spot to kneel beside the child (a wall, a
             a["info"]["fallback"] = "set_down"                              # corner: day 46's west edge): the toy is set down within its
             return self._act_bring_back(a, t)                               # reach instead (the lure, C168, when that too is out of reach)
@@ -5986,7 +6002,7 @@ class ParentMotion:
             except Refuse:
                 near = []
             a["info"]["child_hand"] = cs
-            return near + [dict(type="world_hand", world=toy, child=cs, n=K.HANDOVER_MAX_TICKS), dict(type="plan", what="world_put", args=dict(toy=toy))]
+            return self._hands_emptied(a) + near + [dict(type="world_hand", world=toy, child=cs, n=K.HANDOVER_MAX_TICKS), dict(type="plan", what="world_put", args=dict(toy=toy))]
         if free and all(self._kneel_plan(cs, None, None, f"hand:{cs}:{toy}") is None for cs in free):
             # C175 (2026-10-01): A HAND-OVER WITH NO SPOT BECOMES A SET-DOWN. Life day 46: the child scooted off the mat's west edge within a
             # thousand ticks and lay along the wall and in the corner; 7 of her 9 hand-overs and all 11 shows were refused ("no spot to kneel
@@ -6305,7 +6321,7 @@ class ParentMotion:
                 near = self._near(a, need=None) if self.child.posture != "front" else self._near(a, where="head", offs=PUT_HEAD_OFFS)
             except Refuse:
                 near = []
-            return near + [dict(type="plan", what="world_put", args=dict(toy=toy))]
+            return self._hands_emptied(a) + near + [dict(type="plan", what="world_put", args=dict(toy=toy))]
         if self.child.posture == "front":                                 # A125 (the crawl rung): the toy goes before a prone child's
             near = self._near(a, where="head", offs=PUT_HEAD_OFFS)         # face, so she kneels at its head, where her hand reaches it
         else:                                                             # A133 (room b's lesson): she kneels where her hand reaches the
