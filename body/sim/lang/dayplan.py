@@ -75,7 +75,8 @@ FREE_PELVIS_M, FREE_DEG, FREE_STAND_MAX = 0.62, 35.0, 400   # C287: let go, it s
 CARRY_LAY_CLEAR_M = 1.3                # C281: it is laid this far from where she kneels at the least (its body is 1.3 m long); ours
 CARRY_CLEAR_M = 1.0                   # she carries it back to its mat (her own place this far from the mat's centre); ours
 STAND_SOON = 150                # C330: ticks before the floor stand is due during which her conduct asks no show (ours: a show's length)
-FLOOR_STAND_GAP = 750           # C346 amended (09:15): 750 ticks of floor play AFTER a stand's end (the stands about 40 percent of the floor blocks). C346 (2026-10-09, 07:20): back to 500 from T1's 250. With the held walk mended (A214, C342 to C345) a stand runs 400 to 600 ticks and
+FLOOR_STAND_GAP = 300           # C347 (2026-10-09, 13:20, the owner's word: walking first, naming a third): 300 ticks of floor play after a stand's end (the stands about 55% of
+                                # the floor blocks, held walking 10 to 15 m a day; day 132 at 750: 1.8 m and right names 102). C346 amended (09:15): 750 ticks of floor play AFTER a stand's end (the stands about 40 percent of the floor blocks). C346 (2026-10-09, 07:20): back to 500 from T1's 250. With the held walk mended (A214, C342 to C345) a stand runs 400 to 600 ticks and
                                 # at 250 between them the stands ran 62% of day 130's ticks (26% on day 126): the child's hands were off the floor's toys
                                 # most of the day ('got' 14 against 108 by midday, hand-overs 6 against 38, right names on pace for 60 against 128),
                                 # and walking had tripled already (stood 211, stepped 78, 10.5 m a day). The lead's balance of the two goals: a stand
