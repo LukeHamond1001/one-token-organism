@@ -7114,7 +7114,10 @@ class ParentMotion:
             # which a kneeling pose puts her face before its eyes; failing every one, the pose may bend past a woman's range
             # (DIRECT_LEAN_EXTRA_DEG), her body still clear of the child's (the physics is real). An environment's act, disclosed
             ch = self.child
-            key = (str(ch.posture), tuple(np.round(np.asarray(ch.eyes, float), 1).tolist()), bool(on_line))
+            if any(h.kind in ("stand", "turn") for h in self.holds):
+                raise Refuse("request: her hands hold it (the stand, the turn): no lean-in while they do (C333 amended)")   # (day 126: the
+                                                                            # search ran every tick of a stand as its eyes moved, 760 ms a tick)
+            key = (str(ch.posture), tuple((np.round(np.asarray(ch.eyes, float) / 0.2) * 0.2).tolist()), bool(on_line))   # eyes within 20 cm
             memo = getattr(self, "_lean_fail", None)                        # C333 (life day 125): a search that found nothing is not run
             if memo is not None and memo[1] == key and self.w.tick - memo[0] < K.LEAN_FAIL_MEMO_TICKS:   # again while the child lies the
                 raise Refuse(f"no pose puts her face before its eyes from any of her spots (found {self.w.tick - memo[0]} ticks ago; "   # same (6.5 s
