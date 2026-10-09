@@ -27,7 +27,12 @@ K_Z, C_Z, F_Z_MAX = 5000.0, 300.0, 500.0     # N/m, N s/m, N: the hold up on the
 K_R, C_R, T_R_MAX = 150.0, 30.0, 120.0       # N m/rad, N m s/rad, N m: the righting torque toward upright (ours)
 K_YAW, C_YAW, T_YAW_MAX = 30.0, 8.0, 30.0    # the turn toward the heading (ours)
 K_XY, C_XY, F_XY_MAX = 300.0, 40.0, 60.0     # the lead's spring and its cap (ours: within her lead's 33 to 116 N)
-SPEED = float(__import__('os').environ.get('GHOST_SPEED', 0.05))   # m/s: the lead's pace (ours: her held walks went 0.2 to 0.5 m in a 100-tick stand)
+SPEED = float(__import__('os').environ.get('GHOST_SPEED', 0.10))   # m/s: the lead's pace (ours: her held walks went 0.2 to 0.5 m in a 100-tick stand). C350 amended
+                                             # (17:50): 0.05 in the first live block (day 135: 2,432 ticks, 64 steps, 10 falls caught, pain 1.1%, the
+                                             # strength 1.0 to 0.95); the copy at 0.15 doubled the steps in 600 ticks (14 against 7) with 2 falls against
+                                             # none and less weight borne (the strength 0.996 against 0.948); 0.10 from the day's second block
+METRES_WIN = 10                              # ticks: the metres are the pelvis's displacement over this window, not its sway tick by tick (C350 amended:
+                                             # the first block's 47 m were mostly sway, 2 cm a tick; ours)
 LEAD_M = 0.30                                # m: the lead never farther ahead of the torso than this (a step)
 LIFT_TICKS, LOWER_TICKS = 20, 20             # ticks: the rise from lying to standing height, the lowering at the end (3 s each; ours)
 HOLD_DROP = 0.0                              # m: the hold's height under the torso's standing height (ours: none; the cap below decides what it bears)
@@ -63,7 +68,7 @@ class Ghost:
         self.weight = float(w.body_mass) * G
         self.on = False; self.s = 0.0; self.heading = 0.0; self.lead = np.zeros(2)
         self.ticks = 0; self.lower = 0; self.falls = 0; self.turns = 0; self.z_from = 0.0; self.z_to = self.z_stand
-        self.last = np.zeros(6); self.last_p = np.zeros(6); self.fz_sum = 0.0; self.n = 0; self.metres = 0.0; self.pxy = None
+        self.last = np.zeros(6); self.last_p = np.zeros(6); self.fz_sum = 0.0; self.n = 0; self.metres = 0.0; self.pxy = None; self.win = []
         self.rec = None
 
     # ------------------------------------------------------------------ the day plan's switch
@@ -74,7 +79,7 @@ class Ghost:
         self.heading = float(math.atan2(fwd[1], fwd[0])) if heading is None else float(heading)
         self.on = True; self.s = 1.0; self.ticks = 0; self.lower = 0
         self.z_from = float(d.xipos[self.b][2]); self.z_to = self.z_stand; self.lead = np.asarray(d.xipos[self.b][:2], float).copy()
-        self.pxy = np.asarray(d.xpos[self.pelvis][:2], float).copy(); self.metres = 0.0
+        self.pxy = np.asarray(d.xpos[self.pelvis][:2], float).copy(); self.metres = 0.0; self.win = []
         self.fz_sum = 0.0; self.n = 0
 
     def off_(self, w=None, at_once=False):
@@ -182,8 +187,12 @@ class Ghost:
                     self.s = min(1.0, self.s + RISE)
                 elif share < BEARS:
                     self.s = max(0.0, self.s - FADE)
-        if self.pxy is not None and pz > FALL_Z:
-            self.metres += float(np.linalg.norm(pxy - self.pxy))
+        if pz > FALL_Z:
+            self.win.append(pxy.copy())
+            if len(self.win) > METRES_WIN:
+                self.metres += float(np.linalg.norm(self.win[-1] - self.win[0])); self.win = [self.win[-1]]
+        else:
+            self.win = []
         self.pxy = pxy.copy()
         self.rec = [round(self.s, 4), round(share, 3), round(self.heading, 2), int(self.falls), round(self.metres, 2)]
 
