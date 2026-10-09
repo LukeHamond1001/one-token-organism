@@ -703,6 +703,17 @@ class DayPlan:
             # child on its front or side is turned first (turn_over: her 'up. up. up!' and the turn, A7, C254's rule for the sit), once in
             # FLOOR_STAND_GAP; the stand follows when it lies on its back
             self.next_floor_turn = t + FLOOR_STAND_GAP
+            if world is not None and getattr(world, "carry_to_mat", None) is not None:
+                # C338 amended (2026-10-08 21:50): her own turn failed 0 of 11 in the first hour of C338 ('her right hand did not arrive on
+                # it: it moved', 'not turned within her caps in 8 s'; the direct turn, C336, stalled too), 80 ticks and the child's pain a
+                # try. The environment lays it on its back where it lies (carry_to_mat with its own place: A110's laying, straight, settled),
+                # as it lays it after a held walk (C281) and when her acts are blocked (C328): an environment's act, disclosed; the stand
+                # follows. The turn as a lesson of its own (A7, the motor block's sit, C254) stays hers
+                xy_ = np.asarray(world.d.qpos[:2], float)
+                if world.carry_to_mat(to=xy_):
+                    self.log.append((t, "floor play: laid on its back where it lay, for the stand (C338 amended)"))
+                    self.next_play = t + 10
+                    return
             c.request("turn_over")
             self.log.append((t, "floor play: the child on its front, turned onto its back for the stand (C338)"))
             self.next_play = t + int(self.rng.integers(*PLAY_GAP))
