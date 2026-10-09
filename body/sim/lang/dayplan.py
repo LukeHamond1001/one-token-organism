@@ -64,7 +64,11 @@ CARRY_AFTER, CARRY_WINDOW = 2, 1500   # C277: this many of her acts refused for 
 PRONE_HURT_TICKS, PRONE_HURT_PAIN = 150, 3   # C278: on its front this long with this many pain ticks, it is laid on its back (the carry); ours
 CARRY_WAIT_TICKS = 40                  # C281: the carry waits this long at most for her hands to come off it (ours)
 DOOR_OPEN_DAY = 96                     # the door stage: the day its door first stands open (ours; the owner's stage after walking and talking)
-DOOR_THROUGH_XY, DOOR_RUG_XY, DOOR_ARCH_XY = (2.9, -1.5), (4.1, -1.5), (5.0, -2.4)   # the door stage: the doorway's far side and the second room's rug (make_g1room.ROOM2)
+DOOR_THROUGH_XY, DOOR_RUG_XY, DOOR_ARCH_XY = (2.9, -1.5), (4.1, -1.5), (4.4, -2.4)   # the door stage: the doorway's far side and the second room's rug (make_g1room.ROOM2)
+# C344 (2026-10-09, 03:20): the arch's destination 0.6 m nearer than first set (5.0, -2.4): the walk ends with its feet within 0.5 m of the
+# goal and the lay-back goes along the walk's way (C277), so a metre-long child laid down from (5.2, -2.4) had its feet against the
+# second room's far wall (x 5.9) and its own thrust (A193) loaded its left ankle and its waist: day 128, 55 pain ticks at that one spot,
+# stress to its cap and crying. From 4.4 the feet reach 5.5 at most. Ours
 SIB_NARRATE_GAP, SIB_DEG, SIB_M = 300, 30.0, 4.0   # D2: she names the sibling's walking when the child's head camera is on it (within this many degrees, this near), this often; ours
 DEMO_GAP, DEMO_M = 900, 1.6             # C300: in floor play she shows walking this often (135 s), a walk this far in its view and back; ours
 FREE_PELVIS_M, FREE_DEG, FREE_STAND_MAX = 0.62, 35.0, 400   # C287: let go, it stands alone while its pelvis is this high and its trunk within this of upright, this many ticks at most (60 s); ours
