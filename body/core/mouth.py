@@ -1020,7 +1020,12 @@ class MouthMixin:
         m = self.m
         # --- feelings from dopamine ---
         self.mood = max(-6.0, min(6.0, self.mood + float(self.cfg["mood_gain"]) * delta))
-        self.stress = min(30.0, self.stress + float(self.cfg["stress_gain"]) * max(0.0, -delta))
+        # A215 (2026-10-09): under stress_slow the stress follows the SLOW band's dip (delta_slow, gate_slow_band: the tonic loss), not the
+        # fast band's (dopamine's phasic dip): the HPA axis answers sustained loss, not every prediction's jitter. The G1's day 129: the
+        # walking lessons made the fast error 2.6 times more volatile (|delta| 0.08 to 0.21 a tick), stress sat at 17 all day where it had
+        # been 7 (fed 0.045 a tick by the dips, half-life 240), the gates divided their sharpness by 2.7 (below), and the child looked at
+        # the named toy and grasped a third less. The language default keeps the fast dip (stress_slow unset)
+        self.stress = min(30.0, self.stress + float(self.cfg["stress_gain"]) * max(0.0, -(delta_slow if int(self.cfg.get("stress_slow", 0)) else delta)))
         if abs(delta) >= float(self.cfg["burst"]):
             self.n_bursts += 1
         # --- the gate's buffer and lesson ---
