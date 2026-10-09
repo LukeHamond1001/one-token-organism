@@ -5923,6 +5923,26 @@ class ParentMotion:
         a["info"]["put_xy"] = [float(xy[0]), float(xy[1])]
         return []
 
+    def _ph_world_hand(self, a, ph):
+        """C335: the toy held at the child's palm by the world until A4's release (the palm pressed, the fingers closed, for
+        HANDOVER_HOLD_TICKS) or n ticks; 'taken' in the act's info when its hand closed on it"""
+        toy, cs = ph["world"], ph["child"]; w = self.w
+        g = np.asarray(self.child.grasp[cs], float); nrm = np.asarray(self.child.palm_n[cs], float)
+        w.pin_toy(toy, g + nrm * K.HANDOVER_PLACE_M, ticks=2)
+        palm, inside = self._toy_in_hand(toy, cs); closed = self._closure(cs)
+        ok = palm >= K.HANDOVER_PALM_N and closed >= math.radians(K.HANDOVER_CLOSED_DEG) and inside
+        ph["ok"] = ph.get("ok", 0) + 1 if ok else 0
+        if a is not None:
+            a["info"]["palm_N"] = round(float(palm), 2); a["info"]["closed_deg"] = round(math.degrees(float(closed)), 0)
+        if ph["ok"] >= K.HANDOVER_HOLD_TICKS:
+            if a is not None:
+                a["info"]["taken"] = True
+            w.unpin_toy(toy)                                                # its hand has it: the toy is its own from here
+            i_ = self.phases.index(ph)                                      # (no set-down after a take)
+            self.phases[i_ + 1:] = [p_ for p_ in self.phases[i_ + 1:] if not (p_.get("type") == "plan" and p_.get("what") == "world_put")]
+            return "done"
+        return "done" if ph.get("t", 0) + 1 >= int(ph["n"]) else "run"
+
     def _ph_shake(self, a, ph):
         """the shown toy shaken for its sound (4.10) for n ticks; she keeps shaking gently while it is shown"""
         if ph.get("world"):                                                 # T3: the environment holds the toy before its eyes and shakes it
@@ -5949,6 +5969,24 @@ class ParentMotion:
     def _act_hand_over(self, a, t):
         toy = self._toy(t)
         free = [x for x in "LR" if not self._hand_full(x)]
+        if K.SHOW_BY_PLACEMENT:
+            # C335 (2026-10-08): THE HAND-OVER BY PLACEMENT. The fetch, the approach to its free hand and the arm's hold-out refused 2 of 4
+            # hand-overs in the direct teacher's first hour ('the book was not under her hand', the far misses) as they had for a hundred
+            # days. The environment holds the toy at the child's near palm (HANDOVER_PLACE_M above its grasp point along the palm's normal,
+            # world_hand) until A4's release (its palm pressed HANDOVER_PALM_N and its fingers closed HANDOVER_CLOSED_DEG for HANDOVER_HOLD_TICKS)
+            # or HANDOVER_MAX_TICKS, then sets it down within its reach (world_put) if the hand did not keep it; her figure beside it where it
+            # can be. The palm chosen as before (C240: not facing the floor, open, clear; its face's side first). An environment's act, disclosed
+            if toy in NEVER_FETCHED:
+                raise Refuse(f"the {toy} stays where it stands: she does not carry it (C119)")
+            if not free:
+                raise Refuse("both its hands hold something")
+            cs = self._hands_for_a_toy(free, toy, lambda x: x != self.child.face_side())[0]
+            try:
+                near = self._near(a, where=cs, need=None)
+            except Refuse:
+                near = []
+            a["info"]["child_hand"] = cs
+            return near + [dict(type="world_hand", world=toy, child=cs, n=K.HANDOVER_MAX_TICKS), dict(type="plan", what="world_put", args=dict(toy=toy))]
         if free and all(self._kneel_plan(cs, None, None, f"hand:{cs}:{toy}") is None for cs in free):
             # C175 (2026-10-01): A HAND-OVER WITH NO SPOT BECOMES A SET-DOWN. Life day 46: the child scooted off the mat's west edge within a
             # thousand ticks and lay along the wall and in the corner; 7 of her 9 hand-overs and all 11 shows were refused ("no spot to kneel
@@ -6257,6 +6295,17 @@ class ParentMotion:
 
     def _act_bring_back(self, a, t):
         toy = self._toy(t)
+        if K.SHOW_BY_PLACEMENT:
+            # C335: THE BRING-BACK BY PLACEMENT: the toy set down within its reach by the environment (the put's place beside its near hand,
+            # or before a prone child's face: _put_xy), her figure beside it where it can be; no fetch, no lure (C168: the child's own move to
+            # a toy just out of reach is a lesson the day's crawl rung keeps; measured live: reach_nearer a day)
+            if toy in NEVER_FETCHED:
+                raise Refuse(f"the {toy} stays where it stands: she does not carry it (C119)")
+            try:
+                near = self._near(a, need=None) if self.child.posture != "front" else self._near(a, where="head", offs=PUT_HEAD_OFFS)
+            except Refuse:
+                near = []
+            return near + [dict(type="plan", what="world_put", args=dict(toy=toy))]
         if self.child.posture == "front":                                 # A125 (the crawl rung): the toy goes before a prone child's
             near = self._near(a, where="head", offs=PUT_HEAD_OFFS)         # face, so she kneels at its head, where her hand reaches it
         else:                                                             # A133 (room b's lesson): she kneels where her hand reaches the
