@@ -522,6 +522,8 @@ RAISE_MPS = 0.08                # m/s: her hands lead its chest up and over its 
 RAISE_MAX_TICKS = 260           # a raise that has not stood it in this long (24 s) is given up and it is laid back (ours)
 FEET_DOWN_M = 0.10              # m: C343: an ankle higher than this off the floor while she raises it: its feet are set down before the chest
                                 # rises further (ours; the G1's ankle roll link stands 0.04 above the floor)
+FEET_SOLE_N = 20.0              # N: C343 amended: a sole bearing this much, the feet are on the floor and she holds the chest rather than leads it
+                                # down (ours: the standing reflex's SOLE_N, reflexes.py)
 STAND_HOLD_TICKS = 40           # she steadies it standing this long (6 s) before the walk or the sitting down (ours)
 WALK_LEAD_M = 0.18              # m: her hands lead its chest this far ahead of its feet's middle (ours; C274: 0.10 until then, the stance hip then
                                 # extended only to about the swing's trigger and steps were rare)

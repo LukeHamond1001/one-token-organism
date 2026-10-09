@@ -5547,7 +5547,17 @@ class ParentMotion:
                 # the lower foot that near the floor (the thrust then straightens the legs under it, as in the copy's other raises)
                 fz_ = min(float(self.d.xpos[self.m.body("left_ankle_roll_link").id][2]), float(self.d.xpos[self.m.body("right_ankle_roll_link").id][2]))
                 if fz_ > K.FEET_DOWN_M:
-                    c["up"] = min(float(c["up"]), float(now[2]) - (fz_ - K.FEET_DOWN_M))
+                    # (amended 02:45: she leads the chest down only while NO sole bears load, the hanging child's feet brought to the
+                    # floor; a sole loaded, she holds the chest where it is and lets the thrust work. As first landed the led point went
+                    # below the chest by the foot's height whatever the soles bore, and life tick 6,151,464's child, tipped back with its
+                    # toes on the floor and its ankles raised, was held down against its own thrust for 260 ticks with its left hip pitch
+                    # and right hip roll at their load lines, 156 pain ticks; holding alone (never down) left two raises of five hanging)
+                    sn_ = getattr(self.w, "_sensed", None); tf_ = None if sn_ is None else sn_.get("touch_force")
+                    loaded_ = tf_ is not None and max(float(np.asarray(tf_)[self.w.sole_zones[0]].sum()), float(np.asarray(tf_)[self.w.sole_zones[1]].sum())) >= K.FEET_SOLE_N
+                    if loaded_:
+                        c["up"] = min(float(c["up"]), float(now[2])); lead[2] = min(float(lead[2]), float(now[2]))
+                    else:
+                        c["up"] = min(float(c["up"]), float(now[2]) - (fz_ - K.FEET_DOWN_M))
             lead = near(np.array([lead[0], lead[1], max(lead[2], float(c["up"]))]))
             c["lead"] = _lst(lead); h.next = lead + off
             if stood:
