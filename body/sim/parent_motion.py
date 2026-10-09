@@ -5435,6 +5435,29 @@ class ParentMotion:
     def _feet_mid(self):
         return 0.5 * (self.d.xpos[self.m.body("left_ankle_roll_link").id] + self.d.xpos[self.m.body("right_ankle_roll_link").id])
 
+    def _standing_clear_m(self, xy, z=0.3):
+        """C345: the floor-plan distance from xy to the nearest thing standing in the room: every box of the world's contact class
+        (walls, the door leaf, the arch, the bench, the furniture: contype 17) whose height spans z; its footprint taken axis-aligned,
+        or as its bounding circle where it is turned. A parent walking a child does not walk it into a wall"""
+        m = self.m; best = 9.0; xy = np.asarray(xy, float)[:2]
+        for g in range(m.ngeom):
+            if int(m.geom_contype[g]) != 17 or int(m.geom_type[g]) != mujoco.mjtGeom.mjGEOM_BOX:
+                continue
+            pz, sz = float(m.geom_pos[g][2]), float(m.geom_size[g][2])
+            if m.geom_bodyid[g] != 0 and m.body_parentid[m.geom_bodyid[g]] != 0:
+                continue                                                    # (the child's and her own boxes are not the room's)
+            if not (pz - sz <= z <= pz + sz):
+                continue
+            q = m.geom_quat[g]
+            if abs(float(q[0])) > 0.999 or abs(float(q[3])) > 0.999:
+                dx = max(abs(xy[0] - float(m.geom_pos[g][0])) - float(m.geom_size[g][0]), 0.0)
+                dy = max(abs(xy[1] - float(m.geom_pos[g][1])) - float(m.geom_size[g][1]), 0.0)
+                d = float(np.hypot(dx, dy))
+            else:
+                d = max(float(np.linalg.norm(xy - np.asarray(m.geom_pos[g][:2], float))) - float(m.geom_rbound[g]), 0.0)
+            best = min(best, d)
+        return best
+
     def _ctl_stand(self, h, c):
         """C268 (2026-10-04): THE CHILD STOOD UP, HELD, WALKED AND SAT DOWN. Her two hands on the corner of its chest that faces her
         lead the chest from where it lies up over its pelvis (it sits up) and then over its feet (raise), steady it there (steady),
@@ -5597,6 +5620,13 @@ class ParentMotion:
             c["lead"] = _lst(lead); h.next = lead + off
             if pz < K.STAND_FALL_M:
                 c["mode"] = "lower"; c["why"] = "it sank while walking"
+            elif self._standing_clear_m(feet[:2] + fwd_c * K.WALK_WALL_M) < K.WALK_WALL_M:
+                # C345 (2026-10-09, 04:30): SHE DOES NOT WALK IT INTO A WALL. Day 129 at 6,194,250: a held walk carried the child into the
+                # half-metre pocket between the arch's posts and the second room's far wall, the walk stalled there ('walked 0.04 m'),
+                # it was laid down in the pocket and lay thrashing against the posts and the wall, a dozen joints at their load lines,
+                # its stress at the cap and she unable to reach it. A step ahead within WALK_WALL_M of anything standing, the walk is
+                # over where it is (the settle, the free stand and the carry back as at every walk's end)
+                c["mode"] = "settle"; c["settle_t"] = 0; c["why"] = None; c["walled"] = True
             elif (getattr(self, "walk_goal", None) is None and c["walked"] >= K.WALK_FAR_M) or c["walk_t"] >= K.WALK_MAX_TICKS \
                     or (getattr(self, "walk_goal", None) is not None and float(np.linalg.norm(np.asarray(self.walk_goal, float) - feet[:2])) < 0.5):   # (the door stage: to its destination)
                 c["mode"] = "settle"; c["settle_t"] = 0; c["why"] = None
@@ -5669,6 +5699,12 @@ class ParentMotion:
             h.next = lead + off
             if c["lay_t"] >= n_:
                 c["state"] = "done" if c.get("stood") else f"stopped: {c.get('why') or 'it did not stand'}; she laid it back (C268)"
+                mat_ = np.asarray(self.m.geom_pos[self.m.geom("mat").id][:2], float)
+                if float(np.linalg.norm(feet[:2] - mat_)) > K.CARRY_FAR_M and getattr(self, "carry_pending", None) is None:
+                    # C345: LAID DOWN FAR FROM ITS MAT, IT IS CARRIED BACK. The carry (C281) followed only a walk that reached its settle;
+                    # a stand that sank, stalled or folded far from the mat laid it where it was (day 129: in the arch's pocket). Her
+                    # hands come off it as the lay ends and the day plan's carry lays it on its mat or the second room's rug
+                    self.carry_pending = int(self.tick)
 
     def _ctl_pull(self, h, c):
         """the pull-to-sit (A9): both forearms pulled toward her and up with a force growing at CAP_RAMP_NPS to her brief cap; the

@@ -161,9 +161,9 @@ def _add_room2(spec):
     geom("room2_ceiling", B, ((X0 + X1) / 2, yc, _Hh + .03), ((X1 - X0) / 2, hy, .03), "ceiling", world=False)
     geom("room2_rug", mujoco.mjtGeom.mjGEOM_CYLINDER, (_W + 1.5, yc, .003), (.7, .003, 0), "rug2", world=False)
     geom("room2_bench", B, (X1 - .25, yc + .9, .20), (.20, .60, .20), "bench2")
-    for k_, yy in (("a", yc - 1.25), ("b", yc - .55)):                      # the arch: two posts and a beam, 0.7 m apart, by the far wall
-        geom(f"room2_arch_{k_}", B, (X1 - .5, yy, .55), (.05, .05, .55), "arch2")
-    geom("room2_arch_top", B, (X1 - .5, yc - .9, 1.15), (.05, .40, .05), "arch2")
+    for k_, yy in (("a", yc - 1.25), ("b", yc - .55)):                      # the arch: two posts and a beam, 0.7 m apart, AGAINST the far wall
+        geom(f"room2_arch_{k_}", B, (X1 - .12, yy, .55), (.05, .05, .55), "arch2")   # (C345, 2026-10-09: 0.5 m before it until then, and the
+    geom("room2_arch_top", B, (X1 - .12, yc - .9, 1.15), (.05, .40, .05), "arch2")   # pocket behind it trapped the child, day 129)
     lt = b.add_light(name="room2_lamp", pos=[_W + 1.7, yc, 2.4], dir=[0, 0, -1])
     lt.diffuse[:] = (.55, .52, .46); lt.specular[:] = (0, 0, 0); lt.castshadow = False
 

@@ -536,6 +536,9 @@ WALK_TURN_M = 1.0               # m: farther than this from the mat's centre, th
 STAND_TURN_DPS = 3.0            # deg/s: the walk's way turns this fast (ours: a quarter turn in half a minute; at 15 it swung out of her
                                 # hands, at 6 it turned on past the mat; the day-85 copy)
 WALK_STOP_M = 0.45              # m: its feet this near her knees, the walk is done (ours: her own reach's comfort)
+WALK_WALL_M = 0.50              # m: C345: a step ahead within this of anything standing in the room (walls, the arch, the furniture), the held walk is
+                                # over where it is (ours: the child's own length laid back is a metre; the lay goes backwards)
+CARRY_FAR_M = 1.5               # m: C345: laid back farther than this from its mat at a stand's end, it is carried back (C281's carry; ours)
 WALK_MAX_TICKS = 400            # a walk's longest (60 s; ours)
 STAND_FALL_M = 0.50             # m: its pelvis under this while she holds it standing: it has sunk; she lowers it (ours)
 # STAND_PRONE_Z (C337, 0.3) retired 2026-10-08 23:20: the stand's 'turned onto its front' is the posture law's own test (parent_motion
