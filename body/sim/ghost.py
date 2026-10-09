@@ -50,6 +50,26 @@ FALL_Z, FALL_UP = 0.45, 0.5                  # fallen: the pelvis below this (m)
 CLEAR_M = 0.5                                # m: the lead turns before anything standing nearer than this (C345's WALL)
 TICK_S = 0.150
 G = 9.81
+# THE EXPERT GAIT (W7b, 2026-10-09 18:40, the owner's word: 'find a Unitree G1 walking script to help our ghost, I want this fast'):
+# Unitree's own pretrained G1 locomotion policy (unitree_rl_gym, deploy/pre_train/g1/motion.pt, TorchScript; its MuJoCo deploy
+# config g1.yaml: 50 Hz, PD gains kps/kds, default angles, scales, a 0.8 s gait phase, 47 observations, 12 leg actions; downloaded
+# 2026-10-09 18:35 to data/expert/unitree_g1, never in git) runs inside the room's loop and its PD torques for the twelve leg
+# joints are the ghost's hands at the legs, scaled by the strength and capped at each joint's own torque limit (the room's hands
+# no stronger than the robot's motors), added to the joint as an outside torque (qfrc_applied, as the passive tissue is): the
+# child's servos, acts and reflexes run underneath untouched, nothing of the policy enters the brain. With the expert on, the lead
+# is the policy's own command (EXPERT_V forward, a turn toward the heading) and the torso hold hangs slack EXPERT_DROP under the
+# standing height (the policy stands with its knees at 0.3 rad), catching only a sink. The policy's numbers are Unitree's; ours: the
+# command, the drop, the cap
+POLICY_PATH = __import__('os').environ.get('GHOST_POLICY', '/Users/lukehamond/Projects/project/data/expert/unitree_g1/motion.pt')
+EXPERT_KP = (100., 100., 100., 150., 40., 40., 100., 100., 100., 150., 40., 40.)   # Unitree's g1.yaml
+EXPERT_KD = (2., 2., 2., 4., 2., 2., 2., 2., 2., 4., 2., 2.)
+EXPERT_DEFAULT = (-0.1, 0.0, 0.0, 0.3, -0.2, 0.0, -0.1, 0.0, 0.0, 0.3, -0.2, 0.0)
+EXPERT_ANG_VEL_SCALE, EXPERT_DOF_VEL_SCALE, EXPERT_ACTION_SCALE = 0.25, 0.05, 0.25
+EXPERT_CMD_SCALE = (2.0, 2.0, 0.25)
+EXPERT_DECIMATION, EXPERT_DT, EXPERT_PERIOD = 10, 0.002, 0.8   # the policy every 10 physics steps of 2 ms (50 Hz); the gait's phase
+EXPERT_V = float(__import__('os').environ.get('GHOST_EXPERT_V', 0.4))   # m/s: the walk commanded (ours; Unitree's deploy walks at 0.5)
+EXPERT_TURN, EXPERT_WZ_MAX = 1.0, 0.5    # the turn command per rad of heading error, and its cap (ours)
+EXPERT_DROP = 0.08                       # m: the torso hold's slack under the standing height with the expert on (ours: the policy's stance)
 
 
 def _wrap(a):
@@ -70,6 +90,22 @@ class Ghost:
         self.ticks = 0; self.lower = 0; self.falls = 0; self.turns = 0; self.z_from = 0.0; self.z_to = self.z_stand
         self.last = np.zeros(6); self.last_p = np.zeros(6); self.fz_sum = 0.0; self.n = 0; self.metres = 0.0; self.pxy = None; self.win = []
         self.rec = None
+        self.expert = None; self.e_action = np.zeros(12); self.e_target = np.array(EXPERT_DEFAULT); self.e_count = 0; self.e_steps = 0
+        self.e_idx = list(w.eff_joint_idx["leg_l"]) + list(w.eff_joint_idx["leg_r"])   # the twelve leg joints in the policy's order
+        self.e_qadr = np.asarray(w.qadr)[self.e_idx]; self.e_dof = np.asarray(w.dof)[self.e_idx]; self.e_lim = np.asarray(w.tau_max, float)[self.e_idx]
+        self.e_kp = np.array(EXPERT_KP); self.e_kd = np.array(EXPERT_KD); self.e_default = np.array(EXPERT_DEFAULT)
+        self.e_aid = np.asarray(w.aid)[self.e_idx]; self.e_lo = np.asarray(w.lo, float)[self.e_idx]; self.e_hi = np.asarray(w.hi, float)[self.e_idx]
+        self.use_expert = bool(int(__import__('os').environ.get('GHOST_EXPERT', '1')))
+        self.base = int(w.base_dof)
+
+    def _policy(self):
+        if self.expert is None and self.use_expert:
+            import os, torch
+            if os.path.exists(POLICY_PATH):
+                self.expert = torch.jit.load(POLICY_PATH).eval()
+            else:
+                self.use_expert = False
+        return self.expert
 
     # ------------------------------------------------------------------ the day plan's switch
     def on_(self, w, heading=None):
@@ -81,6 +117,7 @@ class Ghost:
         self.z_from = float(d.xipos[self.b][2]); self.z_to = self.z_stand; self.lead = np.asarray(d.xipos[self.b][:2], float).copy()
         self.pxy = np.asarray(d.xpos[self.pelvis][:2], float).copy(); self.metres = 0.0; self.win = []
         self.fz_sum = 0.0; self.n = 0
+        self.e_action[:] = 0.0; self.e_target = self.e_default.copy(); self.e_count = 0; self.e_steps = 0
 
     def off_(self, w=None, at_once=False):
         if not self.on:
@@ -113,7 +150,9 @@ class Ghost:
             prog = 1.0 - self.lower / LOWER_TICKS; frac = self.lower / LOWER_TICKS
         else:
             prog = frac = min(1.0, self.ticks / LIFT_TICKS)
-        z_t = self.z_from + (self.z_to - self.z_from) * prog
+        pol = self._policy() if self.ticks > LIFT_TICKS or self.lower == 0 else None
+        expert_on = pol is not None and self.use_expert and self.lower == 0 and self.ticks > LIFT_TICKS
+        z_t = self.z_from + (self.z_to - self.z_from) * prog - (EXPERT_DROP if expert_on else 0.0)
         fz = s * (K_Z * (z_t - float(p[2])) - C_Z * float(v_lin[2]))
         cap = F_Z_MAX if (self.ticks <= LIFT_TICKS or self.lower > 0) else CARRY_SHARE * self.weight   # the lift may carry it; standing, the legs must
         fz = min(max(fz, 0.0), cap)                                       # up only: slack above
@@ -132,7 +171,7 @@ class Ghost:
         tau[2] = min(max(tz, -T_YAW_MAX), T_YAW_MAX)
         tau *= s * frac
         fxy = np.zeros(2)
-        if frac >= 1.0 and self.lower == 0:
+        if frac >= 1.0 and self.lower == 0 and not expert_on:
             fxy = s * (K_XY * (self.lead - np.asarray(p[:2], float)) - C_XY * np.asarray(v_lin[:2], float))
             n_ = float(np.linalg.norm(fxy))
             if n_ > F_XY_MAX:
@@ -140,7 +179,40 @@ class Ghost:
         wrench = np.array([fxy[0], fxy[1], fz, 0.0, 0.0, 0.0]); wrench_p = np.array([0.0, 0.0, 0.0, tau[0], tau[1], tau[2]])
         d.xfrc_applied[b] += wrench; d.xfrc_applied[bp] += wrench_p
         self.last = wrench; self.last_p = wrench_p
+        if expert_on:
+            self._expert_step(w, d, s)
         self.fz_sum += fz; self.n += 1
+
+    def _expert_step(self, w, d, s):
+        """W7b: one physics step of the expert gait: every EXPERT_DECIMATION steps the policy reads the pelvis's angular velocity and
+        gravity direction (the free joint's own frame, as Unitree's deploy reads them), the command, the legs' angles and speeds, its
+        last action and the gait's phase, and sets the twelve leg targets; every step its PD torque toward them, scaled by s and
+        capped at each joint's torque limit, is the room's torque on the joint"""
+        import torch
+        self.e_count += 1
+        q = d.qpos[self.e_qadr]; dq = d.qvel[self.e_dof]
+        if self.e_count % EXPERT_DECIMATION == 0:
+            quat = d.qpos[3:7]; qw, qx, qy, qz = (float(x) for x in quat)
+            grav = np.array([2 * (-qz * qx + qw * qy), -2 * (qz * qy + qw * qx), 1 - 2 * (qw * qw + qz * qz)])
+            omega = np.asarray(d.qvel[self.base + 3:self.base + 6], float) * EXPERT_ANG_VEL_SCALE
+            R = d.xmat[self.pelvis].reshape(3, 3); yaw = math.atan2(float(R[1, 0]), float(R[0, 0]))
+            wz = min(max(EXPERT_TURN * _wrap(self.heading - yaw), -EXPERT_WZ_MAX), EXPERT_WZ_MAX)
+            cmd = np.array([EXPERT_V, 0.0, wz]) * np.array(EXPERT_CMD_SCALE)
+            phase = (self.e_count * EXPERT_DT) % EXPERT_PERIOD / EXPERT_PERIOD
+            obs = np.concatenate([omega, grav, cmd, (q - self.e_default), dq * EXPERT_DOF_VEL_SCALE, self.e_action,
+                                  [math.sin(2 * math.pi * phase), math.cos(2 * math.pi * phase)]]).astype(np.float32)
+            with torch.no_grad():
+                self.e_action = self.expert(torch.from_numpy(obs).unsqueeze(0)).numpy().squeeze().astype(float)
+            self.e_target = self.e_action * EXPERT_ACTION_SCALE + self.e_default
+            self.e_steps += 1
+        tau = self.e_kp * (self.e_target - q) - self.e_kd * dq
+        tau = np.clip(s * tau, -self.e_lim, self.e_lim)
+        d.qfrc_applied[self.e_dof] += tau
+        # the leg servos' targets drawn toward the expert's by s (18:50: with the torque alone the body marched in place, its own
+        # servos and stance tone straining against the room's hands, the strain its gear load, its pain): moved along, its motors
+        # go with the movement, as a stiff toddler's legs give to the parent walking it; at s 0 the targets are its own again
+        a = self.e_aid
+        d.ctrl[a] = (1.0 - s) * d.ctrl[a] + s * np.clip(self.e_target, self.e_lo, self.e_hi)
 
     # ------------------------------------------------------------------ the tick's end
     def tick_end(self, w, acts, digits, settings):
@@ -201,6 +273,7 @@ class Ghost:
         return dict(on=bool(self.on), s=float(self.s), heading=float(self.heading), lead=[float(x) for x in self.lead],
                     ticks=int(self.ticks), lower=int(self.lower), falls=int(self.falls), turns=int(self.turns), z_from=float(self.z_from), z_to=float(self.z_to),
                     last=[float(x) for x in self.last], metres=float(self.metres),
+                    e_action=[float(x) for x in self.e_action], e_target=[float(x) for x in self.e_target], e_count=int(self.e_count), e_steps=int(self.e_steps),
                     pxy=None if self.pxy is None else [float(x) for x in self.pxy])
 
     def load_state(self, st):
@@ -212,4 +285,6 @@ class Ghost:
         self.z_from = float(st["z_from"]); self.z_to = float(st.get("z_to", self.z_stand)); self.last[:] = 0.0; self.last_p[:] = 0.0; self.metres = float(st["metres"])   # (xfrc_applied is not in the
                                                                                         # physics state: a loaded world applies afresh)
         self.pxy = None if st.get("pxy") is None else np.asarray(st["pxy"], float).copy()
+        self.e_action = np.asarray(st.get("e_action", np.zeros(12)), float).copy(); self.e_target = np.asarray(st.get("e_target", EXPERT_DEFAULT), float).copy()
+        self.e_count = int(st.get("e_count", 0)); self.e_steps = int(st.get("e_steps", 0))
         self.rec = None
