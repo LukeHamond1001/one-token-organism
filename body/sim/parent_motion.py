@@ -7055,13 +7055,32 @@ class ParentMotion:
 
     # ---- her face where its eyes can reach (A3, A22, C34)
     def _act_lean_in(self, a, t):
+        ch = self.child
+        if ch.posture == "side" and K.TEACHER_DIRECT:
+            # C339 (2026-10-08): THE LEAN-IN TO A CHILD ON ITS SIDE IS A LIE-IN BEFORE ITS FACE. Day 126's lean-in refusals ('no pose ...
+            # from any of her spots') were all with the child on its side: its eyes look along the floor, where no kneeling pose puts her
+            # face. As for a prone child (A124), she lies on her front with her face before its eyes: her figure set on its heels on the
+            # floor along its gaze, LIE_OFFS from its eyes, at the first of those from which a lying pose fits (its eyes as they are, not
+            # lifted), then the lie-in. An environment's act (the placement), disclosed
+            g = np.asarray(ch.axis, float)[:2]
+            if float(np.linalg.norm(g)) > 1e-6:
+                g = g / float(np.linalg.norm(g))
+                for off in LIE_OFFS:
+                    H = np.asarray(ch.eyes[:2], float) + g * off
+                    yaw = math.atan2(-g[1], -g[0]); fw = np.array([math.cos(yaw), math.sin(yaw)])
+                    if not self._in_plan(H) or ch.clearance_xy(H) < 0.03 or self._lie_fit(H + fw * HEELS_BACK, yaw, head_up=False) is None:
+                        continue
+                    self._teleport("heels", H, yaw)
+                    a["info"]["spot"] = dict(H=_lst(H), yaw=float(yaw), direct=True, lean_spot="side_lie", off=float(off))
+                    return [dict(type="plan", what="lie_in", args=dict(head_up=False))]
+            raise Refuse(f"no lying pose puts her face before its eyes as it lies on its side (C339; it looks along {np.round(g, 2).tolist()})")
         if self.child.posture == "front":                                 # A124 (C107): a prone child sees the floor: tummy time, her
             return self._near(a, where="head", offs=LIE_OFFS, need="lie") + [dict(type="plan", what="lie_in", args={})]   # face on it
         on_line = t == "child_line"                                       # A94: her face onto its line of sight (the smile she gives)
         need = "lean_line" if on_line else "lean"                          # A96: from a spot where a pose puts it ON the line (else, the
         return self._near(a, alongs=K.LEAN_ALONG_M, need=need) + [dict(type="plan", what="lean_in", args=dict(on_line=on_line))]   # periphery)
 
-    def _lie_fit(self, T, yaw):
+    def _lie_fit(self, T, yaw, head_up=True):
         """A124 (C107): the chest's extension (LIE_CHEST_UP, tried in turn) with which, lying on her front from the tall kneel at T
         facing yaw, her mouth lands LEAN_DIST_M from where a prone child's eyes will be when it lifts its head (LIE_HEAD_UP_M above
         them now: face down, its cameras look into the mat, C94, and see her only in a head-up), her face turned toward them within
@@ -7073,7 +7092,7 @@ class ParentMotion:
             if any(r.get("violations") for r in p.report.values() if isinstance(r, dict)):
                 continue
             mouth, ffwd, centre = self.mouth_of(p)
-            lifted = np.asarray(self.child.eyes, float) + np.array([0.0, 0.0, LIE_HEAD_UP_M])   # its eyes when it lifts its head
+            lifted = np.asarray(self.child.eyes, float) + np.array([0.0, 0.0, LIE_HEAD_UP_M if head_up else 0.0])   # its eyes when it lifts its head
             lo, hi = K.LEAN_DIST_M                                          # (a prone G1's cameras look into the mat until it does,
             d = float(np.linalg.norm(mouth - lifted))                       # C94; her face waits where the lifted head will see it)
             if not (lo <= d <= hi) or float(ffwd @ unit(lifted - mouth)) < math.cos(math.radians(E_FACE_TURN_DEG())):
@@ -7083,7 +7102,7 @@ class ParentMotion:
             return cu
         return None
 
-    def _plan_lie_in(self, a):
+    def _plan_lie_in(self, a, head_up=True):
         """A124 (C107, tummy time): from the tall kneel before a prone child's head (the approach's spot, need "lie") she lies down on
         her front, her face on the floor before its face, and looks at its eyes; already lying there, she only looks"""
         b = self.base
@@ -7091,7 +7110,7 @@ class ParentMotion:
             return [dict(type="look_at", target="child_eyes")]
         yaw = float(b["yaw"]); fwd = np.array([math.cos(yaw), math.sin(yaw)])
         T = np.asarray(b["at"], float) + (fwd * HEELS_BACK if b["mode"] == "heels" else 0.0)
-        cu = self._lie_fit(T, yaw)
+        cu = self._lie_fit(T, yaw, head_up=head_up)
         if cu is None:
             raise Refuse("no lying pose puts her face where its eyes can reach from here (A124, C107)")
         out = []
