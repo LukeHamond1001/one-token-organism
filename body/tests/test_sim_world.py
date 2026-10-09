@@ -2678,3 +2678,33 @@ def test_the_standing_and_stepping_reflexes():
     assert seen[0][2] == -R.W.STEP_BIG and seen[0][3] == R.W.STEP_BIG                        # lift: hip and knee flex by a big step
     assert seen[R.STEP_LIFT][3] == 0.05                                                      # placing: the knee toward straight
     assert st == {"leg_l": ["stance", 0], "leg_r": ["stance", 0]}
+
+
+def test_a_tick_the_physics_could_not_live_is_lived_again():
+    """W6: a MuJoCo fault in a tick raises WorldFault with the world restored to the tick's start; fault_recover cancels her acts, lets
+    her holds go and clears the applied forces, and the same acts apply again; a second fault in the same tick is not recovered"""
+    import mujoco
+    from body.sim import world as W
+    w = G1World(seed=1)
+    for _ in range(3):
+        w.apply({})
+    t0 = w.tick; q0 = w.d.qpos.copy()
+    real = W.mujoco.mj_step; n = {"k": 0}
+    def broken(m, d, *a, **k):
+        n["k"] += 1
+        if n["k"] == 1:
+            raise mujoco.FatalError("FactorizeHessian: rank-deficient sparse Hessian (the test's)")
+        return real(m, d, *a, **k)
+    W.mujoco.mj_step = broken
+    try:
+        try:
+            w.apply({})
+            assert False, "no fault"
+        except W.WorldFault as e:
+            assert w.tick == t0 and abs(w.d.qpos - q0).max() < 1e-9      # the world stands where the tick began
+            assert w.fault_recover(e) is True and w.faults_recovered == 1
+            assert not w.fault_recover(e)                                   # twice in one tick: the life stops
+        w.apply({})
+        assert w.tick == t0 + 1
+    finally:
+        W.mujoco.mj_step = real

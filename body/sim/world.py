@@ -875,6 +875,30 @@ class G1World(SimWorld):
         if sub == 0 and sa.vor_gain is not None:
             self.vor_corr = np.concatenate([np.asarray(sa.vor_gain, float), np.asarray(sa.vor_offset if sa.vor_offset is not None else (0.0, 0.0), float)])
 
+    def fault_recover(self, e):
+        """W6 (2026-10-09, 05:05): A TICK THE PHYSICS COULD NOT LIVE IS LIVED AGAIN WITH HER HANDS OFF. The world stands where the tick
+        began (apply's restore); her acts are cancelled, her holds let go and her arms relaxed, the applied forces cleared, and the
+        loop (body/core/world.WorldLoop.step) applies the same acts once more: one tick of the brain, one of the world. Two faults
+        in a row stop the life as before (WorldFault). Day 129 at 6,204,338: 'FactorizeHessian: rank-deficient sparse Hessian' in a
+        turn whose hold had missed far, the runner dead, six minutes lost; the restart lived the tick (the life is not bit-replayable
+        across restarts). Logged in the run log and counted (faults_recovered); the record keeps the tick lived again. -> whether the
+        tick may be lived again"""
+        if getattr(self, "_fault_tick", None) == self.tick:
+            return False
+        self._fault_tick = self.tick
+        self.faults_recovered = getattr(self, "faults_recovered", 0) + 1
+        par = getattr(self, "parent", None)
+        if par is not None:
+            for i in list(par.live):
+                try:
+                    par.cancel(i)
+                except Exception:
+                    pass
+            par.holds = []; par.phases = []; par.arms = {sd: dict(mode="relaxed") for sd in "LR"}
+        self.d.xfrc_applied[:] = 0.0; self.d.qfrc_applied[:] = 0.0
+        print(f"world fault lived through at tick {self.tick}: {getattr(e, 'reason', e)}: her acts cancelled, her holds let go, the tick lived again (W6)", flush=True)
+        return True
+
     def apply(self, acts):
         """one tick (150 ms, 75 steps of 2 ms) with the body's acts (S5a: body/core/world.py `Acts`): {effector name: flat act} for the
         tract ("voice"), the words' output ("words"), the gaze and the joint effectors, with `acts.cord` (the born patterns' steps below

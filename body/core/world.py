@@ -412,7 +412,13 @@ class WorldLoop:
                 t0 = self.clock()
         dusk = life.last_night
         acts = life.tick()
-        world.apply(acts)
+        try:
+            world.apply(acts)
+        except RuntimeError as e:                             # W6: a sim world's fault (WorldFault) lived again once with the parent's
+            rec = getattr(world, "fault_recover", None)       # hands off; a world without the hook, or a second fault, stops the life
+            if type(e).__name__ != "WorldFault" or rec is None or not rec(e):
+                raise
+            world.apply(acts)
         te_ = getattr(life, "tick_end", None)
         if te_ is not None:
             te_()                                             # step R8c (C74): the tick's end, between ticks (a body in frames sleeps here)
