@@ -7112,9 +7112,13 @@ class ParentMotion:
             if memo is not None and memo[1] == key and self.w.tick - memo[0] < K.LEAN_FAIL_MEMO_TICKS:   # again while the child lies the
                 raise Refuse(f"no pose puts her face before its eyes from any of her spots (found {self.w.tick - memo[0]} ticks ago; "   # same (6.5 s
                              f"it lies as it lay)")                                                      # a tick of searching, at 372 ms)
-            spots = []; per_ = {}                                           # the first LEAN_SPOTS_PER_SIDE spots of each side (L, R, head)
-            for sp in list(self._spots(alongs=K.LEAN_ALONG_M)) + list(self._spots(where="head")):
-                if per_.get(sp[2], 0) >= K.LEAN_SPOTS_PER_SIDE or not self._in_plan(np.asarray(sp[0], float)) or ch.clearance_xy(np.asarray(sp[0], float)) < 0.03:
+            spots = []; per_ = {}; off_ = 0                                 # the first LEAN_SPOTS_PER_SIDE spots of each side (L, R, head;
+            for sp in list(self._spots(alongs=K.LEAN_ALONG_M)) + list(self._spots(where="head")):   # never its feet: no face pose from there)
+                if sp[2] == "feet":
+                    continue
+                if not self._in_plan(np.asarray(sp[0], float)) or ch.clearance_xy(np.asarray(sp[0], float)) < 0.03:
+                    off_ += 1; continue
+                if per_.get(sp[2], 0) >= K.LEAN_SPOTS_PER_SIDE:
                     continue
                 per_[sp[2]] = per_.get(sp[2], 0) + 1; spots.append(sp)
             for strict, coarse in ((True, True), (True, False), (False, True)):   # the coarse grid first (96 poses a spot); the fine
@@ -7134,6 +7138,9 @@ class ParentMotion:
                 sol = self.face_reach(on_line=on_line, strict=False, coarse=True)
             if sol is None:
                 self._lean_fail = (int(self.w.tick), key)
+                a["info"]["face"] = None
+                raise Refuse(f"no pose inside human ranges puts her face where its eyes can reach from any of her spots (A22, C34; "
+                             f"spots tried {dict(per_)}, off the plan {off_}; it lies {ch.posture} at {np.round(ch.torso[:2], 2).tolist()})")
         a["info"]["face"] = sol
         if sol is None:
             raise Refuse("no pose inside human ranges puts her face where its eyes can reach from here (A22, C34)")
