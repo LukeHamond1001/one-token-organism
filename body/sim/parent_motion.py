@@ -5510,7 +5510,7 @@ class ParentMotion:
             h.next = h.point(self.d); h.cap = 0.0; c["lead"] = _lst(now); c["up"] = float(now[2]); c["t"] = 0   # one hand on: it waits
             return
         stood = pz >= K.STAND_PELVIS_M and th <= K.STAND_DEG
-        if mode in ("raise", "steady", "walk") and ch.posture == "front":
+        if mode in ("steady", "walk") and ch.posture == "front":          # (the raise excluded, C337's second amendment below)
             # C337 (2026-10-08, life tick 6,019,191): THE STAND ENDS WHEN IT TURNS ONTO ITS FRONT IN HER HANDS. Under the direct holds
             # (C331: springs that never slip for her reach) the child rolled prone two ticks after it stood and was led a metre along the
             # floor on its front, crawling, its hands and face hurt (the day's pain, 205 ticks); the scripted holds would have slipped and
@@ -5518,7 +5518,11 @@ class ParentMotion:
             # when it sinks. C337 amended (23:20): the test is the posture law's own (Child.posture 'front': the trunk past SITTING_DEG
             # from vertical with the chest's normal under -0.6), not a chest's normal under -0.3, which is a lean of 17 degrees, inside
             # STAND_DEG's upright band: the dawn-127 copy lowered a child standing on its feet (pelvis 0.75, trunk 22 degrees) as
-            # 'turned onto its front', and day 126's 19 stands of 24 that 'walked 0.00 m' were lowered in the raise or the steady
+            # 'turned onto its front', and day 126's 19 stands of 24 that 'walked 0.00 m' were lowered in the raise or the steady.
+            # Amended again (23:55): the raise is not under the rule. Lifted by the chest from lying curled (hips and knees fully flexed),
+            # the child's trunk passes through 'front' over its flexed thighs while the thrust (A193) brings its legs under it (the same
+            # copy: hips -1.9 to -0.9 in eight ticks, the trunk at 51 deg, the stand given up there); the raise has its own ends
+            # (RAISE_MAX_TICKS, the sinking), and C337's fault was a child led along the floor in the walk
             c["mode"] = mode = "lower"; c["why"] = "it turned onto its front in her hands"
 
         def near(lead_):                                                    # the led point kept within STAND_LEAD_M of the chest
@@ -5541,7 +5545,13 @@ class ParentMotion:
             elif c["t"] >= K.RAISE_MAX_TICKS:
                 c["mode"] = "lower"; c["why"] = "it did not come to its feet"
         elif mode == "steady":
-            lead = near(np.array([feet[0], feet[1], K.STAND_CHEST_M]))
+            # C342 (2026-10-09, 00:50): STEADIED OVER ITS HIPS, NOT ITS FEET. The dawn-127 copy (p1_tools/standup.py, every tick): stood in
+            # her hands (pelvis 0.75, trunk 16 deg) its right leg swung a step (A193) and set down ahead, the feet's middle moved a half
+            # step forward, her led point went with it, and the chest, led ahead of hips that stood still, folded forward at them to 56
+            # deg in three ticks (her hands at 80 to 100 N, the spring slack toward the new point); day 126's 19 stands of 24 'walked
+            # 0.00 m'. Steadying a standing child a parent keeps its chest over its hips and lets its feet shuffle; the walk (below)
+            # leads the chest ahead of its feet as C274 built it
+            lead = near(np.array([ch.pelvis[0], ch.pelvis[1], K.STAND_CHEST_M]))
             c["lead"] = _lst(lead); h.next = lead + off
             c["steady"] += 1
             if pz < K.STAND_FALL_M:

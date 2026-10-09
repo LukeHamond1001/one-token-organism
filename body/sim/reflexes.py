@@ -476,6 +476,10 @@ STEP_HIP_PLACE = 0.8            # the hip's target while the foot is set down, a
 # tone alone stands it 10 s and through a 20 N push at gains 6 to 12; with its brain running, tone 8 and the reflex 4 and 0.8
 # stood the 30 s of the trial in two of three (16 ticks in the third; 1.2 s without). Constants ours, from that grid.
 POSTURE_UP_G, POSTURE_KNEE = 9.0, 0.5                         # the tone holds a body upright within about 23 deg (9.81 cos 23) on legs within 0.5 rad of straight (ours)
+POSTURE_OFF_G = 8.0                                           # A214: and, once on, lets go past about 35 deg (9.81 cos 35): the stance program is an upright body's; tipped
+                                                              # farther (sat down by her, falling) it yields and the thrust and the step (A193, to 55 deg) carry on. Until
+                                                              # A214 it held to the standing reflex's 55 deg: with the stiffness kept under her hold, her sitting it down
+                                                              # drove the stiff legs to their load lines (the dawn-127 copy: 81 pain ticks of 525 lowering). Ours
 SUPPORT_LP = 0.10                                             # the felt hold's smoothing a tick (ours)
 SUPPORT_FULL_N = 150.0                                        # N felt on its trunk at which the tone is gone (ours: above her steadying, 33 to 116 N, so part of the tone stays in her hands)
 SUPPORT_N = 5.0                                               # N felt on its trunk's touch zones (torso, pelvis): held (ours)
@@ -495,7 +499,7 @@ def posture(ev, q=None, imu_torso=None, on=False):
     """the limbs under the postural tone this tick: {limb: (stance angles in its joints' order, the index of its ankle pitch or None)} for
     the waist and each leg the standing reflex holds in stance (`ev` its second return); a swinging leg is the stepping reflex's"""
     out = {}
-    if not on and imu_torso is not None and float(imu_torso[2]) < POSTURE_UP_G:    # (`on`: the tone held last tick: it holds while the standing reflex does) only once it is up: raised by her hands, its trunk still
+    if imu_torso is not None and float(imu_torso[2]) < (POSTURE_UP_G if not on else POSTURE_OFF_G):   # (`on`: the tone held last tick: it holds to POSTURE_OFF_G, A214) only once it is up: raised by her hands, its trunk s
         return out                                                      # leaning and its knees bent, the thrust (A193) brings it up,
     for limb, e in (ev or {}).items():                                  # and the tone's stiffness there drove its joints to their
         if e != "stand":                                                # load lines (38 pain ticks in a raise of 98 on the copy)
@@ -509,15 +513,24 @@ def posture(ev, q=None, imu_torso=None, on=False):
     return out
 
 
-def posture_step(q, qd, ref, own, ankle, pitch, pitch_rate, hip=None, supported=False, roll=(), share=1.0, lean_roll=0.0, roll_rate=0.0):
+def posture_step(q, qd, ref, own, ankle, pitch, pitch_rate, hip=None, supported=False, roll=(), share=1.0, lean_roll=0.0, roll_rate=0.0, relaxed=None):
     """one limb's targets' offsets from its measured angles for the next 10 ms: the tone toward the stance angles, the own act's step on
     top, and at the ankle the vestibular push"""
-    g = np.full(len(q), 1.0 + (POSTURE_STIFF - 1.0) * float(share))  # (`share`: the tone's share as a hold on its trunk eases)
+    g = np.full(len(q), POSTURE_STIFF)                                  # A214: the antigravity stiffness whatever the hold on its trunk
+    if ankle is not None:
+        g[ankle] = 1.0 + (POSTURE_STIFF - 1.0) * float(share)           # (`share`: the balance responses' share as a hold on its trunk eases:
+                                                                        # the ankle's stiffness here, the vestibulospinal push below)
     if hip is not None and float(q[hip]) > float(ref[hip]):             # a hip extended past its stance angle (the leg trailing as the
         g[hip] = POSTURE_HIP_EXT                                        # body passes over its foot) is held softly, or the stance hip
                                                                         # could never extend and no step begin (A193's rule, kept)
     for r_ in roll:                                                     # A196: the legs' sideways joints softly: the weight must pass
         g[r_] = POSTURE_ROLL                                            # from foot to foot for a step (her sway, its own)
+    if relaxed is not None:                                             # A214: THE TENDON ORGAN INHIBITS THE TONE TOO (A139's reflex, the
+        g[np.asarray(relaxed, bool)] = 0.0                              # Ib afferent's autogenic inhibition): a joint at its load line last
+                                                                        # tick has no pull toward its stance angle this tick (the damping
+                                                                        # stays). With the stiffness kept under her hold (above), her
+                                                                        # sitting it down drove the stiff legs to their load lines: the
+                                                                        # dawn-127 copy's lowering, 127 pain ticks of 525
     yielded = ankle is not None and float(q[ankle]) < float(ref[ankle]) - STEP_YIELD
     if yielded:                                                         # A196: THE ANKLES YIELD TO A STEP: the shank leaning forward over
         g[ankle] = POSTURE_HIP_EXT                                      # the foot past STEP_YIELD, the lean is more than the ankles

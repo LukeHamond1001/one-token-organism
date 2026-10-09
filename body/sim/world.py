@@ -941,11 +941,14 @@ class G1World(SimWorld):
             self._sup_lp = getattr(self, "_sup_lp", 0.0) + R.SUPPORT_LP * (sup_n_ - getattr(self, "_sup_lp", 0.0))   # (the hold felt, smoothed over
             sup_n_ = self._sup_lp                                           # about half a second: her steadying wavers 40 to 150 N in a walk)
             self._tone_w = float(np.clip(1.0 - (sup_n_ - R.SUPPORT_N) / (R.SUPPORT_FULL_N - R.SUPPORT_N), 0.0, 1.0))   # C287: the tone's share: all of it
-            if posture_ and self._tone_w <= 0.0:                            # unheld, none of it at a full hold felt on its trunk
-                posture_ = {}                                               # (SUPPORT_FULL_N), in between as the hold eases: the legs'
-                                                                            # postural responses fall away as the body is held by a
-                                                                            # support (Cordo and Nashner 1982; recalled), by degrees: let
-                                                                            # go from a full hold it went down before its tone began
+            # A214 (2026-10-08, 23:55): THE SUPPORTING REACTION STAYS UNDER HER HOLD. Until A214 a full hold felt on its trunk
+            # (SUPPORT_FULL_N) switched the whole tone off, and the hips, knees and waist of a child standing in her hands were free:
+            # the dawn-127 copy's child stood (pelvis 0.75, trunk 16 deg), its right leg swung a step (A193), her hands led its chest
+            # after the feet's middle, and its trunk folded forward at the hips in three ticks (hips -0.4 to -1.2, knees straight) to
+            # 56 deg and the stand was lowered; day 126's 19 stands of 24 'walked 0.00 m'. The share (_tone_w, C287) now eases only the
+            # balance responses (the ankle's stiffness and the vestibulospinal push: the responses Cordo and Nashner 1982 saw fall away
+            # under a support); the antigravity stiffness of the hips, knees and waist about their stance angles stays whatever the
+            # hold felt, as the positive supporting reaction does on a loaded sole (posture_step). Ours
             self._tone_on = bool(posture_)              # A195: the limbs under the postural tone this tick
 
             for limb, t_ in st_.items():
@@ -1023,7 +1026,8 @@ class G1World(SimWorld):
                         sl = self.eff_slices[limb]
                         q_ = d.qpos[self.qadr[sl]]
                         off_ = R.posture_step(q_, d.qvel[self.dof[sl]], ref_, steps.get(limb, 0.0), ank_, pit_, float(imu_last[10]), hip_, sup_, roll_, tw_,
-                                              getattr(self, "_vest_roll", 0.0), float(imu_last[9]))   # A201: the roll and its rate
+                                              getattr(self, "_vest_roll", 0.0), float(imu_last[9]),   # A201: the roll and its rate
+                                              relaxed=(self._tendon[self.eff_joint_idx[limb]] > 0) if self.spinal else None)   # A214: the tendon organ
                         d.ctrl[self.aid[sl]] = np.clip(q_ + off_, self.lo[sl], self.hi[sl])
                 if rest_a is not None:
                     d.ctrl[rest_a] += alpha * (d.qpos[rest_q] - d.ctrl[rest_a])
