@@ -2660,6 +2660,8 @@ def test_the_standing_and_stepping_reflexes():
     up = [0.0, 0.0, 9.81, 0, 0, 0]
     assert R.stand(nq, [0.0, 0.0, 2.0, 0, 0, 0], (200.0, 200.0), st) == ({}, {})            # lying
     assert R.stand(nq, up, (0.0, 5.0), st) == ({}, {})                                       # upright, no sole loaded (sitting, held up)
+    assert R.stand(nq, [6.0, 0.0, 7.7, 0, 0, 0], (200.0, 200.0), st) == ({}, {})          # A216: tipped back 38 deg on loaded soles: no thrust
+    assert R.stand(nq, [-6.0, 0.0, 7.7, 0, 0, 0], (200.0, 200.0), st)[1].get("leg_l") == "stand"   # leaning forward the same: the thrust
     q = {n: list(v) for n, v in nq.items()}
     iq = {j.split("_", 1)[1].replace("_joint", ""): i for i, j in enumerate(R._JOINTS["leg_l"])}
     q["leg_l"][iq["knee"]] = 0.5; q["waist"][0] = 0.4

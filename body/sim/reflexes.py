@@ -445,6 +445,12 @@ STAND_UP_G = 5.6                # m/s2 along the torso's long axis: upright with
                                 # first built: raised by her hands (C268) it hung at 35 to 50 deg with its soles loaded and its legs
                                 # limp, and never came under itself; at 55 deg the thrust takes its weight as soon as it is half up
 SOLE_N = 20.0                   # N on a sole: loaded (ours: a sixteenth of the body's weight)
+STAND_BACK_G = 4.9              # m/s2 along the chest's normal (the torso unit's x: +9.8 on its back): tipped BACK past about 30 deg the supporting
+                                # reaction does not fire (A216, 2026-10-09: the reaction is a body's weight over its feet; raised by the chest
+                                # and tipped back with its soles on the floor, the thrust pushed the child back against her pull and its hips
+                                # sat at their load lines for 200 ticks, twice: days 128 and 132, 156 and 215 pain ticks, its stress to the
+                                # cap. Leaning forward or upright within STAND_UP_G the thrust works as before: every raise that stood passed
+                                # through the trunk forward of vertical). Ours
 STAND_GAIN, STAND_STEP = 1.0, W.STEP_BIG        # the supporting reaction is an extensor THRUST: the whole distance to the straight leg,
                                                 # at most one big step a tick. With the tone's soft spring (0.3, one small step) the
                                                 # held child stood but could not rise: led up by the chest within her sustained cap
@@ -552,7 +558,7 @@ def stand(q, imu_torso, soles, state):
     the world and changed in place -> ({limb: its additive steps}, {limb: "stand" | "step"}); ({}, {}) when the body is not upright
     on a loaded sole (the legs' phases return to stance)"""
     az = float(imu_torso[2])
-    if az < STAND_UP_G or max(float(soles[0]), float(soles[1])) < SOLE_N:
+    if az < STAND_UP_G or max(float(soles[0]), float(soles[1])) < SOLE_N or float(imu_torso[0]) > STAND_BACK_G:
         for k in state:
             state[k][0], state[k][1] = "stance", 0
         return {}, {}
