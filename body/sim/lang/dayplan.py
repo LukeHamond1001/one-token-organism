@@ -75,7 +75,11 @@ FREE_PELVIS_M, FREE_DEG, FREE_STAND_MAX = 0.62, 35.0, 400   # C287: let go, it s
 CARRY_LAY_CLEAR_M = 1.3                # C281: it is laid this far from where she kneels at the least (its body is 1.3 m long); ours
 CARRY_CLEAR_M = 1.0                   # she carries it back to its mat (her own place this far from the mat's centre); ours
 STAND_SOON = 150                # C330: ticks before the floor stand is due during which her conduct asks no show (ours: a show's length)
-FLOOR_STAND_GAP = 250           # T1 (2026-10-08): 250 (a stand every 37 s of floor play; the owner's word: walking first, every second); was 500 #          # C273: in floor play she stands it up this often when it lies on its back (75 s; ours: a stand takes
+FLOOR_STAND_GAP = 500           # C346 (2026-10-09, 07:20): back to 500 from T1's 250. With the held walk mended (A214, C342 to C345) a stand runs 400 to 600 ticks and
+                                # at 250 between them the stands ran 62% of day 130's ticks (26% on day 126): the child's hands were off the floor's toys
+                                # most of the day ('got' 14 against 108 by midday, hand-overs 6 against 38, right names on pace for 60 against 128),
+                                # and walking had tripled already (stood 211, stepped 78, 10.5 m a day). The lead's balance of the two goals: a stand
+                                # every 75 s of floor play, measured from day 130's second half against its first. T1 (2026-10-08): 250 (a stand every 37 s of floor play; the owner's word: walking first, every second); was 500 #          # C273: in floor play she stands it up this often when it lies on its back (75 s; ours: a stand takes
                                 # about 250 ticks, so a third of her floor play is standing and stepping in her hands)
 STAND_AGAIN_GAP = 100           # C268: after a stand done, the next one this many ticks on (15 s of rest; ours)
 SIT_RETRY_GAP = 200             # C224: ... the next try this many ticks after the refusal (30 s: a parent tries again in a minute; ours)
