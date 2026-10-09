@@ -5538,6 +5538,16 @@ class ParentMotion:
             if n > 1e-6:
                 lead = lead + v / n * min(n, K.RAISE_MPS * TICK_S)
             c["up"] = min(float(goal[2]), float(c["up"]) + 1.5 * K.RAISE_MPS * TICK_S, float(now[2]) + K.STAND_LEAD_M)   # up before across
+            if c.get("sat"):
+                # C343 (2026-10-09, 01:35): ITS FEET ARE SET ON THE FLOOR BEFORE IT IS RAISED. Lifted by the chest from lying curled (hips
+                # and knees fully flexed, the newborn's flexor posture) the child hung in her hands with its feet in the air (the dawn-127
+                # copy: pelvis 0.4, soles 0 N for 260 ticks, 'it did not come to its feet', two raises of five): the supporting reaction
+                # (A193) fires only on a loaded sole. A parent standing a curled infant lowers it until its feet touch and lets the legs
+                # take the weight: while either sole is off the floor by more than FEET_DOWN_M her led point rises no higher than keeps
+                # the lower foot that near the floor (the thrust then straightens the legs under it, as in the copy's other raises)
+                fz_ = min(float(self.d.xpos[self.m.body("left_ankle_roll_link").id][2]), float(self.d.xpos[self.m.body("right_ankle_roll_link").id][2]))
+                if fz_ > K.FEET_DOWN_M:
+                    c["up"] = min(float(c["up"]), float(now[2]) - (fz_ - K.FEET_DOWN_M))
             lead = near(np.array([lead[0], lead[1], max(lead[2], float(c["up"]))]))
             c["lead"] = _lst(lead); h.next = lead + off
             if stood:

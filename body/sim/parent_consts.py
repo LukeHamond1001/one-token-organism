@@ -520,6 +520,8 @@ STAND_DEG = 20.0                # deg: the trunk within this of vertical counts 
 RAISE_MPS = 0.08                # m/s: her hands lead its chest up and over its feet at this speed (ours; the day-84 copy: on its feet
                                 # in 9 s on 100 to 135 N with its own legs' thrust, A193)
 RAISE_MAX_TICKS = 260           # a raise that has not stood it in this long (24 s) is given up and it is laid back (ours)
+FEET_DOWN_M = 0.10              # m: C343: an ankle higher than this off the floor while she raises it: its feet are set down before the chest
+                                # rises further (ours; the G1's ankle roll link stands 0.04 above the floor)
 STAND_HOLD_TICKS = 40           # she steadies it standing this long (6 s) before the walk or the sitting down (ours)
 WALK_LEAD_M = 0.18              # m: her hands lead its chest this far ahead of its feet's middle (ours; C274: 0.10 until then, the stance hip then
                                 # extended only to about the swing's trigger and steps were rare)
