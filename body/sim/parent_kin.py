@@ -333,7 +333,37 @@ def face_geoms_graded(fp, gaze_head=None, blink=None):
     and lower vermilion), the mouth's opening and teeth, the brows, the irises and pupils (turned to the gaze), the lids (upper and
     lower, turned about the lids' hinge), the upper lash lines (parent_face.face_geoms)"""
     f = dict(FACE_NEUTRAL); f.update(fp)
-    return face.face_geoms(f, gaze_head, blink)
+    # P1 (2026-10-09, 18:00; the tick's profile: her face's moving parts 17 ms of a 140 ms tick, re-made every tick though her face
+    # holds still most ticks): the parts are a pure function of the graded parameters, the gaze and the blink, memoized on them
+    # rounded (a parameter to FACE_ROUND, a gaze direction to the same of a unit vector, the blink too: 0.05, three degrees of her
+    # eyes' turn, a twentieth of a smile, under a pixel of her face at the child's eyes from a metre; her face's reading for the
+    # reward is of the parameters themselves, parent_kin.face_reading, untouched); the same inputs give the same parts, so a replay
+    # is exact. FACE_MEMO entries at most. Measured on the day-127 pair: see docs P1
+    try:
+        r_ = lambda x: round(float(x) / FACE_ROUND) * FACE_ROUND
+        gk = None if gaze_head is None else (tuple(r_(x) for x in np.ravel(np.concatenate([_unit_(np.asarray(gaze_head[sd], float).ravel()) for sd in ("L", "R")])))
+                                             if isinstance(gaze_head, dict) else tuple(r_(x) for x in _unit_(np.asarray(gaze_head, float).ravel())))
+        key = (tuple((k, r_(f[k])) for k in sorted(f)), gk, None if blink is None else r_(blink))
+    except Exception as e_:
+        _FACE_MEMO_ERR.append(repr(e_)[:200]); _FACE_MEMO_ERR[:] = _FACE_MEMO_ERR[-3:]
+        return face.face_geoms(f, gaze_head, blink)
+    hit = _FACE_MEMO.get(key)
+    if hit is None:
+        if len(_FACE_MEMO) >= FACE_MEMO:
+            _FACE_MEMO.clear()
+        hit = _FACE_MEMO[key] = face.face_geoms(f, gaze_head, blink)
+    return {n: (np.array(p, float), np.array(q, float), None if sz is None else tuple(sz)) for n, (p, q, sz) in hit.items()}
+
+
+_FACE_MEMO = {}
+_FACE_MEMO_ERR = []
+FACE_ROUND = 0.05                      # P1: the memo's rounding (ours)
+
+
+def _unit_(v):
+    n = float(np.linalg.norm(v))
+    return v / n if n > 1e-9 else v
+FACE_MEMO = 2048                       # P1: the memo's size (ours)
 
 
 # the hand's fingers (left hand frame; palm faces -y, thumb on +x): knuckle x positions, lengths, radii

@@ -51,7 +51,7 @@ DAY_TICKS = 24000                      # a life day (4.7)
 WAKE = 300                             # the wake episode (4.7)
 WIND = 1000                            # the winding down (4.7)
 GOODNIGHT = 300                        # goodnight (4.7)
-BLOCKS = (("floor", 3, 4000, 5000), ("ghost", 4, 2500, 3000), ("show", 1, 1500, 1500), ("away", 1, 400, 600),
+BLOCKS = (("floor", 3, 4000, 5000), ("ghost", 5, 2500, 3000), ("show", 1, 1500, 1500), ("away", 1, 400, 600),
           ("tasks", 1, 600, 600))      # 4.7's table: kind, how many, shortest, longest. TRAINING MODE (2026-09-29, the owner's word: fix
                                        # fast; her pace is the lead's): away 2-4 x 400-1,200 and her own tasks 3,000 cut to one short block
                                        # each, so the play blocks (drawn, then scaled to the day) carry about a quarter more of the day

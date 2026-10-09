@@ -188,7 +188,7 @@ def test_the_days_layout():
         assert d.blocks[0][0] == DP.WAKE and d.blocks[-1][1] == DP.DAY_TICKS - DP.WIND
         assert all(a[1] == b[0] for a, b in zip(d.blocks, d.blocks[1:]))
         n = {k: ks.count(k) for k in set(ks)}
-        assert n["floor"] == 3 and n["ghost"] == 4 and n["show"] == 1 and n["tasks"] == 1 and n["away"] == 1, n   # (the training day, 2026-09-29: away once)
+        assert n["floor"] == 3 and n["ghost"] == 5 and n["show"] == 1 and n["tasks"] == 1 and n["away"] == 1, n   # (the training day, 2026-09-29: away once)
         counts.add(n["away"])
         assert 2 <= len(d.focus) <= 3 and set(d.focus) <= set(DP.BIRTH_TOYS)
     d = DP.DayPlan(1, day_ticks=2400); d.lay_out(0)
