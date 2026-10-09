@@ -73,6 +73,7 @@ SIB_NARRATE_GAP, SIB_DEG, SIB_M = 300, 30.0, 4.0   # D2: she names the sibling's
 DEMO_GAP, DEMO_M = 900, 1.6             # C300: in floor play she shows walking this often (135 s), a walk this far in its view and back; ours
 FREE_PELVIS_M, FREE_DEG, FREE_STAND_MAX = 0.62, 35.0, 400   # C287: let go, it stands alone while its pelvis is this high and its trunk within this of upright, this many ticks at most (60 s); ours
 LURE_AHEAD_M, LURE_Z_M = 0.35, 0.85   # C348: the toy held this far ahead of its feet, this high, while it stands alone (ours: a step, a little under its chest)
+STAND_CLEAR_M = 0.8                    # C349: lying nearer than this to anything standing, it is carried to its mat before the stand (ours: a step and a half of walking room)
 CARRY_LAY_CLEAR_M = 1.3                # C281: it is laid this far from where she kneels at the least (its body is 1.3 m long); ours
 CARRY_CLEAR_M = 1.0                   # she carries it back to its mat (her own place this far from the mat's centre); ours
 STAND_SOON = 150                # C330: ticks before the floor stand is due during which her conduct asks no show (ours: a show's length)
@@ -761,6 +762,21 @@ class DayPlan:
             self.next_play = t + int(self.rng.integers(*PLAY_GAP))
             return
         if kind == "floor" and t >= getattr(self, "next_floor_stand", 0) and self._lying_on_back(lane):
+            # C349 (2026-10-09, 13:35): STOOD UP CLEAR OF THE WALLS. Day 133's morning: two held walks of thirteen ended 'walled' at once (C345's
+            # stop), the child stood up where it lay 0.4 m from the front wall; a parent carries a child to the open floor before walking it.
+            # Lying within STAND_CLEAR_M of anything standing it is laid on its back at its mat first (the environment's carry, C277), the stand
+            # offered again next tick
+            try:
+                here_ = np.asarray(world.d.qpos[:2], float)
+                if pm._standing_clear_m(here_) < STAND_CLEAR_M and not pm.holds and not any(v is not None for v in pm.holding.values()):
+                    world.carry_to_mat()
+                    world.toys_beside(list(self.focus))
+                    self.log.append((t, "floor play: carried to its mat for the stand, clear of the walls (C349)", [round(float(x), 2) for x in here_]))
+                    print(f"carried to its mat for the stand at tick {t} from {[round(float(x), 2) for x in here_]} (C349)", flush=True)
+                    self.next_play = t + 5
+                    return
+            except Exception as e_:
+                self.log.append((t, "C349 failed", repr(e_)[:80]))
             # C273: THE STAND IS PART OF HER FLOOR PLAY. Day 88: 8,000 ticks of floor play before the day's first motor block, the
             # stand (C268) not offered once; standing and stepping are learned by doing them, and the owner's word is walking first.
             # Every FLOOR_STAND_GAP, with the child on its back and her hands empty, her play's offer is the stand

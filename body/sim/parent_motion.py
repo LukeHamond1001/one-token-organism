@@ -6940,6 +6940,9 @@ class ParentMotion:
             if a is not None and ph["kind"] == "stand":
                 a["info"]["walked_m"] = round(max(float(h.ctl.get("walked", 0.0)) for h in hs), 2)
                 ends_ = sorted({str(h.ctl.get("walk_end")) for h in hs if h.ctl.get("walk_end")} | ({"no walk"} if not any("walk_t" in h.ctl for h in hs) else set()))
+                if not ends_:
+                    why_ = [str(h.ctl.get("why")) for h in hs if h.ctl.get("why")]
+                    ends_ = ["lowered: " + why_[0][:40]] if why_ else ["lowered"]   # (the steady's end named too: sank, turned onto its front)
                 a["info"]["walk_end"] = ",".join(ends_)
                 a["why"] = f"stood on its own legs in her hands and walked {a['info']['walked_m']:.2f} m ({a['info']['walk_end'] or 'lowered'}; C268)"   # (the walk's end named: an instrument, 2026-10-09)
                 self.stats["stands"] = self.stats.get("stands", 0) + 1
