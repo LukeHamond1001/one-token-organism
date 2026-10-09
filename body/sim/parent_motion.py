@@ -7020,7 +7020,7 @@ class ParentMotion:
             holds.append(dict(type="hold", name=f"turn_{sd}", side=sd, body=int(b), local=_lst(loc), normal=_lst(nl), goff=_lst(goff),
                               kind="turn", cap=0.0, brief=True, ctl=dict(toward=_lst(toward)), shape=shape, wait=False))
         out = []
-        if K.TEACHER_DIRECT:
+        if K.TEACHER_DIRECT and K.TURN_DIRECT:
             # C336: THE TURN BY DIRECT HOLDS (as the stand's, C331): her hands' springs engaged at its far shoulder and hip at once, the turn's
             # controller (A101, A7's caps and seconds) as before. Day 125: turns 4 done, 5 refused ('her right hand did not arrive on it: it
             # moved', 'cannot reach it from here')
