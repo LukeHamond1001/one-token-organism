@@ -530,6 +530,8 @@ STAND_TURN_DPS = 3.0            # deg/s: the walk's way turns this fast (ours: a
 WALK_STOP_M = 0.45              # m: its feet this near her knees, the walk is done (ours: her own reach's comfort)
 WALK_MAX_TICKS = 400            # a walk's longest (60 s; ours)
 STAND_FALL_M = 0.50             # m: its pelvis under this while she holds it standing: it has sunk; she lowers it (ours)
+STAND_PRONE_Z = 0.3             # C337: its chest's normal's z under -0.3 while she holds it standing: it has turned onto its front; she lowers
+                                # and lays it (ours: the posture law's threshold, parent_motion.Child)
 LIGHT_N = 2.0                   # N a hand: her fingertips' touch while it finds its own balance (ours: both under reflexes.SUPPORT_N)
 BALANCE_GAIN = 0.0002           # C291: m a tick per N her hands carry sideways or fore-aft: she feels for its balance (ours)
 BALANCE_STEP_M = 0.004          # ... at most this far a tick (ours)

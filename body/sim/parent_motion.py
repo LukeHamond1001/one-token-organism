@@ -5510,6 +5510,13 @@ class ParentMotion:
             h.next = h.point(self.d); h.cap = 0.0; c["lead"] = _lst(now); c["up"] = float(now[2]); c["t"] = 0   # one hand on: it waits
             return
         stood = pz >= K.STAND_PELVIS_M and th <= K.STAND_DEG
+        if mode in ("raise", "steady", "walk") and float(ch.torso_R[2, 0]) < -K.STAND_PRONE_Z:
+            # C337 (2026-10-08, life tick 6,019,191): THE STAND ENDS WHEN IT TURNS ONTO ITS FRONT IN HER HANDS. Under the direct holds
+            # (C331: springs that never slip for her reach) the child rolled prone two ticks after it stood and was led a metre along the
+            # floor on its front, crawling, its hands and face hurt (the day's pain, 205 ticks); the scripted holds would have slipped and
+            # ended the act. A chest turned toward the floor (its normal's z under -STAND_PRONE_Z) ends the raise, the steady or the walk:
+            # she lowers and lays it as C268 does when it sinks
+            c["mode"] = mode = "lower"; c["why"] = "it turned onto its front in her hands"
 
         def near(lead_):                                                    # the led point kept within STAND_LEAD_M of the chest
             dv = lead_ - now; dn = float(np.linalg.norm(dv))
