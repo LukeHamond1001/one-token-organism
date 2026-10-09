@@ -8,7 +8,7 @@ scaled by one number, the STRENGTH s in [0, 1], recorded every tick. At 1 the gh
 (the chest led up and forward, the stepping reflex A193 and the postural tone A195 doing the legs); at 0 it is gone and the body
 stands and walks on its own or falls. The strength FALLS on every tick the body bears its own weight (the hold carrying less than
 BEARS of it: a parent's hands lighten as the baby takes its weight), RISES while the ghost carries more than HANG of it (it hangs),
-and returns to 1 when it falls (the catch: the harness). (The first law, 2026-10-09 16:30, took the child's own hip acts' agreement
+and returns to 1 when it falls (the catch: the harness). (The first law, 2026-10-09 16:00, took the child's own hip acts' agreement
 with its hips' motion: its leg policy acts every tick and the sign agreed by chance, a coin's fade; withdrawn the same hour.) The steps are the lane's 'stepped' events as before
 (the pelvis carried STEP_M, standing), paid by her smile as every step is (C284): the reward channel is not touched. Nothing is
 written into the child. The walls: the lead turns before anything standing (her C345 rule). The constants: ours, of the order of
@@ -32,8 +32,8 @@ LEAD_M = 0.30                                # m: the lead never farther ahead o
 LIFT_TICKS, LOWER_TICKS = 20, 20             # ticks: the rise from lying to standing height, the lowering at the end (3 s each; ours)
 HOLD_DROP = 0.0                              # m: the hold's height under the torso's standing height (ours: none; the cap below decides what it bears)
 CARRY_SHARE = 0.5                            # the most of its weight the hold carries once it stands (ours: her two hands' sustained cap, 156 N, is 0.46
-                                             # of it; 17:50: with the whole weight on offer, the copy hung, the soles unloaded and the standing reflex off)
-# 17:10-17:40, the copies: held and righted at the torso it walked (900 ticks: 16 steps, 9.1 m, 2 falls) but the righting torque went
+                                             # of it; 16:20: with the whole weight on offer, the copy hung, the soles unloaded and the standing reflex off)
+# 16:00-16:20, the copies (the clock read right at 16:25): held and righted at the torso it walked (900 ticks: 16 steps, 9.1 m, 2 falls) but the righting torque went
 # through the waist pitch joint at its load line (54 of 62 pain ticks); held and righted at the pelvis, a walker's seat, no pain and
 # no walking: the legs hung bent, the soles unloaded, the standing reflex off, the seat carrying 0.99 of its weight. So the hold and
 # the lead at the torso, where her hands were, and the righting at the pelvis, which the floor and the strong hips react
@@ -153,7 +153,7 @@ class Ghost:
             up = d.xmat[self.b].reshape(3, 3)[:, 2]
             fallen = pz < FALL_Z or float(up[2]) < FALL_UP
             if fallen:                                                      # the catch: the harness takes it again. The first catch
-                self.s = 1.0; self.ticks = 0; self.falls += 1               # (16:40) restarted the lift from the fallen pose and hauled a
+                self.s = 1.0; self.ticks = 0; self.falls += 1               # (16:05) restarted the lift from the fallen pose and hauled a
                 lay = getattr(w, "carry_to_mat", None)                   # child on its front up by the chest, head down (the copy: pain 13
                 if lay is not None:                                         # ticks in 30); the environment lays it on its back where it fell
                     try:                                                    # first (its laying, C338 amended), and the lift is from lying
