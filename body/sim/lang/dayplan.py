@@ -695,6 +695,18 @@ class DayPlan:
         c, p = lane.conduct, lane._p
         # C323 (2026-10-07): the stand is offered whatever her hands hold (C319: the stand sets a held toy aside first). Day 116: 9 stands
         # in 13,261 ticks of floor play where FLOOR_STAND_GAP offers 26; she held a toy from her shows on most offers
+        if kind == "floor" and t >= getattr(self, "next_floor_stand", 0) and self._posture(lane) in ("front", "side") \
+                and getattr(self, "next_floor_turn", 0) <= t and not c.motion.holding.get("L") and not c.motion.holding.get("R"):
+            # C338 (2026-10-08): A PRONE CHILD IS TURNED ONTO ITS BACK FOR THE FLOOR STAND. Day 125: the child lay on its front or side 53% of
+            # the day (tummy time and its own rolling), and the floor stand is offered only from its back, so half the day's floor play gave
+            # no stand (18 stands in a day where FLOOR_STAND_GAP would offer 90); the owner's first goal is walking. At the stand's offer a
+            # child on its front or side is turned first (turn_over: her 'up. up. up!' and the turn, A7, C254's rule for the sit), once in
+            # FLOOR_STAND_GAP; the stand follows when it lies on its back
+            self.next_floor_turn = t + FLOOR_STAND_GAP
+            c.request("turn_over")
+            self.log.append((t, "floor play: the child on its front, turned onto its back for the stand (C338)"))
+            self.next_play = t + int(self.rng.integers(*PLAY_GAP))
+            return
         if kind == "floor" and t >= getattr(self, "next_floor_stand", 0) and self._lying_on_back(lane):
             # C273: THE STAND IS PART OF HER FLOOR PLAY. Day 88: 8,000 ticks of floor play before the day's first motor block, the
             # stand (C268) not offered once; standing and stepping are learned by doing them, and the owner's word is walking first.
