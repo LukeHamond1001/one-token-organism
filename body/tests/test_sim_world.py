@@ -2831,3 +2831,23 @@ def test_the_born_approach():
     print(f"world A216: the born approach: the turn's step {k} x her bearing from the body (the eyes' yaw plus the cue's offset) less {cd} x its own yaw rate, at most {mx} a tick, "
           f"the speed's {go} a tick within {zone} rad of straight ahead; the orienting gain scales both; the command alone, under the switch; "
           f"the world sums it with the brain's own command ({w.ghost.cmd_v:.3f}, {w.ghost.cmd_w:.3f})")
+
+
+def test_the_wedge_carry_goes_where_it_is_clearer():
+    """C352 amended (2026-10-10): the wedged child is carried to the mat's centre only where that is clearer of anything standing
+    by WEDGE_GAIN_M than where it lies; on the mat's south edge (day 142's spot) it is, at the centre it is not"""
+    import types
+    import numpy as np
+    import mujoco
+    from body.sim import parent_motion as PM
+    from body.sim.lang import dayplan as DP
+    m = mujoco.MjModel.from_xml_path(os.path.join(os.path.dirname(PM.__file__), "g1room_door.xml"))
+    stub = types.SimpleNamespace(m=m)
+    cls = [getattr(PM, n) for n in dir(PM) if hasattr(getattr(PM, n), "_standing_clear_m")][0]
+    clear = lambda xy: float(cls._standing_clear_m(stub, np.asarray(xy, float)))
+    mat = np.asarray(m.geom_pos[m.geom("mat").id][:2], float)
+    edge = (0.85, -1.59)
+    assert clear(edge) < DP.WEDGE_CLEAR_M, clear(edge)
+    assert clear(mat) >= clear(edge) + DP.WEDGE_GAIN_M, (clear(mat), clear(edge))          # carried to the centre
+    assert not (clear(mat) >= clear(mat) + DP.WEDGE_GAIN_M)                                 # at the centre: left where it lies
+    print("the wedge carry goes where it is clearer: edge", round(clear(edge), 2), "centre", round(clear(mat), 2))

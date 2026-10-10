@@ -62,7 +62,7 @@ HER_HANDS = False               # C350 (2026-10-09, the owner's word at 15:00: h
                                 # and face as before (she follows at a distance; a step is paid by her smile, C284). Her shows and hand-overs stay
 GHOST_FOLLOW_M, GHOST_FOLLOW_GAP = 2.0, 100   # C350: in a ghost block she walks to the child when farther than this, this often at most (ours)
 COME_GAP, COME_DIST, COME_SPOT_WAIT, COME_MIN_M = 200, 1.2, 150, 0.9   # C351 amended five times: 1.3 m, crouched (her face in its eyes' field); under 0.9 m too near to teach
-WEDGE_CLEAR_M, WEDGE_EVERY = 1.0, 50      # C352: a lying child in pain this near (m) anything standing is carried to its mat; checked every this many ticks (ours: LAY_CLEAR_M's 1.0)
+WEDGE_CLEAR_M, WEDGE_EVERY, WEDGE_GAIN_M = 1.0, 50, 0.3      # C352: a lying child in pain this near (m) anything standing is carried to its mat, where the mat's centre is clearer by WEDGE_GAIN_M (amended); checked every this many ticks (ours: LAY_CLEAR_M's 1.0)
 COME_FAR_M = 1.8                        # C351 amended five times: a call from farther than this (the crouched face's reach in its eyes' field) is not made: another spot nearer
 COME_AFTER = 300                        # C351 amended six times: after it has come (or is too near to teach) she stays with it this long before her next spot (ours: 45 s of praise and play)
 COME_STAY_MAX = 900                     # C351 amended four times: she keeps her spot, calling every COME_GAP, until it comes (within COME_MIN_M) or this long   # C351: in a command block she calls it from this far, this often; her walk to the spot waits
@@ -296,9 +296,16 @@ class DayPlan:
             # wall: when it lies in pain within WEDGE_CLEAR_M of anything standing, the environment carries it to its mat (world.carry_to_mat,
             # A110's laying), as the ghost's catch lays a fallen child clear of the walls (LAY_CLEAR_M). Not while the ghost holds it
             try:
-                clear_ = getattr(world.parent, "_standing_clear_m", None); xy_ = np.asarray(world.d.qpos[:2], float)
-                if clear_ is not None and float(clear_(xy_)) < WEDGE_CLEAR_M and not world.parent.holds:
-                    world.carry_to_mat()
+                clear_ = getattr(world.parent, "_standing_clear_m", None); xy_ = np.array(world.d.qpos[:2], float)   # (a copy: the view read the mat's centre after the carry)
+                mat_ = np.asarray(world.m.geom_pos[world.m.geom("mat").id][:2], float)
+                # C352 amended (2026-10-10, 13:55): THE CARRY ONLY WHERE THE MAT'S CENTRE IS CLEARER. Day 142 (6,816,050 to 6,819,400):
+                # the check fired 27 times at one spot and moved nothing: the child lay on the mat's south edge (the mat 2.8 x 2.0 m
+                # at (0, -0.6), its edge at the wall's metre) and carry_to_mat with no place lays a child already on its mat where it
+                # lies; at the mat's centre itself the table stands inside the metre, so a child in pain at its own mat was 'carried'
+                # to where it lay. Now the carry goes to the mat's centre, only where that is clearer than where it lies by
+                # WEDGE_GAIN_M, and the line is written only when the world carried it
+                if clear_ is not None and float(clear_(xy_)) < WEDGE_CLEAR_M and not world.parent.holds and \
+                        float(clear_(mat_)) >= float(clear_(xy_)) + WEDGE_GAIN_M and world.carry_to_mat(to=mat_):
                     self.wedged = int(getattr(self, "wedged", 0)) + 1
                     self.log.append((t, "wedged against a wall in pain: carried to its mat (C352)", [round(float(x), 2) for x in xy_], round(float(clear_(xy_)), 2)))
                     print(f"wedged against a wall in pain at {np.round(xy_, 2).tolist()}: carried to its mat at tick {t} (C352)", flush=True)
