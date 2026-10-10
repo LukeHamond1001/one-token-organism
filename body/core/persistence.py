@@ -254,7 +254,7 @@ class PersistenceMixin:
             for k_ in ("vf_A", "vf_b", "vf_mu", "vf_var", "vf_n"):
                 getattr(life.m, k_).copy_(vf_saved[k_].cpu())
         same_ = bool(st_saved) and life.m.stri_W.numel() > 0 and st_saved.get("stri_W") is not None and st_saved["stri_W"].shape == life.m.stri_W.shape
-        # W8 amended three times (2026-10-10, 04:55): THE STRIATUM GROWS FOR AN EFFECTOR THAT JOINED AFTER THE SAVE. Its rows lie in the
+        # W8 amended three times (2026-10-10, 03:40): THE STRIATUM GROWS FOR AN EFFECTOR THAT JOINED AFTER THE SAVE. Its rows lie in the
         # effectors' declared order after the language block and before the event lines' block (body/model.py), so a joined last effector
         # widens the striatum by k rows a setting and the saved shape no longer matches: until now neither this branch nor the R5b one
         # took such a save, and nothing of the striatum was restored: its input map, its thresholds, the fast critic's head, the voice's

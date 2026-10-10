@@ -728,7 +728,7 @@ class DayPlan:
                     st["spot"] = None; st["next"] = t + 40                  # five times: the child drifted off while she walked and knelt
                     self.log.append((t, "come here: too far to be seen, another spot (C351)", round(d0, 2)))
                     return
-                if t < int(st.get("called", -10 ** 9)) + COME_GAP:          # she keeps her spot and calls again every COME_GAP (04:00: the
+                if t < int(st.get("called", -10 ** 9)) + COME_GAP:          # she keeps her spot and calls again every COME_GAP (02:30: the
                     return                                                  # first form chose a new spot 2 m off after every call, walking
                 c.request("come_call")                                      # away from a child coming to her; and at 2 to 3 m her face was
                 lane.come_call = [int(t), d0, False, False, [float(ch_xy[0]), float(ch_xy[1])], [float(her_[0]), float(her_[1])]]   # under the born

@@ -4828,7 +4828,7 @@ class ParentMotion:
         return self._walk_phases(start, xy, yaw, goal_r=goal_r, child=child, goal_clear=goal_clear, again=redo)
 
     def _act_crouch_at(self, a, t):
-        """C351 amended five times (2026-10-10, 03:50): she goes to a spot and crouches there facing the child (the heels kneel, her
+        """C351 amended five times (2026-10-10, 02:37): she goes to a spot and crouches there facing the child (the heels kneel, her
         trunk leaned CROUCH_LEAN_DEG forward), her face low enough for a G1 whose eye cameras look 47 degrees down (g1scene D435_PITCH:
         the field's top edge 18 degrees under the horizon) to hold it from COME_DIST: standing, her mouth is 0.25 m above its eyes and
         never in its images; kneeling on her heels, 0.34 m under them, in them within a metre; crouched, within a metre and a half.

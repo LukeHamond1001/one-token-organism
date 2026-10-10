@@ -1124,7 +1124,7 @@ class Conduct:
     def _request(self, act, t, p):
         """an act asked of her motion: kept open (running, whatever it reports but done, refused or cancelled) until her motion
         reports it ended, and in her log from this tick, before her motion's first report of it. C351 amended three times
-        (2026-10-10, 02:50): while her day plan says stay_put (a command block: she calls from across the room and the child must
+        (2026-10-10, 02:17): while her day plan says stay_put (a command block: she calls from across the room and the child must
         come to her), the acts that bring her to the child (STAY_PUT_KINDS: the lean-in of her asks, the copy, the attend, the hand-over,
         the touch) are not asked: day 138's command blocks had her lean in 58 times and kneel within a metre of it on 62% of their ticks,
         so there was nothing to come to. Her line is said from where she stands; the refusal is logged"""

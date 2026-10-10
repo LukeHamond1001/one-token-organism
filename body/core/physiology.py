@@ -489,7 +489,7 @@ REFLEX = dict(
     # (Bowlby 1969). The sizes are ours, in the command's own units (world.LOCO_SETTINGS: m/s and rad/s a tick, decaying): a bearing of
     # 0.4 rad steps the turn at its cap, which the command's decay holds at 0.6 rad/s; facing her the speed settles at a third of a
     # metre a second. 1 = on; off at birth for every body that does not say so
-    # Sized at 02:30 on the day-139 copy: at a gain of 0.05 and a cap of 0.02 the step lost to the brain's own held act on the command
+    # Sized at 02:08 on the day-139 copy: at a gain of 0.05 and a cap of 0.02 the step lost to the brain's own held act on the command
     # (one setting, -0.1 rad/s a tick, held tick after tick by the movement unit, A176): the turn sat at its cap and the speed at zero,
     # the approach firing on every tick. The turn's step is now approach_turn_gain x the bearing less approach_damp x the body's own yaw
     # rate (the trunk's gyro: the vestibular damping of a turn, the vestibulospinal road that steadies the body's rotation), capped at
@@ -502,7 +502,7 @@ REFLEX = dict(
     approach_damp=0.5,
     approach_go=0.01,
     approach_zone=0.35,
-    # the voice (A216 amended, 03:20): a sound's onset is one tick, so its step is a pulse, not a slew: approach_sound_gain x the ears'
+    # the voice (A216 amended, 02:26): a sound's onset is one tick, so its step is a pulse, not a slew: approach_sound_gain x the ears'
     # angle, which under the command's decay (0.97 a tick, 0.15 s a tick: a pulse integrates to 5 times itself in radians) turns the body
     # by about the angle heard, as a head turns to a sound; at most approach_sound_max, the command's extreme. On the day-139 copy the
     # slewed pulse (0.05) turned it a quarter radian an onset and the ears' read flipped sign between onsets, so the body never came round
