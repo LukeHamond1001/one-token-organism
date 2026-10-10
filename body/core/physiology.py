@@ -502,6 +502,12 @@ REFLEX = dict(
     approach_damp=0.5,
     approach_go=0.01,
     approach_zone=0.35,
+    # the voice (A216 amended, 03:20): a sound's onset is one tick, so its step is a pulse, not a slew: approach_sound_gain x the ears'
+    # angle, which under the command's decay (0.97 a tick, 0.15 s a tick: a pulse integrates to 5 times itself in radians) turns the body
+    # by about the angle heard, as a head turns to a sound; at most approach_sound_max, the command's extreme. On the day-139 copy the
+    # slewed pulse (0.05) turned it a quarter radian an onset and the ears' read flipped sign between onsets, so the body never came round
+    approach_sound_gain=0.2,
+    approach_sound_max=0.3,
     # THE VOR (3.7, A23; brainstem, present at birth): the gaze's window counter-turns by the torso gyro's rotation in each camera's frame
     # (the world applies it through the tick at its samples of the gyro, as it applies the servo law); the body's born gain and the
     # quick phase's jump back, a fraction of the axis's reach, handed to the world with the tick's acts (Acts.vor); the flocculus's

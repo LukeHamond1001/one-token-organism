@@ -2796,10 +2796,11 @@ def test_the_born_approach():
     s = step([1.0, -0.01, 0.0], eye_yaw=-0.01, body=Body(0.5)); assert abs(s[1] - 0.5 * k * 0.02) < 1e-12 and abs(s[0] - 0.5 * go) < 1e-12, s
     s = step([1.0, -0.01, 0.0], eye_yaw=-0.01, body=Body(-0.5)); assert abs(s[1] + 0.5 * k * 0.02) < 1e-12 and abs(s[0] + 0.5 * go) < 1e-12, s
     assert step([0.0, 0.0, 0.0]) is None
+    ks, mxs = float(REFLEX["approach_sound_gain"]), float(REFLEX["approach_sound_max"])
     s = step([0.0, 0.0, 0.0], extra=dict(sound_side=[1.0, 0.5]))                   # her voice 0.5 rad to the left (the ears' read, + left):
-    assert abs(s[1] - mx) < 1e-12 and s[0] == 0.0, s                               # a left turn at the slew, no step toward a sound
-    s = step([0.0, 0.0, 0.0], extra=dict(sound_side=[1.0, -0.02]))
-    assert abs(s[1] + k * 0.02) < 1e-12 and s[0] == 0.0, s                         # a little to the right: proportional, no step
+    assert abs(s[1] - ks * 0.5) < 1e-12 and s[0] == 0.0, s                         # a left pulse of the sound's gain, no step toward a sound
+    s = step([0.0, 0.0, 0.0], extra=dict(sound_side=[1.0, -3.0]))
+    assert abs(s[1] + mxs) < 1e-12 and s[0] == 0.0, s                              # far to the right: the pulse capped, no step
     assert step([0.0, 0.0, 0.0], extra=dict(onset_periph=[1.0, 0.1, 0.0])) is None   # a sudden change in view is no one to go to
     s = step([1.0, 0.0, 0.0], extra=dict(sound_side=[1.0, 0.5]))                   # her face straight ahead and her voice: the face leads
     assert abs(s[1]) < 1e-12 and abs(s[0] - go) < 1e-12, s

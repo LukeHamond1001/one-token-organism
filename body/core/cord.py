@@ -402,6 +402,8 @@ class CordMixin:
                     if gb_ is not None:
                         rate = float(gb_[int(gy[1])])
                 c = float(self._reflex_const("approach_damp"))
+                if heard:                                                   # a voice: one onset, one pulse that turns it by about the angle
+                    k = float(self._reflex_const("approach_sound_gain")); mx = float(self._reflex_const("approach_sound_max"))
                 out[int(jt)] = g * max(-mx, min(mx, sg * k * bearing - c * rate)); moved = True
             jg = ap.get("go")
             if jg is not None and not heard and abs(bearing) <= float(self._reflex_const("approach_zone")):
