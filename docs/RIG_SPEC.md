@@ -1,4 +1,4 @@
-# THE RIG: the same life on the real G1 (stage 1 of the play; written 2026-10-09, 21:20, owed since 2026-10-09 morning)
+# THE RIG: the same life on the real G1 (stage 1 of the play; written 2026-10-09, 21:00, owed since 2026-10-09 morning)
 
 The body's contract with any world is `body/core/world.py` `World`: `frame()` shows the world as it is, the body lives the tick on it,
 `apply(acts)` takes the body's acts and moves the world on by a tick (150 ms); `sub_tick(SubFrame)` is called every 10 ms inside the tick
