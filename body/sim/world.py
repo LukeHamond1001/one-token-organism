@@ -277,7 +277,13 @@ def act_flat(digits):
     return a
 
 
-EFFECTOR_FACTORS = {GAZE_NAME: [SETTINGS_PER_JOINT] * len(GAZE_JOINTS), **{n: [SETTINGS_PER_JOINT] * len(js) for n, js in G.EFFECTORS}}
+LOCO_NAME, LOCO_JOINTS = "loco", ("go", "turn")   # W8 (2026-10-09, 22:30): THE LOCOMOTION EFFECTOR: the brain's command to the body's gait circuit (the
+                                                    # expert gait held in the ghost's command blocks, body/sim/ghost.py): two channels of five settings,
+                                                    # a step on the commanded speed and on the commanded turn, as the gaze's acts step its windows. The
+                                                    # cortex does not walk; it says where (the mesencephalic locomotor region's command; Grillner 2006)
+LOCO_SETTINGS = ((-0.15, -0.05, 0.0, 0.05, 0.15), (-0.3, -0.1, 0.0, 0.1, 0.3))   # m/s a tick on the speed; rad/s a tick on the turn (ours)
+EFFECTOR_FACTORS = {GAZE_NAME: [SETTINGS_PER_JOINT] * len(GAZE_JOINTS), LOCO_NAME: [SETTINGS_PER_JOINT] * len(LOCO_JOINTS),
+                    **{n: [SETTINGS_PER_JOINT] * len(js) for n, js in G.EFFECTORS}}
 EFFECTOR_REST = {n: rest_id(len(f)) for n, f in EFFECTOR_FACTORS.items()}
 BODY_SIZE = 4 * len(JOINTS) + 6  # the body channel: 43 joints x 4, then the gaze's state and its velocity
 
@@ -827,7 +833,7 @@ class G1World(SimWorld):
         """each motor effector's own act this tick as joint settings, for the cerebellum's efference copy (7.5, A67), in the
         anatomy's order: the tract's 10, the gaze's 3, then the waist's, the arms', the hands' and the legs' (rest: every setting 2)"""
         out = []
-        for name, n in ((VOICE_NAME, len(AN.TRACT)), (GAZE_NAME, len(GAZE_JOINTS))) + tuple((nm, len(js)) for nm, js in G.EFFECTORS):
+        for name, n in ((VOICE_NAME, len(AN.TRACT)), (GAZE_NAME, len(GAZE_JOINTS))) + tuple((nm, len(js)) for nm, js in G.EFFECTORS):   # (W8: the gait command is not among the mossy fibres, anatomy's rule)
             a = acts.get(name)
             out.extend(act_digits(rest_id(n) if a is None else int(a), n))
         return np.array(out, float)
@@ -1005,6 +1011,11 @@ class G1World(SimWorld):
         cg_ = cord.get(GAZE_NAME)                                         # A186: the born saccade, summed with the gaze's own step (the
         if cg_ is not None:                                               # brainstem's saccade generator: the colliculus's command and the
             gaze_step = gaze_step + np.asarray(cg_, float)                # cortex's add)
+        la = acts.get(LOCO_NAME)                                          # W8: the locomotion command's step this tick
+        if la is not None and int(la) != EFFECTOR_REST[LOCO_NAME]:
+            self.ghost.command_step(*[LOCO_SETTINGS[j][k] for j, k in enumerate(act_digits(la, len(LOCO_JOINTS)))])
+        else:
+            self.ghost.command_step(0.0, 0.0)
         va = acts.get(VOICE_NAME)
         vdig = None if va is None or int(va) == VOICE_REST else act_digits(va, len(AN.TRACT))
         wo = acts.get(WORDS_NAME)

@@ -81,6 +81,12 @@ TURN_DONE = 0.3                          # rad: a turn in place is over when the
 LAY_CLEAR_M = 1.0                        # m: the catch lays it where it fell only this clear of anything standing, else on its mat (ours: C281's rule)
 ROOMS = ((-2.6, 2.6, -2.3, 2.3), (2.7, 5.9, -3.3, 0.3))   # the rooms' floor plans (make_g1room ROOM_X/ROOM_Y; g1scene ROOM2), x0, x1, y0, y1
 ROOM_SLACK = 0.3                         # m: beyond the plans by this the child has left the rooms: carried to its mat (ours)
+# W8: THE COMMAND BLOCKS. The gait circuit held at full strength; the speed and the turn the brain commands through its locomotion
+# effector (world.LOCO_*): each act steps the command, the command decays toward rest (COMMAND_DECAY a tick: a command not renewed
+# fades in a few seconds, as a volley of descending drive does), the speed in [0, COMMAND_V_MAX], the turn in +-COMMAND_W_MAX. The
+# room's rules stand over it: blocked ahead, the heading turns toward the middle and the walk waits for the turn; out of the rooms,
+# the mat. Ours
+COMMAND_V_MAX, COMMAND_W_MAX, COMMAND_DECAY = 0.5, 0.6, 0.97
 
 
 def _wrap(a):
@@ -108,6 +114,7 @@ class Ghost:
         self.e_aid = np.asarray(w.aid)[self.e_idx]; self.e_lo = np.asarray(w.lo, float)[self.e_idx]; self.e_hi = np.asarray(w.hi, float)[self.e_idx]
         self.use_expert = bool(int(__import__('os').environ.get('GHOST_EXPERT', '1')))
         self.turning = False; self.left_room = 0; self.edge = None   # W7c: the strength at the last fall (None: no fall yet)
+        self.command = False; self.cmd_v = 0.0; self.cmd_w = 0.0     # W8: the command block, and the brain's command
         self.base = int(w.base_dof)
 
     def _policy(self):
@@ -120,12 +127,18 @@ class Ghost:
         return self.expert
 
     # ------------------------------------------------------------------ the day plan's switch
-    def on_(self, w, heading=None):
+    def command_step(self, dv, dw):
+        """W8: the brain's act on the gait command this tick (a step on the speed and on the turn), the command's decay"""
+        self.cmd_v = min(max(self.cmd_v * COMMAND_DECAY + float(dv), 0.0), COMMAND_V_MAX)
+        self.cmd_w = min(max(self.cmd_w * COMMAND_DECAY + float(dw), -COMMAND_W_MAX), COMMAND_W_MAX)
+
+    def on_(self, w, heading=None, command=False):
         d = w.d
+        self.command = bool(command); self.cmd_v = 0.0; self.cmd_w = 0.0
         R = d.xmat[self.b].reshape(3, 3)
         fwd = R[:, 0]
         self.heading = float(math.atan2(fwd[1], fwd[0])) if heading is None else float(heading)
-        self.on = True; self.s = 1.0 if self.edge is None else min(1.0, self.edge + EDGE_START); self.ticks = 0; self.lower = 0   # W7c
+        self.on = True; self.s = 1.0 if (self.edge is None or self.command) else min(1.0, self.edge + EDGE_START); self.ticks = 0; self.lower = 0   # W7c; W8: a command block at full strength
         self.z_from = float(d.xipos[self.b][2]); self.z_to = self.z_stand; self.lead = np.asarray(d.xipos[self.b][:2], float).copy()
         self.pxy = np.asarray(d.xpos[self.pelvis][:2], float).copy(); self.metres = 0.0; self.win = []
         self.fz_sum = 0.0; self.n = 0
@@ -211,7 +224,10 @@ class Ghost:
             wz = min(max(EXPERT_TURN * _wrap(self.heading - yaw), -EXPERT_WZ_MAX), EXPERT_WZ_MAX)
             if self.turning and abs(_wrap(self.heading - yaw)) < TURN_DONE:
                 self.turning = False
-            cmd = np.array([0.0 if self.turning else EXPERT_V, 0.0, wz]) * np.array(EXPERT_CMD_SCALE)
+            if self.command and not self.turning:                      # W8: the brain's command (the room's turn at a wall stands over it)
+                cmd = np.array([self.cmd_v, 0.0, self.cmd_w]) * np.array(EXPERT_CMD_SCALE)
+            else:
+                cmd = np.array([0.0 if self.turning else EXPERT_V, 0.0, wz]) * np.array(EXPERT_CMD_SCALE)
             phase = (self.e_count * EXPERT_DT) % EXPERT_PERIOD / EXPERT_PERIOD
             obs = np.concatenate([omega, grav, cmd, (q - self.e_default), dq * EXPERT_DOF_VEL_SCALE, self.e_action,
                                   [math.sin(2 * math.pi * phase), math.cos(2 * math.pi * phase)]]).astype(np.float32)
@@ -266,7 +282,9 @@ class Ghost:
             up = d.xmat[self.b].reshape(3, 3)[:, 2]
             fallen = pz < FALL_Z or float(up[2]) < FALL_UP
             if fallen:                                                      # the catch: the harness takes it again. The first catch
-                self.edge = float(self.s); self.s = min(1.0, self.s + EDGE_UP); self.ticks = 0; self.falls += 1   # W7c: the edge kept, a tenth more help. (16:05) the catch restarted the lift from the fallen pose and hauled a
+                if not self.command:
+                    self.edge = float(self.s)
+                self.s = min(1.0, self.s + EDGE_UP); self.ticks = 0; self.falls += 1   # W7c: the edge kept, a tenth more help. (16:05) the catch restarted the lift from the fallen pose and hauled a
                 lay = getattr(w, "carry_to_mat", None)                   # child on its front up by the chest, head down (the copy: pain 13
                 if lay is not None:                                         # ticks in 30); the environment lays it on its back where it fell
                     try:                                                    # first (its laying, C338 amended), and the lift is from lying;
@@ -285,6 +303,9 @@ class Ghost:
                 ahead = float((self.lead - txy) @ fwd)
                 self.lead = txy + fwd * min(max(ahead, 0.0), LEAD_M)          # along the heading, a step ahead at most
                 expert_ = self.use_expert and self.expert is not None
+                if self.command and not self.turning:                      # W8: the heading is wherever the brain has turned the body
+                    Rb = d.xmat[self.pelvis].reshape(3, 3); self.heading = float(math.atan2(float(Rb[1, 0]), float(Rb[0, 0])))
+                    fwd = np.array([math.cos(self.heading), math.sin(self.heading)])
                 look = (EXPERT_LOOK_M if expert_ else LEAD_M + CLEAR_M)
                 probe = txy + fwd * look
                 par = getattr(w, "parent", None)
@@ -299,7 +320,9 @@ class Ghost:
                     else:
                         self.heading = _wrap(self.heading + math.pi / 2)
                     self.turns += 1; self.turning = expert_; self.lead = txy.copy()
-                if share > HANG:
+                if self.command:
+                    self.s = 1.0                                            # W8: the circuit held; the brain learns to drive it
+                elif share > HANG:
                     self.s = min(1.0, self.s + RISE)
                 elif share < BEARS:
                     self.s = max(0.0, self.s - FADE)
@@ -311,13 +334,15 @@ class Ghost:
             self.win = []
         self.pxy = pxy.copy()
         self.rec = [round(self.s, 4), round(share, 3), round(self.heading, 2), int(self.falls), round(self.metres, 2)]
+        if self.command:
+            self.rec += [round(self.cmd_v, 3), round(self.cmd_w, 3)]                # W8: the brain's command, recorded
 
     # ------------------------------------------------------------------ the save
     def state(self):
         return dict(on=bool(self.on), s=float(self.s), heading=float(self.heading), lead=[float(x) for x in self.lead],
                     ticks=int(self.ticks), lower=int(self.lower), falls=int(self.falls), turns=int(self.turns), z_from=float(self.z_from), z_to=float(self.z_to),
                     last=[float(x) for x in self.last], metres=float(self.metres),
-                    e_action=[float(x) for x in self.e_action], e_target=[float(x) for x in self.e_target], e_count=int(self.e_count), e_steps=int(self.e_steps), turning=bool(self.turning), left_room=int(self.left_room), edge=self.edge,
+                    e_action=[float(x) for x in self.e_action], e_target=[float(x) for x in self.e_target], e_count=int(self.e_count), e_steps=int(self.e_steps), turning=bool(self.turning), left_room=int(self.left_room), edge=self.edge, command=bool(self.command), cmd_v=float(self.cmd_v), cmd_w=float(self.cmd_w),
                     pxy=None if self.pxy is None else [float(x) for x in self.pxy])
 
     def load_state(self, st):
@@ -331,4 +356,5 @@ class Ghost:
         self.pxy = None if st.get("pxy") is None else np.asarray(st["pxy"], float).copy()
         self.e_action = np.asarray(st.get("e_action", np.zeros(12)), float).copy(); self.e_target = np.asarray(st.get("e_target", EXPERT_DEFAULT), float).copy()
         self.e_count = int(st.get("e_count", 0)); self.e_steps = int(st.get("e_steps", 0)); self.turning = bool(st.get("turning", False)); self.left_room = int(st.get("left_room", 0)); self.edge = st.get("edge", None)
+        self.command = bool(st.get("command", False)); self.cmd_v = float(st.get("cmd_v", 0.0)); self.cmd_w = float(st.get("cmd_w", 0.0))
         self.rec = None

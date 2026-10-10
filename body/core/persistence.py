@@ -148,8 +148,17 @@ class PersistenceMixin:
         rc_saved = sorted(k_ for k_ in blob["organs"] if k_.split(".")[0] in ("recall", "head_code"))   # step R7f: recall's maps likewise (A20)
         rc_built = sorted(["head_code"] + ["recall." + k_ for k_ in organs.recall.state_dict()]) if "recall" in organs._modules else []
         if rc_saved != rc_built:
-            raise ValueError(f"load: the save's organs hold {len(rc_saved)} entries of recall into action and its constants under this load switch "
-                             f"it {'on' if rc_built else 'off'} ({len(rc_built)} entries): a body is born with its switches (SIM_DESIGN.md A20)")
+            # W8 (2026-10-09): A MOTOR EFFECTOR THAT JOINED THE ANATOMY AFTER THE SAVE has no recall map in the save; its map is born fresh
+            # beside the saved ones (strict=False below), as a reward source's amygdala head is (A127) and a new gate's inputs are. The
+            # switch itself is still neither dropped nor grown (A20): every saved entry must be built, and the extra entries must all
+            # be maps of effectors the save has none for (the locomotion command, W8: the first)
+            extra_ = sorted(set(rc_built) - set(rc_saved)); lost_ = sorted(set(rc_saved) - set(rc_built))
+            new_eff_ = {k_.split(".")[1] for k_ in extra_ if k_.startswith("recall.") and "." in k_[7:]}
+            saved_eff_ = {k_.split(".")[1] for k_ in rc_saved if k_.startswith("recall.") and "." in k_[7:]}
+            if lost_ or not rc_saved or not extra_ or (new_eff_ & saved_eff_) or any(not k_.startswith("recall.") for k_ in extra_):
+                raise ValueError(f"load: the save's organs hold {len(rc_saved)} entries of recall into action and its constants under this load switch "
+                                 f"it {'on' if rc_built else 'off'} ({len(rc_built)} entries): a body is born with its switches (SIM_DESIGN.md A20)")
+            print(f"load: recall's maps born fresh for an effector that joined after the save (W8): {sorted(new_eff_)} ({len(extra_)} entries)", flush=True)
         am_saved = sorted(k_ for k_ in blob["organs"] if k_.split(".")[0] == "amyg")          # step R7d: the amygdala likewise (A20)
         am_built = sorted("amyg." + k_ for k_ in organs.amyg.state_dict()) if "amyg" in organs._modules else []
         if am_saved != am_built:
@@ -203,6 +212,15 @@ class PersistenceMixin:
                                                           "stri_Ws", "stri_sense") if k_ in blob["organs"]}   # the striatal input, sized by the life below (A149: and its body sense's rows)
         st_saved.update({k_: blob["organs"].pop(k_) for k_ in [k_ for k_ in blob["organs"] if k_ in ("stri_mline", "stri_eline") or k_.startswith("actors.")]})   # the later effectors' (step R5), the event lines' (R7a)
         vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b", "vc_mu", "vc_var", "vc_n", "vc_form") if k_ in blob["organs"]}   # sized by the life below
+        # W8 (2026-10-09): THE PER-EFFECTOR BUFFERS GROW FOR AN EFFECTOR THAT JOINED AFTER THE SAVE (the locomotion command, the last
+        # in the declared order): a saved buffer with one entry a motor effector (spg_phase, spg_seed) shorter than the built one keeps
+        # its saved entries and takes the built body's own born values for the new effector's
+        built_ = organs.state_dict()
+        for k_ in ("spg_phase", "spg_seed"):
+            t_ = blob["organs"].get(k_); b_ = built_.get(k_)
+            if t_ is not None and b_ is not None and t_.dim() == b_.dim() and t_.dim() >= 1 and t_.shape[0] < b_.shape[0] and t_.shape[1:] == b_.shape[1:]:
+                blob["organs"][k_] = torch.cat([t_.to(b_.dtype), b_[t_.shape[0]:].detach().clone().cpu()], 0)
+                print(f"load: {k_} grown from {int(t_.shape[0])} to {int(b_.shape[0])} for an effector that joined after the save (W8; the new entries the born body's)", flush=True)
         missing = organs.load_state_dict(blob["organs"], strict=False)
         motor_ = {e_.name for e_ in anatomy.motors}   # a later channel's head or a later effector's organs the anatomy does not declare: said, not loaded
         dropped = sorted([k_ for k_ in missing.unexpected_keys if k_.split(".")[0] in ("chan_pred", "acts", "gates", "timing", "encs", "spg_phase", "spg_seed")]

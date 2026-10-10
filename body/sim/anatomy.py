@@ -437,6 +437,17 @@ class Gaze(Effector):
         return 0.03
 
 
+class Loco(Effector):
+    """THE LOCOMOTION COMMAND (W8, 2026-10-09; effector 10, the last): the brain's drive to the body's gait circuit, go and turn, two
+    channels of five settings stepping the commanded speed and turn (body/sim/world.py LOCO_*; the circuit: the expert gait the ghost
+    holds in its command blocks, body/sim/ghost.py). The cortex does not make the steps; it says where (the locomotor command of the
+    brainstem: Grillner 2006). Its consequence sense is the vestibular channel (its own motion felt), no joint of the body; its cost the
+    gaze's. Born fresh at a load (its organs where the save has none, as the gaze's inverse was)"""
+
+    def cost(self, act, frame, life):
+        return 0.03
+
+
 class SimAnatomy(LanguageAnatomy):
     """THE G1 (the module's doc): `tok` is `born_table(words)`, `cfg` the life's constants (SIM_CFG's symbols: the rest `<rest>`, the end
     `<end>`, end_symbol "eot"); `limits` the G1's torque limits in BODY_JOINTS' order (the model's own: S5a reads them from the file;
@@ -486,7 +497,8 @@ class SimAnatomy(LanguageAnatomy):
             rewards.append(Novelty("novelty", clip=NOVELTY_GAIN, signs=(1.0,)))        # A127: the new pays (+), a switch of the body
         if int((cfg or {}).get("competence", SIM_CFG.get("competence", 0))):
             rewards.append(Competence("competence", clip=COMPETENCE_GAIN, signs=(1.0,)))   # A181: mastery of its own doing pays (+), a switch of
-        self.channels, self.effectors, self.rewards, self.inner_at = chans, [tract, voice, gaze] + limbs, rewards, 2
+        loco = Loco("loco", [5, 5], rest_id=12, sense="vestibular", fwd_gate=True, n_in=2, inverse=True)   # W8 (the last: a loaded life's window grows at the end)
+        self.channels, self.effectors, self.rewards, self.inner_at = chans, [tract, voice, gaze] + limbs + [loco], rewards, 2
         self.orienting = [# A202: the heard word's look found in the periphery (body/core/grounding.py): a standing cue, as her face is, so
                           # the born saccade turns the eyes to it and the orienting bias pulls while it stands; first among the standing
                           # cues (A208): a child hearing 'ball' looks at the ball before its hand or her face
@@ -521,9 +533,11 @@ class SimAnatomy(LanguageAnatomy):
         def fibre(name, mid, hr):
             mossy.append(name); off.append(float(mid)); half.append(float(hr))
         for e in self.effectors:                                       # (1) the efference copy of every motor effector's acts
-            if e is voice:
-                continue                                               # the words' token output: no joint, no body sense (the lead's)
-            jn = TRACT if e is tract else (("yaw", "pitch", "vergence") if e is gaze else tuple(BODY_JOINTS[j] for j in e.joints))
+            if e is voice or e is loco:
+                continue                                               # the words' token output: no joint, no body sense (the lead's); W8: the
+                                                                       # gait command is no joint either, and a living body's cerebellum is not
+                                                                       # widened at a load (A20): its efference copy stays out of the mossy fibres
+            jn = TRACT if e is tract else (("yaw", "pitch", "vergence") if e is gaze else (("go", "turn") if e is loco else tuple(BODY_JOINTS[j] for j in e.joints)))   # (W8: the command's two channels)
             for j in jn:
                 fibre(f"act {e.name}.{j}", 2.0, 2.0)                   # a joint's setting, 0-4 about the hold
         for (lo, hi), j in zip(RANGES, BODY_JOINTS):                   # (2) the joints' positions, then their velocities

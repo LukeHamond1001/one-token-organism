@@ -51,7 +51,7 @@ DAY_TICKS = 24000                      # a life day (4.7)
 WAKE = 300                             # the wake episode (4.7)
 WIND = 1000                            # the winding down (4.7)
 GOODNIGHT = 300                        # goodnight (4.7)
-BLOCKS = (("floor", 3, 4000, 5000), ("ghost", 5, 2500, 3000), ("show", 1, 1500, 1500), ("away", 1, 400, 600),
+BLOCKS = (("floor", 3, 4000, 5000), ("ghost", 1, 2500, 3000), ("command", 4, 2500, 3000), ("show", 1, 1500, 1500), ("away", 1, 400, 600),
           ("tasks", 1, 600, 600))      # 4.7's table: kind, how many, shortest, longest. TRAINING MODE (2026-09-29, the owner's word: fix
                                        # fast; her pace is the lead's): away 2-4 x 400-1,200 and her own tasks 3,000 cut to one short block
                                        # each, so the play blocks (drawn, then scaled to the day) carry about a quarter more of the day
@@ -276,7 +276,7 @@ class DayPlan:
                 self.sit_due = True                                         # (C254: owed whatever its posture; a prone child is turned first)
                 self.log.append((t, "motor block two: a sit owed again (C220)" + ("" if self._lying_on_back(lane) else "; the child not on its back: turned over first (C254)")))
             self.block_i = bi
-        if kind == "ghost":
+        if kind in ("ghost", "command"):
             self._ghost_tick(t, lane, world)
         if any(k == "pain" for k, _o in p.events):
             self.last_pain = t
@@ -562,7 +562,7 @@ class DayPlan:
         """an episode begins"""
         c, feel = lane.conduct, lane.feel
         self.log.append((t, "episode", kind))
-        if self.kind == "ghost" and kind != "ghost" and getattr(world, "ghost", None) is not None:   # C350: the ghost block over: the field
+        if self.kind in ("ghost", "command") and kind not in ("ghost", "command") and getattr(world, "ghost", None) is not None:   # C350: the ghost block over: the field
             rec_ = list(world.ghost.rec or [])                      # off at once and the body laid on its back where it stands (the
             world.ghost.off_(world, at_once=True)                   # environment's laying, C338 amended; her carry's rules for the mat)
             try:
@@ -592,16 +592,20 @@ class DayPlan:
         elif kind == "tasks":
             c.routine = None
             c.motion.request(_Plain("walk", "sofa"))
-        elif kind == "ghost":
-            # C350: THE GHOST BLOCK. The room's field stands it and leads it (body/sim/ghost.py); no play of hers (her hands off it), her
+        elif kind in ("ghost", "command"):
+            # C350: THE GHOST BLOCK. W8: THE COMMAND BLOCK: the gait circuit held, the brain's locomotion effector drives it (body/sim/ghost.py). The room's field stands it and leads it (body/sim/ghost.py); no play of hers (her hands off it), her
             # voice and face as ever, the lure a step ahead (C348), she follows at a distance. The strength and the metres in the record
             c.routine = None
             self.next_play = t + 10 ** 9
             self.lure = None; self.ghost_follow = t
             if getattr(world, "ghost", None) is not None:
-                world.ghost.on_(world)
-                self.log.append((t, "ghost block: the room holds it (C350)"))
-                print(f"ghost block at tick {t}: the room holds it (C350)", flush=True)
+                if self.kind in ("ghost", "command") and world.ghost.on:        # (one kind into the other: the field stays on)
+                    world.ghost.command = (kind == "command"); world.ghost.cmd_v = 0.0; world.ghost.cmd_w = 0.0
+                    if kind == "command": world.ghost.s = 1.0
+                else:
+                    world.ghost.on_(world, command=(kind == "command"))
+                self.log.append((t, f"{kind} block: the room holds it (C350/W8)"))
+                print(f"{kind} block at tick {t}: the room holds it (C350/W8)", flush=True)
         elif kind in ("floor", "motor", "show", "wind"):
             c.routine = None
             self.next_play = t + int(self.rng.integers(*PLAY_GAP))
