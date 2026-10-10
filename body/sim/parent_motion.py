@@ -171,6 +171,8 @@ KINDS = {
     "clear": "a toy moved out of where she will kneel (A6)",
     "wave": "a wave of her hand",
     "walk": "walk to the target: 'door' (the hall, leaving), 'sofa' (she sits on it), 'child' (return: she comes to it), a point",
+    "crouch_at": "walk to a point and crouch there facing the child (the heels kneel, her trunk leaned CROUCH_LEAN_DEG forward): her "
+                 "face low enough for its eyes' field from COME_DIST, where she calls it to come (C351 amended five times)",
     "cover_face": "her hands over her face (peekaboo)",
     "reveal_face": "her hands away from her face (the reveal)",
     "do": "her body does the named act (DOES: wave, clap, stand, walk, open_hand, close_hand, show, pick_up); others are refused "
@@ -290,6 +292,7 @@ KEEP_ACTS, KEEP_OLD = 64, 1024             # the acts kept whole in her state, a
                                             # captured every tick for the world's fault roll-back, so it stays small)
 CHILD_BODY = ("pelvis", "waist_yaw_link", "waist_roll_link", "torso_link")   # the child's body (its trunk; its head is part of its
                                             # torso's link): her trunk keeps its standoff from these (A25b: _standoff)
+CROUCH_LEAN_DEG = 35.0                      # C351 amended five times: her trunk's lean in the crouch she calls from (ours: within her lean_in's range)
 HEELS_BACK = 0.338 - 0.03                   # parent_poses: the heels kneel's pelvis lies this far behind the tall kneel's
 STAND_BACK = 0.30                           # parent_poses.kneel_down: its standing start lies this far behind the tall kneel's pelvis
 
@@ -4823,6 +4826,30 @@ class ParentMotion:
             yaw = math.atan2(xy[1] - start[1], xy[0] - start[0])
         redo = dict(what="walk_to", args=dict(xy=_lst(xy), yaw=float(yaw), child=child, goal_r=goal_r, goal_clear=goal_clear))
         return self._walk_phases(start, xy, yaw, goal_r=goal_r, child=child, goal_clear=goal_clear, again=redo)
+
+    def _act_crouch_at(self, a, t):
+        """C351 amended five times (2026-10-10, 03:50): she goes to a spot and crouches there facing the child (the heels kneel, her
+        trunk leaned CROUCH_LEAN_DEG forward), her face low enough for a G1 whose eye cameras look 47 degrees down (g1scene D435_PITCH:
+        the field's top edge 18 degrees under the horizon) to hold it from COME_DIST: standing, her mouth is 0.25 m above its eyes and
+        never in its images; kneeling on her heels, 0.34 m under them, in them within a metre; crouched, within a metre and a half.
+        A parent calling a toddler to come crouches and opens her arms. The spot is a point [x, y]; the facing is toward the child
+        as it stands when the act is planned"""
+        pt = self._resolve_point(t)
+        if pt is None or not isinstance(t, (list, tuple, np.ndarray)):
+            raise Refuse(f"crouch_at wants a point: {t}")
+        xy = np.asarray(pt[:2], float); ch = np.asarray(self.child.pelvis[:2], float)
+        yaw = float(math.atan2(ch[1] - xy[1], ch[0] - xy[0]))
+        return self._up_phases() + [dict(type="plan", what="walk_to", args=dict(xy=_lst(xy), yaw=yaw, child=True)),
+                                    dict(type="plan", what="crouch_here", args=dict(yaw=yaw))]
+
+    def _plan_crouch_here(self, a, yaw):
+        """the crouch where she stands (C351 amended five times): down onto her heels facing yaw, then her trunk leaned forward; the
+        kneel's frames checked clear as _plan_kneel_here checks them, else refused (she calls standing, as before)"""
+        T2 = np.asarray(self._standing_at(), float)
+        if not all(self._clearance(frame_segs("kneel_down", u, T2, yaw)) >= K.CLEAR_M for u in KNEEL_CHECK_U):
+            raise Refuse("no clear crouch where she stands (C351 amended five times)")
+        return [dict(type="kneel_down", at=_lst(T2), yaw=float(yaw), u0=0.0, u1=3.0),
+                dict(type="lean", lean=float(CROUCH_LEAN_DEG), spine=0.0, twist=0.0)]
 
     def _act_point(self, a, t):
         if self._resolve_point(t) is None:

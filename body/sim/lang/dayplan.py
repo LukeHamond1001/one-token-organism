@@ -61,7 +61,8 @@ HER_HANDS = False               # C350 (2026-10-09, the owner's word at 15:00: h
                                 # motor blocks: 4 x 2,500-3,000 ticks of the room's hold, lead and fade, the lure a step ahead (C348), her voice
                                 # and face as before (she follows at a distance; a step is paid by her smile, C284). Her shows and hand-overs stay
 GHOST_FOLLOW_M, GHOST_FOLLOW_GAP = 2.0, 100   # C350: in a ghost block she walks to the child when farther than this, this often at most (ours)
-COME_GAP, COME_DIST, COME_SPOT_WAIT, COME_MIN_M = 200, 1.5, 150, 1.2
+COME_GAP, COME_DIST, COME_SPOT_WAIT, COME_MIN_M = 200, 1.3, 150, 0.9   # C351 amended five times: 1.3 m, crouched (her face in its eyes' field); under 0.9 m too near to teach
+WEDGE_CLEAR_M, WEDGE_EVERY = 1.0, 50      # C352: a lying child in pain this near (m) anything standing is carried to its mat; checked every this many ticks (ours: LAY_CLEAR_M's 1.0)
 COME_STAY_MAX = 900                     # C351 amended four times: she keeps her spot, calling every COME_GAP, until it comes (within COME_MIN_M) or this long   # C351: in a command block she calls it from this far, this often; her walk to the spot waits
                                                                         # this long at most; no call from nearer than COME_MIN_M (the copy: a call from 0.74 m paid 'came' at once). Ours
                                                                         # C351 amended (00:15): her shows are quiet in a command block (c.quiet_shows) and the wait is 150: day 138's first
@@ -285,6 +286,22 @@ class DayPlan:
             self._ghost_tick(t, lane, world)
         if any(k == "pain" for k, _o in p.events):
             self.last_pain = t
+        if t % WEDGE_EVERY == 0 and world is not None and t - int(getattr(self, "last_pain", -10 ** 9)) < WEDGE_EVERY and \
+                self._posture(lane) in ("back", "front") and not (getattr(world, "ghost", None) is not None and world.ghost.on):
+            # C352 (2026-10-10): A CHILD WEDGED AGAINST A WALL IS CARRIED TO ITS MAT. Day 139 at 6,683,601: the command block's end laid it
+            # on its back at the north wall and its right ankle was pressed against the wall for 1,100 ticks (848 pain ticks, the stress at
+            # its cap of 30); day 138's block end the same (218 pain ticks, stress 21). A parent does not leave a baby wedged against a
+            # wall: when it lies in pain within WEDGE_CLEAR_M of anything standing, the environment carries it to its mat (world.carry_to_mat,
+            # A110's laying), as the ghost's catch lays a fallen child clear of the walls (LAY_CLEAR_M). Not while the ghost holds it
+            try:
+                clear_ = getattr(world.parent, "_standing_clear_m", None); xy_ = np.asarray(world.d.qpos[:2], float)
+                if clear_ is not None and float(clear_(xy_)) < WEDGE_CLEAR_M and not world.parent.holds:
+                    world.carry_to_mat()
+                    self.wedged = int(getattr(self, "wedged", 0)) + 1
+                    self.log.append((t, "wedged against a wall in pain: carried to its mat (C352)", [round(float(x), 2) for x in xy_], round(float(clear_(xy_)), 2)))
+                    print(f"wedged against a wall in pain at {np.round(xy_, 2).tolist()}: carried to its mat at tick {t} (C352)", flush=True)
+            except Exception as e_:
+                self.log.append((t, "the wedge check failed (C352)", repr(e_)[:80]))
         if p.child_sounding and self.away:
             self.bids = [b for b in self.bids if b > t - BIDS_BACK[1]] + [t]
         if not hasattr(self, "stood_seen"):
@@ -572,7 +589,12 @@ class DayPlan:
             rec_ = list(world.ghost.rec or [])                      # off at once and the body laid on its back where it stands (the
             world.ghost.off_(world, at_once=True)                   # environment's laying, C338 amended; her carry's rules for the mat)
             try:
-                world.carry_to_mat(to=np.asarray(world.d.qpos[:2], float))
+                here_ = np.asarray(world.d.qpos[:2], float)
+                clear_ = getattr(world.parent, "_standing_clear_m", None)   # C352: laid where it stands only this clear of anything standing
+                ok_ = clear_ is None or float(clear_(here_)) >= WEDGE_CLEAR_M   # (the catch's rule, ghost.LAY_CLEAR_M), else on its mat: days 138
+                world.carry_to_mat(to=here_ if ok_ else None)                    # and 139 laid it at the north wall, a foot against it
+                if not ok_:
+                    self.log.append((t, "ghost block over: laid on its mat, the wall too near (C352)", [round(float(x), 2) for x in here_]))
             except Exception as e_:
                 self.log.append((t, "ghost block over: the laying failed (C350)", repr(e_)[:80]))
             if getattr(self, "lure", None) is not None:
@@ -675,7 +697,7 @@ class DayPlan:
                         continue
                     if pm._in_plan(q_) and float(pm.plan.dist[pm.plan.cell(q_)]) >= 0.5:
                         st["spot"] = [float(q_[0]), float(q_[1])]; st["at"] = t
-                        st["mid"] = c.motion.request(_Plain("walk", [float(q_[0]), float(q_[1]), 0.0]))
+                        st["mid"] = c.motion.request(_Plain("crouch_at", [float(q_[0]), float(q_[1])]))   # C351 amended five times: she crouches there
                         self.log.append((t, "come here: she goes to her spot (C351)", st["spot"], st["mid"]))
                         break
                 else:

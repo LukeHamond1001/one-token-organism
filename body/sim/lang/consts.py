@@ -445,7 +445,7 @@ MOTOR_WORTH = {                       # event kind -> (its worth, the full act i
 }
 RECOVER_MOTOR = ("stood", "stepped", "came")  # C295: the motor acts whose smiles recover over the night, as words do (C159); C351: and coming when called
 COME_M, COME_NEARER_M, COME_WINDOW = 0.7, 0.3, 120   # C351: arrived within this of her (m); nearer by this than at the call; the call's window (ticks; ours)
-COME_OWN_M = 0.6                      # C351 amended: 'came' asks its own way toward her of at least this (m), so her coming back to it pays nothing (ours)
+COME_OWN_M = 0.5                      # C351 amended: 'came' asks its own way toward her of at least this (m), so her coming back to it pays nothing (ours)
 RECOVER_KEEP = 0.25                   # C295: ... to this share of their count (ours: at 30 steps a day the morning pays about 25 of them; at HABIT_KEEP, 7)
 HABIT_TAU = 10.0                      # the n-th smile for the same act and object is worth w e^(-n/10): A2's fall with mastery, its floor
                                       # of 1 removed (the positive circuits of Knox and Stone 2015: a smile that never ends is farmed)
