@@ -292,7 +292,7 @@ KEEP_ACTS, KEEP_OLD = 64, 1024             # the acts kept whole in her state, a
                                             # captured every tick for the world's fault roll-back, so it stays small)
 CHILD_BODY = ("pelvis", "waist_yaw_link", "waist_roll_link", "torso_link")   # the child's body (its trunk; its head is part of its
                                             # torso's link): her trunk keeps its standoff from these (A25b: _standoff)
-CROUCH_LEAN_DEG = 35.0                      # C351 amended five times: her trunk's lean in the crouch she calls from (ours: within her lean_in's range)
+CROUCH_LEAN_DEG = 50.0                      # C351 amended five times: her trunk's lean in the crouch she calls from (ours: within her lean_in's range; 35 put her mouth at 0.82 m, in its eyes' field to 1.8 m; 50 lower, to about 2 m)
 HEELS_BACK = 0.338 - 0.03                   # parent_poses: the heels kneel's pelvis lies this far behind the tall kneel's
 STAND_BACK = 0.30                           # parent_poses.kneel_down: its standing start lies this far behind the tall kneel's pelvis
 
@@ -4845,10 +4845,14 @@ class ParentMotion:
     def _plan_crouch_here(self, a, yaw):
         """the crouch where she stands (C351 amended five times): down onto her heels facing yaw, then her trunk leaned forward; the
         kneel's frames checked clear as _plan_kneel_here checks them, else refused (she calls standing, as before)"""
-        T2 = np.asarray(self._standing_at(), float)
-        if not all(self._clearance(frame_segs("kneel_down", u, T2, yaw)) >= K.CLEAR_M for u in KNEEL_CHECK_U):
+        b = self.base
+        if b["mode"] not in ("stand", "turn"):
+            raise Refuse(f"the crouch begins standing, not {b['mode']} (C351 amended five times)")
+        y0 = float(b["yaw"]); fw = np.array([math.cos(y0), math.sin(y0)])      # (her facing as the walk left it: toward the child; the
+        T2 = np.asarray(b["at"], float) + fw * STAND_BACK                      # tall kneel's spot lies STAND_BACK before her stand)
+        if not all(self._clearance(frame_segs("kneel_down", u, T2, y0)) >= K.CLEAR_M for u in KNEEL_CHECK_U):
             raise Refuse("no clear crouch where she stands (C351 amended five times)")
-        return [dict(type="kneel_down", at=_lst(T2), yaw=float(yaw), u0=0.0, u1=3.0),
+        return [dict(type="kneel_down", at=_lst(T2), yaw=y0, u0=0.0, u1=3.0),
                 dict(type="lean", lean=float(CROUCH_LEAN_DEG), spine=0.0, twist=0.0)]
 
     def _act_point(self, a, t):

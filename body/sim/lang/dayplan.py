@@ -61,7 +61,7 @@ HER_HANDS = False               # C350 (2026-10-09, the owner's word at 15:00: h
                                 # motor blocks: 4 x 2,500-3,000 ticks of the room's hold, lead and fade, the lure a step ahead (C348), her voice
                                 # and face as before (she follows at a distance; a step is paid by her smile, C284). Her shows and hand-overs stay
 GHOST_FOLLOW_M, GHOST_FOLLOW_GAP = 2.0, 100   # C350: in a ghost block she walks to the child when farther than this, this often at most (ours)
-COME_GAP, COME_DIST, COME_SPOT_WAIT, COME_MIN_M = 200, 1.3, 150, 0.9   # C351 amended five times: 1.3 m, crouched (her face in its eyes' field); under 0.9 m too near to teach
+COME_GAP, COME_DIST, COME_SPOT_WAIT, COME_MIN_M = 200, 1.2, 150, 0.9   # C351 amended five times: 1.3 m, crouched (her face in its eyes' field); under 0.9 m too near to teach
 WEDGE_CLEAR_M, WEDGE_EVERY = 1.0, 50      # C352: a lying child in pain this near (m) anything standing is carried to its mat; checked every this many ticks (ours: LAY_CLEAR_M's 1.0)
 COME_STAY_MAX = 900                     # C351 amended four times: she keeps her spot, calling every COME_GAP, until it comes (within COME_MIN_M) or this long   # C351: in a command block she calls it from this far, this often; her walk to the spot waits
                                                                         # this long at most; no call from nearer than COME_MIN_M (the copy: a call from 0.74 m paid 'came' at once). Ours
@@ -704,6 +704,15 @@ class DayPlan:
                     st["next"] = t + 60
                 return
             near_ = float(np.linalg.norm(her_ - np.asarray(st["spot"], float))) < 0.5
+            if st.get("mid") is not None and st.get("called") is None:      # C351 amended five times: her crouch refused (no clear crouch there,
+                try:                                                         # a kneel from a stale pose): another spot in a while, not a call standing
+                    a_ = pm._act(st["mid"])
+                    if a_.get("status") == "refused":
+                        self.log.append((t, "come here: her crouch refused (C351)", str(a_.get("why"))[:80]))
+                        st["spot"] = None; st["next"] = t + 40
+                        return
+                except Exception:
+                    pass
             if t - int(st["at"]) == 6 and st.get("mid") is not None:            # (an instrument, 00:25: day 138's first blocks had her walk to no spot:
                 try:                                                         # five spots, no walk act in the record; its status and why, logged)
                     a_ = pm._act(st["mid"]); self.log.append((t, "come here: her walk", a_.get("status"), str(a_.get("why"))[:80], [round(float(x), 2) for x in her_]))
