@@ -3744,3 +3744,76 @@ if __name__ == "__main__":
             failed += 1; print("ERROR", t.__name__, ":", type(e).__name__, str(e)[:300])
     print(f"{len(ANATOMY_TESTS) - failed}/{len(ANATOMY_TESTS)} passed in {time.time() - t0:.0f}s")
     sys.exit(1 if failed else 0)
+
+
+class _ArmGo(LanguageAnatomy):
+    """_Arm and a later effector 'go' of two joints of five settings, the last (W8's locomotion command's shape)"""
+
+    def __init__(self, tok, cfg=None):
+        super().__init__(tok, cfg)
+        self.effectors += [Effector("arm", [5, 5], rest_id=12, effort=0.05), _Grip("grip", [3], rest_id=1, n_in=2, effort=0.03),
+                           Effector("go", [5, 5], rest_id=12, effort=0.03)]
+
+
+class _Grip3(Effector):
+    def gate_inputs(self, frame, life, state):
+        return [1.0 if state["acted_last"] else 0.0, math.sin(frame.tick / 5.0), 1.0]
+
+
+class _ArmRedeclared(LanguageAnatomy):
+    """_Arm with the grip's gate re-declared with a third input (its gate's shape moves; the arm's does not)"""
+
+    def __init__(self, tok, cfg=None):
+        super().__init__(tok, cfg)
+        self.effectors += [Effector("arm", [5, 5], rest_id=12, effort=0.05), _Grip3("grip", [3], rest_id=1, n_in=3, effort=0.03)]
+
+
+def test_an_effector_that_joined_and_one_re_declared_load():
+    """anatomy 33 (W8 and W8 amended, 2026-10-09; the test owed): a save of _Arm loads into _ArmGo (one more motor effector, the last):
+    every saved organ of the arm and the grip is kept whole, the new effector's organs are born fresh beside them (its gate, acts and
+    timing where the save has none), and the loaded body lives on; a save of _Arm loads into _ArmRedeclared (the grip's gate with a
+    third input): the grip's gate entry whose shape no longer matches is dropped and born fresh, said once, the arm's organs and the
+    grip's other organs kept whole, and the loaded body lives on"""
+    import contextlib
+    import io
+    cfg = dict(wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, fast_rls=1, fast_input="striatum", actor=1, stri_k=8,
+               stri_m=64, wm=1, gate_floor=0.3)                     # (the striatum as anatomy 32 builds it; recall's map, the sim's, needs the frames)
+    L = _born(_Arm(TOK, cfg), cfg); _live(L, ticks=40)
+    sL = {k_: v_.detach().clone() for k_, v_ in L.m.state_dict().items()}
+    fd, path = tempfile.mkstemp(suffix=".pt"); os.close(fd)
+    said1, said2 = io.StringIO(), io.StringIO()
+    try:
+        L.save(path)
+        with contextlib.redirect_stdout(said1):
+            G = Life.load(path, _ArmGo(TOK, L.cfg), save_path=None)
+        with contextlib.redirect_stdout(said2):
+            R = Life.load(path, _ArmRedeclared(TOK, L.cfg), save_path=None)
+    finally:
+        os.remove(path)
+    sG, sR = G.m.state_dict(), R.m.state_dict()
+    kept_G = [k_ for k_ in sL if k_ in sG and tuple(sL[k_].shape) == tuple(sG[k_].shape)]
+    assert all(torch.equal(sL[k_], sG[k_]) for k_ in kept_G), [k_ for k_ in kept_G if not torch.equal(sL[k_], sG[k_])]
+    new_G = [k_ for k_ in sG if k_ not in sL]
+    assert new_G and all(".go." in k_ or k_.endswith(".go") or "go" in k_.split(".") for k_ in new_G), new_G   # the joined effector's organs alone are new
+    grown_ = [k_ for k_ in sL if k_ in sG and tuple(sL[k_].shape) != tuple(sG[k_].shape)]
+    k8 = 8; nl_ = k8 * (2 * L.m.vocab + 3); old_rows = nl_ + k8 * (10 + 3); new_rows = k8 * 10
+    assert "stri_W" in grown_ and sG["stri_W"].shape[0] == sL["stri_W"].shape[0] + new_rows, (sL["stri_W"].shape, sG["stri_W"].shape)
+    assert torch.equal(sG["stri_W"][:old_rows], sL["stri_W"][:old_rows]) and torch.equal(sG["stri_W"][old_rows + new_rows:], sL["stri_W"][old_rows:]), \
+        "the striatum's saved rows are not kept in their places round the joined effector's"   # W8 amended three times
+    assert float(sG["stri_W"][old_rows:old_rows + new_rows].abs().max()) > 0, "the new rows are not born"
+    for k_ in grown_:                                                   # a per-effector buffer grown by one entry keeps its saved entries
+        if k_ == "stri_W":
+            continue
+        assert sG[k_].shape[0] == sL[k_].shape[0] + 1 and torch.equal(sG[k_][:sL[k_].shape[0]], sL[k_]), k_
+    assert "grown by 80 rows for ['go']" in said1.getvalue(), said1.getvalue()
+    assert "re-declared" not in said1.getvalue()
+    _live(G, ticks=10); assert G.ticks == L.ticks + 10
+    note = [l_ for l_ in said2.getvalue().splitlines() if "re-declared" in l_]
+    assert len(note) == 1 and "['grip']" in note[0], said2.getvalue()
+    gate_k = [k_ for k_ in sL if k_.startswith("gates.grip")]
+    assert gate_k and all(tuple(sR[k_].shape) != tuple(sL[k_].shape) or not torch.equal(sR[k_], sL[k_]) for k_ in gate_k if "weight" in k_), "the grip's gate was not born fresh"
+    kept_R = [k_ for k_ in sL if k_ in sR and not k_.startswith("gates.grip") and tuple(sL[k_].shape) == tuple(sR[k_].shape)]
+    assert all(torch.equal(sL[k_], sR[k_]) for k_ in kept_R), [k_ for k_ in kept_R if not torch.equal(sL[k_], sR[k_])]
+    _live(R, ticks=10); assert R.ticks == L.ticks + 10
+    print(f"anatomy 33: a save of two effectors loads with a third joined ({len(new_G)} organs born fresh beside {len(kept_G)} kept whole,",
+          f"{len(grown_)} buffers grown) and with one re-declared (the grip's gate born fresh, said once; {len(kept_R)} kept whole); both live on")

@@ -254,6 +254,30 @@ class PersistenceMixin:
             for k_ in ("vf_A", "vf_b", "vf_mu", "vf_var", "vf_n"):
                 getattr(life.m, k_).copy_(vf_saved[k_].cpu())
         same_ = bool(st_saved) and life.m.stri_W.numel() > 0 and st_saved.get("stri_W") is not None and st_saved["stri_W"].shape == life.m.stri_W.shape
+        # W8 amended three times (2026-10-10, 04:55): THE STRIATUM GROWS FOR AN EFFECTOR THAT JOINED AFTER THE SAVE. Its rows lie in the
+        # effectors' declared order after the language block and before the event lines' block (body/model.py), so a joined last effector
+        # widens the striatum by k rows a setting and the saved shape no longer matches: until now neither this branch nor the R5b one
+        # took such a save, and nothing of the striatum was restored: its input map, its thresholds, the fast critic's head, the voice's
+        # actor, the working-memory slot and every effector's actor were born fresh without a note. The live body's W8 landing (2026-10-09,
+        # 22:31, the locomotion command joined) lost them so, 137 days of the striatum's learning; the fast critic's head re-solved from its
+        # kept evidence (vf_A), the rest relearned from day 138. Now a save whose striatum is the built one less the rows of the effectors
+        # the save has no organs for (the new ones, last in the order) is grown: the language block, the saved effectors' rows and the event
+        # lines kept in their places, the new effector's rows as born, the heads, the slot, the lines and the saved effectors' actors kept
+        grow_ = None
+        if not same_ and bool(st_saved) and life.m.stri_W.numel() > 0 and st_saved.get("stri_W") is not None \
+                and int(st_saved["stri_W"].shape[1]) == int(life.m.stri_W.shape[1]) and st_saved.get("stri_line") is not None \
+                and st_saved["stri_line"].shape == life.m.stri_line.shape and st_saved.get("vfast.weight") is not None \
+                and st_saved["vfast.weight"].shape == life.m.vfast.weight.shape:
+            k_ = int(life.m.stri_line.numel()); motors_ = list(life.anatomy.motors)
+            miss_ = set(missing.missing_keys)
+            new_ = [e_ for e_ in motors_ if (e_.gate + ".weight") in miss_ or (e_.organ + ".rows") in miss_]
+            if new_ and motors_[len(motors_) - len(new_):] == new_:
+                old_rows_ = int(life.m.stri_line.numel()) * (2 * int(life.m.vocab) + 3) + sum(k_ * sum(int(f_) for f_ in e_.factors) for e_ in motors_[:len(motors_) - len(new_)])
+                new_rows_ = sum(k_ * sum(int(f_) for f_ in e_.factors) for e_ in new_)
+                if int(st_saved["stri_W"].shape[0]) + new_rows_ == int(life.m.stri_W.shape[0]):
+                    grow_ = (old_rows_, new_rows_, [e_.name for e_ in new_])
+                    print(f"load: the striatum grown by {new_rows_} rows for {grow_[2]}, joined after the save: its language block, the saved effectors' rows, "
+                          f"the event lines, the heads, the slot, the lines and the saved effectors' actors kept; the new rows as born (W8 amended three times)", flush=True)
         # A LATER EFFECTOR'S STRIATUM SAVED BEFORE ITS ROWS PER JOINT (step R5b; the R5b verifier's finding, 2026-09-24): the save's
         # effectors' block holds a row for every flat act, so the striatum's shape is not this body's, and until now nothing of it was
         # kept, the voice's heads and lines included. Its language block (the first k (2V + 3) rows), thresholds, lines, heads, slot and
@@ -272,10 +296,13 @@ class PersistenceMixin:
         if pre_r5b_:
             print(f"load: the striatum was saved with a row per flat act (before R5b, 2026-09-24; {int(st_saved['stri_W'].shape[0])} rows): its language "
                   f"block, thresholds, lines, heads and actors are kept, the effectors' rows born again per joint ({int(life.m.stri_W.shape[0])} rows)", flush=True)
-        if same_ or pre_r5b_:
+        if same_ or pre_r5b_ or grow_:
             with torch.no_grad():                                  # the striatal input as born, its line, and its head
                 if same_:
                     life.m.stri_W.copy_(st_saved["stri_W"].to(device))
+                elif grow_:
+                    a_, n_, _ = grow_; W_ = st_saved["stri_W"].to(device)
+                    life.m.stri_W[:a_].copy_(W_[:a_]); life.m.stri_W[a_ + n_:].copy_(W_[a_:])   # the saved rows in their places, the new as born
                 else:
                     life.m.stri_W[:nl_].copy_(st_saved["stri_W"][:nl_].to(device))   # the language block; the effectors' rows as born (R5b)
                 life.m.stri_b.copy_(st_saved["stri_b"].to(device)); life.m.stri_line.copy_(st_saved["stri_line"].to(device))
@@ -290,6 +317,9 @@ class PersistenceMixin:
                         life.m.stri_sense.copy_(st_saved["stri_sense"].to(device))
                 if st_saved.get("stri_mline") is not None and "stri_mline" in life.m._buffers and st_saved["stri_mline"].shape == life.m.stri_mline.shape:
                     life.m.stri_mline.copy_(st_saved["stri_mline"].to(device))   # the later effectors' lines and actors (step R5)
+                elif grow_ and st_saved.get("stri_mline") is not None and "stri_mline" in life.m._buffers and st_saved["stri_mline"].dim() == 2 \
+                        and int(st_saved["stri_mline"].shape[0]) < int(life.m.stri_mline.shape[0]) and st_saved["stri_mline"].shape[1:] == life.m.stri_mline.shape[1:]:
+                    life.m.stri_mline[:int(st_saved["stri_mline"].shape[0])].copy_(st_saved["stri_mline"].to(device))   # (the saved effectors' lines; the new one's -1)
                 if st_saved.get("stri_eline") is not None and "stri_eline" in life.m._buffers and st_saved["stri_eline"].shape == life.m.stri_eline.shape:
                     life.m.stri_eline.copy_(st_saved["stri_eline"].to(device))   # the event lines' line (step R7a)
                 for e_ in life.anatomy.motors:
