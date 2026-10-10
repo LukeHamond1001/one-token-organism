@@ -47,7 +47,14 @@ GROUND_AWAY = 0.5       # A202l: the look in view (and a periphery cell) counts 
 GROUND_TRACE = 20       # ticks (3 s) a heard word keeps drawing the eyes toward its look (ours: the orienting response's span)
 GROUND_FLOOR = 0.02     # the least contrast (opponent units) that counts as a look at a thing, in the fovea or a cell (ours)
 GROUND_MATCH = 0.6      # the least cosine between a word's look and a cell's for the cue or the name (ours)
-GROUND_MARGIN = 0.15    # the best match's lead over the second (ours)
+GROUND_MARGIN = 0.15    # the best match's lead over the second, for the NAME (ours)
+GROUND_CUE_MARGIN = 0.0    # A217 (2026-10-10): the best match's lead over the second for the CUE: none (the copy: the drum's two cells tied within 0.003). The day-139 copy at 'drum' hearings with the
+                        # drum in its view (p1_tools/look_probe.py): the best periphery cell's cosine to the word's look 0.99 and the second's
+                        # 0.99, on hearing after hearing (a toy spans more than one cell of the fifteen, and its colour's direction is shared
+                        # by its neighbours), so the cue fired on 19 of 384 such hearings in day 138 and no ask was met. The priority map
+                        # takes its most active location, with no absolute lead (Bisley and Goldberg 2010; Treue and Martinez-Trujillo 1999:
+                        # feature-based attention raises every matching location and the saccade goes to the best): a tie between a
+                        # thing's own cells is the thing. Ours
 GROUND_SAY = 2.0        # A202i: the prior on the logit of the word whose look fills the fovea, in the readout's own units: this many standard
                         # deviations of the readout's logits for a margin at GROUND_MARGIN, in proportion past it (ours). It was 1.0 times
                         # the margin, 0.2 of a logit against a top gap of 2.6 (day 109: 'ball' primed 47 times and never said)
@@ -154,7 +161,7 @@ class GroundingMixin:
                 if cos.size >= 2:
                     order = np.argsort(-cos, kind="stable")
                     b, s = int(order[0]), int(order[1])
-                    if cos[b] >= GROUND_MATCH and cos[b] - cos[s] >= GROUND_MARGIN:
+                    if cos[b] >= GROUND_MATCH and cos[b] - cos[s] >= GROUND_CUE_MARGIN:   # A217: the best cell, no absolute lead
                         out = np.array([1.0, float(dirs[b][0]), float(dirs[b][1])])
                         self._ground_stats["cue"] += 1
             tr[1] = left - 1
