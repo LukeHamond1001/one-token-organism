@@ -64,6 +64,7 @@ GHOST_FOLLOW_M, GHOST_FOLLOW_GAP = 2.0, 100   # C350: in a ghost block she walks
 COME_GAP, COME_DIST, COME_SPOT_WAIT, COME_MIN_M = 200, 1.2, 150, 0.9   # C351 amended five times: 1.3 m, crouched (her face in its eyes' field); under 0.9 m too near to teach
 WEDGE_CLEAR_M, WEDGE_EVERY = 1.0, 50      # C352: a lying child in pain this near (m) anything standing is carried to its mat; checked every this many ticks (ours: LAY_CLEAR_M's 1.0)
 COME_FAR_M = 1.8                        # C351 amended five times: a call from farther than this (the crouched face's reach in its eyes' field) is not made: another spot nearer
+COME_AFTER = 300                        # C351 amended six times: after it has come (or is too near to teach) she stays with it this long before her next spot (ours: 45 s of praise and play)
 COME_STAY_MAX = 900                     # C351 amended four times: she keeps her spot, calling every COME_GAP, until it comes (within COME_MIN_M) or this long   # C351: in a command block she calls it from this far, this often; her walk to the spot waits
                                                                         # this long at most; no call from nearer than COME_MIN_M (the copy: a call from 0.74 m paid 'came' at once). Ours
                                                                         # C351 amended (00:15): her shows are quiet in a command block (c.quiet_shows) and the wait is 150: day 138's first
@@ -681,8 +682,9 @@ class DayPlan:
 
     def _come_tick(self, t, lane, world, c, pm):
         """C351: she walks to a spot COME_DIST from the child, in front of it, turns to it and calls it ('come here') every COME_GAP from
-        there; the lane pays its coming (came_nearer, came). She keeps her spot until it comes (within COME_MIN_M: a new spot in a while)
-        or COME_STAY_MAX passes (C351 amended four times); between calls she stays where she is (it must come to her, not she to it)"""
+        there; the lane pays its coming (came_nearer, came). She keeps her spot until it comes (within COME_MIN_M: she stays with it
+        COME_AFTER, then a new spot behind it) or COME_STAY_MAX passes (C351 amended four and six times); between calls she stays where
+        she is (it must come to her, not she to it)"""
         st = getattr(self, "come", None)
         if st is None:
             self.come = st = dict(next=t + 60, spot=None, at=None)
@@ -692,7 +694,7 @@ class DayPlan:
                 if t < st["next"] or pm.holds:
                     return
                 gh = world.ghost; fwd = np.array([np.cos(gh.heading), np.sin(gh.heading)])
-                cands = [ch_xy + fwd * COME_DIST, ch_xy - fwd * COME_DIST, ch_xy + np.array([-fwd[1], fwd[0]]) * COME_DIST, ch_xy + np.array([fwd[1], -fwd[0]]) * COME_DIST]
+                cands = [ch_xy - fwd * COME_DIST, ch_xy + np.array([-fwd[1], fwd[0]]) * COME_DIST, ch_xy + np.array([fwd[1], -fwd[0]]) * COME_DIST, ch_xy + fwd * COME_DIST]   # C351 amended six times: behind it first (its voice must turn it), then beside, then in front
                 for q_ in cands:
                     if not (-2.3 <= q_[0] <= 2.3 and -2.0 <= q_[1] <= 2.0):          # (her walk to a point knows the first room: 'no such place' beyond it)
                         continue
@@ -721,11 +723,11 @@ class DayPlan:
                     self.log.append((t, "come here: her walk unread", repr(e_)[:60]))
             if near_ or t - int(st["at"]) >= COME_SPOT_WAIT:
                 d0 = float(np.linalg.norm(ch_xy - her_))
-                if d0 < COME_MIN_M:                                         # it came (or she is too near to teach coming): another spot in a while
-                    st["spot"] = None; st["next"] = t + 40
-                    return
+                if d0 < COME_MIN_M:                                         # it came (or she is too near to teach coming): another spot after a while
+                    st["spot"] = None; st["next"] = t + COME_AFTER            # (C351 amended six times: day 141's chase: she left for the next spot in
+                    return                                                  # front of it at once and it followed her there before she could call)
                 if t - int(st["at"]) >= COME_STAY_MAX or d0 > COME_FAR_M:   # C351 amended four times: a spot it never came to, given up;
-                    st["spot"] = None; st["next"] = t + 40                  # five times: the child drifted off while she walked and knelt
+                    st["spot"] = None; st["next"] = t + 40                  # five times: the child drifted off while she walked and knelt (a spot nearer at once)
                     self.log.append((t, "come here: too far to be seen, another spot (C351)", round(d0, 2)))
                     return
                 if t < int(st.get("called", -10 ** 9)) + COME_GAP:          # she keeps her spot and calls again every COME_GAP (02:30: the
