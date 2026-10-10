@@ -497,7 +497,12 @@ class SimAnatomy(LanguageAnatomy):
             rewards.append(Novelty("novelty", clip=NOVELTY_GAIN, signs=(1.0,)))        # A127: the new pays (+), a switch of the body
         if int((cfg or {}).get("competence", SIM_CFG.get("competence", 0))):
             rewards.append(Competence("competence", clip=COMPETENCE_GAIN, signs=(1.0,)))   # A181: mastery of its own doing pays (+), a switch of
-        loco = Loco("loco", [5, 5], rest_id=12, sense="vestibular", fwd_gate=True, n_in=2, inverse=True)   # W8 (the last: a loaded life's window grows at the end)
+        loco = Loco("loco", [5, 5], rest_id=12, sense=None, fwd_gate=False, n_in=1, inverse=False)   # W8 (the last: a loaded life's window grows at the end).
+                                                        # W8 amended (2026-10-09, 23:58): NO CONSEQUENCE SENSE. Declared on the vestibular channel at first, its
+                                                        # newborn forward half forecast raw accelerations (gravity at 9.8) and its squared error swamped the first
+                                                        # night's lesson (night 138: the NREM loss 1091 against 61, REM's coherence 0.74 against 0.99). The command's
+                                                        # consequence is the whole body's motion, read by the channels' own heads; the effector learns from its
+                                                        # actor and gate under dopamine, as the words' output does
         self.channels, self.effectors, self.rewards, self.inner_at = chans, [tract, voice, gaze] + limbs + [loco], rewards, 2
         self.orienting = [# A202: the heard word's look found in the periphery (body/core/grounding.py): a standing cue, as her face is, so
                           # the born saccade turns the eyes to it and the orienting bias pulls while it stands; first among the standing

@@ -216,6 +216,14 @@ class PersistenceMixin:
         # in the declared order): a saved buffer with one entry a motor effector (spg_phase, spg_seed) shorter than the built one keeps
         # its saved entries and takes the built body's own born values for the new effector's
         built_ = organs.state_dict()
+        # W8 amended (23:58): AN EFFECTOR'S ORGANS RE-DECLARED SINCE THE SAVE (a gate with other inputs, a timing part with another sense)
+        # are born fresh again: a saved entry under acts./gates./timing. whose shape is not the built one is dropped with a note (the
+        # locomotion command's, hours old; never a limb's, whose declarations do not move)
+        redecl_ = [k_ for k_, t_ in list(blob["organs"].items()) if k_.split(".")[0] in ("acts", "gates", "timing") and k_ in built_ and tuple(t_.shape) != tuple(built_[k_].shape)]
+        for k_ in redecl_:
+            blob["organs"].pop(k_)
+        if redecl_:
+            print(f"load: {len(redecl_)} entries of a re-declared effector's organs dropped, born fresh again (W8 amended): {sorted({k_.split('.')[1] for k_ in redecl_})}", flush=True)
         for k_ in ("spg_phase", "spg_seed"):
             t_ = blob["organs"].get(k_); b_ = built_.get(k_)
             if t_ is not None and b_ is not None and t_.dim() == b_.dim() and t_.dim() >= 1 and t_.shape[0] < b_.shape[0] and t_.shape[1:] == b_.shape[1:]:
