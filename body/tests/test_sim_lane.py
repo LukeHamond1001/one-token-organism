@@ -859,6 +859,7 @@ def test_floor_play_reaches_the_lesson():
     "her hands are busy" 26 times on life day 28) and never asks the child to give her the toy she holds; her plan's hide turn and
     her conduct's comfort gap, cry window and look at the bucket are saved with them"""
     from types import SimpleNamespace
+    _P = lambda **kw: SimpleNamespace(**{"seen": [], "events": [], "seen_by_child": True, "child_holds": (), "child_target": None, "child_sounding": False, **kw})   # (the fields her day plan reads)
     from body.sim.lang import templates as TP
     w, lane = _world(plan=True, day_ticks=2400)
     for _k in range(5):
@@ -871,20 +872,20 @@ def test_floor_play_reaches_the_lesson():
     real_request, real_p, real_holding = c.request, lane._p, c.motion.holding
     try:
         c.request = lambda k, **kw: asked.append((k, kw))
-        lane._p = SimpleNamespace(seen=[], events=[])                    # her eyes on the child: no toy before them
+        lane._p = _P()   # her eyes on the child: no toy before them (the fields her day plan reads since C313)
         n0 = len(plan.log)
         for k in range(200):
             plan._play(1000 + k, lane, "floor")
         lessons = [x for x in plan.log[n0:] if x[1] == "lesson"]
         assert 40 <= len(lessons) <= 120, len(lessons)                   # LESSON_SHARE of her offers (0.4 of 200)
         assert all(x[3] in plan.focus for x in lessons), lessons[:3]
-        lane._p = SimpleNamespace(seen=[], events=[], child_holds=(plan.focus[0],))   # C132: the toy in ITS hand, out of her view
+        lane._p = _P(child_holds=(plan.focus[0],))   # C132: the toy in ITS hand, out of her view
         n0 = len(plan.log)
         for k in range(120):
             plan._lesson(1500 + k, lane)
         held_by_it = [x for x in plan.log[n0:] if x[1] == "lesson" and x[3] == plan.focus[0]]
         assert not held_by_it and any(x[1] == "lesson" for x in plan.log[n0:]), held_by_it[:2]
-        lane._p = SimpleNamespace(seen=[], events=[])
+        lane._p = _P()
         peek = sum(1 for k, _kw in asked if k == "peekaboo_hide")
         assert peek > 0, "her peekaboo with her hands free, as before"
         held = plan.focus[0]
@@ -907,7 +908,7 @@ def test_floor_play_reaches_the_lesson():
         lw = int(plan.level.get(worn, 0))                                # C261: worn at the reach level it stands at too (its got's own key there)
         c.book["got"][DP._lvl_key(worn, lw)] = 60
         assert DP._worn(c.book, worn) and DP._worn(c.book, worn, lw) and not DP._worn(c.book, fresh_toy, plan.level.get(fresh_toy, 0))
-        lane._p = SimpleNamespace(seen=[], events=[])
+        lane._p = _P()
         n0 = len(plan.log)
         for k in range(60):
             plan._lesson(1700 + k, lane)
@@ -920,7 +921,7 @@ def test_floor_play_reaches_the_lesson():
         plan.focus = [held]                                              # reach (life day 29: 36 gives refused); else the toy into
         gives = {}                                                       # its hand (the handle act)
         for sees, reach in ((False, False), (True, False), (True, True)):
-            lane._p = SimpleNamespace(seen=[SimpleNamespace(id=held, name=held, on="floor", child_sees=sees, child_can_reach=reach)],
+            lane._p = _P(seen=[_P(id=held, name=held, on="floor", child_sees=sees, child_can_reach=reach)],
                                       events=[])
             asked.clear(); n0 = len(plan.log)
             for k in range(60):
