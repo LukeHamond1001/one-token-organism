@@ -182,7 +182,7 @@ FRAMES = {
     "confirm_stepped": [F("you walk!", "walk"), F("yes! you walk.", "walk"), F("walk. walk!", "walk")],
     "confirm_lifted": [F("the {o} is up.", "up"), F("up. up! the {o}.", "{o}")],
     "confirm_shook": [F("oh! the {o}.", "{o}"), F("look. the {o}!", "{o}"), F("the {o}. the {o}!", "{o}")],
-    "confirm_hit": [F("oh! the {o}.", "{o}"), F("oh! you hit it. the {o}!", "{o}")],
+    "confirm_hit": [F("oh! the {o}.", "{o}"), F("look. the {o}!", "{o}")],
     "confirm_reach_nearer": [F("yes. get the {o}.", "{o}"), F("get it! the {o}.", "{o}")],
     "recast": [F("{w}. yes. the {w}.", "{w}"), F("yes. the {w}!", "{w}")],
     "recast_word": [F("{w}. yes. {w}.", "{w}"), F("yes! {w}.", "{w}")],
