@@ -114,6 +114,11 @@ class CordMixin:
             if sc_ is not None:
                 out = sc_ if out is None else [a_ + b_ for a_, b_ in zip(out, sc_)]
                 st["cord_n"]["saccade"] = int(st["cord_n"].get("saccade", 0)) + 1
+        if e.approach and int(self._reflex_const("orient")) and int(self._reflex_const("approach")):
+            ap_ = self._approach_step(e, frame)                            # A216: the born approach toward a face, on the locomotor command
+            if ap_ is not None:
+                out = ap_ if out is None else [a_ + b_ for a_, b_ in zip(out, ap_)]
+                st["cord_n"]["approach"] = int(st["cord_n"].get("approach", 0)) + 1
         if st.get("now") is not None:
             st["now"]["cry"] = bool(crying)                                 # (the world's crying flag: the cry's step, never the breath's)
         return out
@@ -350,6 +355,46 @@ class CordMixin:
             v = float(d) * k * mx if c.side_only else max(-mx, min(mx, k * float(c.sense) * float(o_[int(idx)])))
             out[int(j)] = g * float(sg) * v; moved = True
         return out if moved else None
+
+    def _approach_step(self, e, frame):
+        """A216 (2026-10-10): THE BORN APPROACH. The superior colliculus's crossed descending road turns the head and body toward a target
+        and drives approach (its uncrossed road, defence: Dean, Redgrave and Westby 1989), reading the target in the eyes' coordinates
+        together with where the eyes point in the head (Freedman and Sparks 1997: gaze shifts share the eyes' and the head's part); a
+        newborn turns toward its mother's face and voice (Goren, Sarty and Wu 1975; Muir and Field 1979), and the infant's approach to
+        the caregiver is the attachment system's set goal (Bowlby 1969). For an effector that declares `approach` (the G1's locomotor
+        command, W8), the first of its named standing cues that fires (the face) gives its bearing from the body: the eyes' yaw in the
+        head (approach["eye"]: the frame's observation and index) plus the cue's offset from the fovea (rad, + right); the turn joint's
+        step is approach_turn_gain x the bearing, at most approach_turn_max a tick, signed by the joint's declared sense (`orient`); the
+        speed joint's step is approach_go a tick while the bearing lies within approach_zone of straight ahead (it walks when it faces
+        her); both times the orienting gain (the amygdala's toward or away: a face that forecasts bad turns it away). A cord step: summed
+        with the brain's own command below the gate, no efference copy, no credit; the brain's own acts on the command earn their credit
+        from her face as every act does, and can hold against it. -> one step per joint, or None"""
+        ap = e.approach
+        names = tuple(ap.get("cues", ("face",)))
+        for c, _dy, _dp, _ in self._orient_cues(frame):
+            if c.name not in names or c.onset or c.yaw is None:
+                continue
+            o_ = frame.obs.get(c.obs)
+            if o_ is None or float(o_[int(c.fired)]) <= 0.0:
+                continue
+            bearing = float(c.sense) * float(o_[int(c.yaw)])
+            eye = ap.get("eye")
+            if eye is not None:
+                ob_ = frame.obs.get(eye[0])
+                if ob_ is not None:
+                    bearing += float(ob_[int(eye[1])])
+            g = float(self._orient_gain())
+            out = [0.0] * len(e.factors); moved = False
+            jt = ap.get("turn")
+            if jt is not None:
+                sg = float((e.orient or {}).get(int(jt), ("yaw", 1))[1])
+                k = float(self._reflex_const("approach_turn_gain")); mx = float(self._reflex_const("approach_turn_max"))
+                out[int(jt)] = g * sg * max(-mx, min(mx, k * bearing)); moved = True
+            jg = ap.get("go")
+            if jg is not None and abs(bearing) <= float(self._reflex_const("approach_zone")):
+                out[int(jg)] = g * float(self._reflex_const("approach_go")); moved = True
+            return out if moved else None
+        return None
 
     def _vor_acts(self):
         """the VOR's born constants for the world this tick (Acts.vor), per effector that declares it: its axes, the born gain, the quick

@@ -149,7 +149,10 @@ FRAMES = {
     "call": [F("{n}.", "{n}"), F("{n}. look at mama.", "mama"), F("{n}. look here.")],   # her teaching's call (4.5); the name
                                                         # test is trial_name's (its name or a foil: 4.8, 12)
     "hall_call": [F("{n}.", "{n}"), F("{n}? mama is here.")],
-    "come_call": [F("come here, {n}.", "{n}"), F("{n}. come to mama.", "mama"), F("come. come here, {n}.", "{n}")],   # C351: called from across the room (the focus word last)
+    "come_call": [F("mama is here. {n}.", "{n}"), F("here. here. {n}.", "{n}"), F("look. mama here. {n}.", "{n}")],   # C351: called from across the room (the focus word last).
+                                                        # C351 amended twice (2026-10-10, 02:10): the first frames ('come here, {n}.', '{n}. come to mama.') never passed
+                                                        # her check: a comma fails the form and 'come' is no word of hers (birth or growth), so no call was ever voiced
+                                                        # (the copy's refusals: 19 of 19); her words only, no commas
     "greet": [F("hi {n}.", "{n}"), F("hi. hi {n}.", "{n}"), F("hi {n}. mama is here.")],
     "return": [F("hi {n}! mama is here."), F("hi {n}. hi.", "hi")],
     "answer_bid": [F("mama is here.")],
@@ -190,8 +193,8 @@ FRAMES = {
                                                                                 # 3,000 ticks spoke 241 lines against 172, 78% of them social: five
                                                                                 # frames under the same-line rule let her say the social line
                                                                                 # five times as often; the toy-in-view reply stands)
-    "narrate_walk": [F("mama walks. walk, walk, walk.", "walk"), F("walk. walk. walk.", "walk"), F("mama goes to you. walk.", "walk")],   # C300: she shows walking
-    "narrate_sib": [F("look. walk, walk, walk.", "walk"), F("see? walk. walk.", "walk"), F("walk. walk. walk.", "walk")],   # D2: the sibling walking in its view
+    "narrate_walk": [F("walk. walk. walk.", "walk"), F("mama walk. walk.", "walk"), F("look. mama walk. walk.", "walk")],   # C300: she shows walking (C351 amended twice: 'walks', 'goes' and the commas were never hers; the frames refused since C300)
+    "narrate_sib": [F("look. walk. walk. walk.", "walk"), F("see? walk. walk.", "walk"), F("walk. walk. walk.", "walk")],   # D2: the sibling walking in its view
     "narrate_sib_get": [F("look. get the {o}.", "{o}"), F("up. the {o}.", "{o}"), F("see? the {o}.", "{o}")],   # D2: the sibling getting a toy
     "narrate_get": [F("mama gets the {o}.", "{o}"), F("up. mama has the {o}.", "{o}"), F("look. mama gets the {o}.", "{o}")],   # C300: she shows getting
     "narrate_fell": [F("uh oh. the {o} is down.", "down"), F("oh! the {o} is down.", "down")],

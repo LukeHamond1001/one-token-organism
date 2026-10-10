@@ -224,6 +224,10 @@ class Effector:
     orient: Optional[dict] = None         # step R6h: its joints the born orienting bias acts on, {joint: ("yaw" or "pitch", the sense its
                                           # positive step turns: +1 toward + right / + up, -1 the other way)} (3.7, A43)
     orient_gate: bool = False             # step R6h: the born gate input "a face, a sound onset or a sudden change appeared" (in n_in)
+    approach: Optional[dict] = None       # A216: the born approach (body/core/cord.py _approach_step), on a locomotor command: {"go": the joint
+                                          # that steps the speed, "turn": the joint that steps the turn (its sense from `orient`), "cues": the
+                                          # standing cues approached (the face), "eye": (obs, index) of the eyes' own yaw in the head, so the
+                                          # cue's bearing from the body is the eye's turn plus the cue's offset from the fovea}
     vor: Optional[list] = None            # step R6h: its joints the VOR counter-turns (the gaze's yaw and pitch: 3.7, A23)
     twitch: bool = False                  # step R8c: its joints twitch in active sleep, one at a time, one small step (3.7, A46)
 

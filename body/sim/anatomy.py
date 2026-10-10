@@ -497,7 +497,12 @@ class SimAnatomy(LanguageAnatomy):
             rewards.append(Novelty("novelty", clip=NOVELTY_GAIN, signs=(1.0,)))        # A127: the new pays (+), a switch of the body
         if int((cfg or {}).get("competence", SIM_CFG.get("competence", 0))):
             rewards.append(Competence("competence", clip=COMPETENCE_GAIN, signs=(1.0,)))   # A181: mastery of its own doing pays (+), a switch of
-        loco = Loco("loco", [5, 5], rest_id=12, sense=None, fwd_gate=False, n_in=1, inverse=False)   # W8 (the last: a loaded life's window grows at the end).
+        loco = Loco("loco", [5, 5], rest_id=12, sense=None, fwd_gate=False, n_in=2, inverse=False,   # W8 (the last: a loaded life's window grows at the end).
+                    orient={1: ("yaw", -1)}, orient_gate=True,                # A216: the turn's positive step (+ rad/s) turns the body left, so a cue on
+                    approach={"go": 0, "turn": 1, "cues": ("face",), "eye": ("body", GAZE_AT)})   # the right is turned toward by its negative step: sense -1;
+                                                        # the born approach on the command (body/core/cord.py _approach_step): her face's bearing
+                                                        # from the body is the eyes' yaw in the head (the body channel at GAZE_AT) plus the cue's
+                                                        # offset from the fovea; the gate's second input "a cue appeared" (the waist's).
                                                         # W8 amended (2026-10-09, 23:58): NO CONSEQUENCE SENSE. Declared on the vestibular channel at first, its
                                                         # newborn forward half forecast raw accelerations (gravity at 9.8) and its squared error swamped the first
                                                         # night's lesson (night 138: the NREM loss 1091 against 61, REM's coherence 0.74 against 0.99). The command's
@@ -600,7 +605,7 @@ SIM_CFG = dict(
     # the born patterns and biases (REFLEX): the spinal pattern generators (their shape and cycles REFLEX's, C54: a movement of 2 ticks'
     # flexion and 3 ticks' extension, the extension returning the flexion's excursion, then a pause, each cycle drawn from the seed,
     # 3.56 +- 1.93 s held to 1.0-8.5 s), the born cry, orienting, the VOR
-    spg=1, cry=1, breath=1, orient=1, vor=1, orient_saccade=1,   # A173: the born breath (the tract's tidal cycle below the gate)
+    spg=1, cry=1, breath=1, orient=1, vor=1, orient_saccade=1, approach=1,   # A216: the born approach (the locomotor command's step toward her face)   # A173: the born breath (the tract's tidal cycle below the gate)
     breath_brake=0.30,   # A179: the newborn's expiratory braking, the glottis narrowed this much of its range a tick through the expiration
                          # (the tract's position follows its target with its own lag: the glottis reaches 0.55 of its range by the fifth tick,
                          # just under the cry's 0.6, where its aerodynamics give a soft voicing on the expiration's last ticks, 5 to 7 mPa at

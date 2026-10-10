@@ -479,6 +479,21 @@ REFLEX = dict(
     orient_saccade=0,
     orient_saccade_gain=0.5,
     orient_saccade_max=0.20,
+    # A216 (2026-10-10): THE BORN APPROACH (body/core/cord.py _approach_step): on an effector that declares `approach` (the G1's locomotor
+    # command), a cord step toward the leading standing cue it names (her face): the turn's step approach_turn_gain x the cue's bearing
+    # from the body (the eyes' turn in the head plus the cue's offset from the fovea, rad), at most approach_turn_max a tick; and, with
+    # the cue within approach_zone of straight ahead, the speed's step approach_go a tick; both times the orienting gain (the amygdala's
+    # toward or away). The superior colliculus's crossed descending road turns head and body toward a target and drives approach, its
+    # uncrossed road defence (Dean, Redgrave and Westby 1989, TINS 12:137); the newborn turns its head toward its mother's voice and face
+    # (Muir and Field 1979; Goren, Sarty and Wu 1975) and the infant's approach to the caregiver is the attachment system's set goal
+    # (Bowlby 1969). The sizes are ours, in the command's own units (world.LOCO_SETTINGS: m/s and rad/s a tick, decaying): a bearing of
+    # 0.4 rad steps the turn at its cap, which the command's decay holds at 0.6 rad/s; facing her the speed settles at a third of a
+    # metre a second. 1 = on; off at birth for every body that does not say so
+    approach=0,
+    approach_turn_gain=0.05,
+    approach_turn_max=0.02,
+    approach_go=0.01,
+    approach_zone=0.35,
     # THE VOR (3.7, A23; brainstem, present at birth): the gaze's window counter-turns by the torso gyro's rotation in each camera's frame
     # (the world applies it through the tick at its samples of the gyro, as it applies the servo law); the body's born gain and the
     # quick phase's jump back, a fraction of the axis's reach, handed to the world with the tick's acts (Acts.vor); the flocculus's

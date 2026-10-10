@@ -2751,3 +2751,66 @@ def test_the_ghost_stands_it_leads_it_and_lets_it_down():
     assert g.on and g.s == s_ and not g.last.any() and not g.last_p.any()                            # (the wrench applied afresh: xfrc is not in the state)
     w2 = G1World(seed=1); w2.frame()
     assert w2.ghost.load_state(None) is None and not w2.ghost.on
+
+
+def test_the_born_approach():
+    """A216 (approach; REFLEX off, SIM_CFG on): the locomotor command's born approach toward her face, at the cord. Her face 0.30 rad right
+    of the fovea with the eyes 0.10 rad right in the head: the bearing is 0.40 rad, the turn's step -approach_turn_max (its sense -1: a
+    negative step turns right), the speed's none (outside approach_zone); the face straight ahead (the eyes 0.20 left, the cue 0.20
+    right): the turn's step 0, the speed's +approach_go; a small bearing left: a positive turn under the cap and the speed's step; the
+    orienting gain scales both (negative: away, and no forward step); no face, none; the onset cues give none; the gaze takes none;
+    the switch off: none; and the world sums the step with the brain's own command"""
+    import types
+    from body.core.cord import CordMixin
+    from body.core.physiology import REFLEX
+    from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table, GAZE_AT
+    assert int(SIM_CFG["approach"]) == 1 and int(REFLEX["approach"]) == 0
+    anat = SimAnatomy(born_table(), dict(SIM_CFG))
+    loco = next(e for e in anat.motors if e.name == "loco"); gaze = next(e for e in anat.motors if e.name == "gaze")
+    assert loco.approach == {"go": 0, "turn": 1, "cues": ("face",), "eye": ("body", GAZE_AT)} and loco.orient == {1: ("yaw", -1)} and loco.n_in == 2
+    k, mx, go, zone = (float(REFLEX[n_]) for n_ in ("approach_turn_gain", "approach_turn_max", "approach_go", "approach_zone"))
+
+    class Body(CordMixin):
+        def __init__(self, gain=1.0):
+            self.anatomy = anat; self.cfg = dict(SIM_CFG); self.ticks = 0; self._g = gain
+        def _orient_gain(self):
+            return self._g
+    def step(face, eye_yaw=0.0, body=None, e=loco, extra=None):
+        b = body or Body(); b.ticks += 1
+        bd = [0.0] * (GAZE_AT + 6); bd[GAZE_AT] = float(eye_yaw)
+        obs = dict(face_periph=list(face), body=bd, sound_side=[0.0, 0.0], onset_periph=[0.0, 0.0, 0.0])
+        obs.update(extra or {})
+        return b._approach_step(e, types.SimpleNamespace(obs=obs))
+    s = step([1.0, 0.30, 0.0], eye_yaw=0.10)
+    assert s is not None and abs(s[1] + mx) < 1e-12 and s[0] == 0.0, s          # bearing 0.40 right: the turn capped, no forward step
+    s = step([1.0, 0.20, 0.0], eye_yaw=-0.20)
+    assert abs(s[1]) < 1e-12 and abs(s[0] - go) < 1e-12, s                        # straight ahead: forward
+    s = step([1.0, -0.10, 0.0], eye_yaw=-0.10)
+    assert abs(s[1] - k * 0.20) < 1e-12 and k * 0.20 < mx and abs(s[0] - go) < 1e-12, s   # 0.20 left: a left turn under the cap, and forward
+    s = step([1.0, -0.10, 0.0], eye_yaw=-0.10, body=Body(0.5)); assert abs(s[1] - 0.5 * k * 0.20) < 1e-12 and abs(s[0] - 0.5 * go) < 1e-12, s
+    s = step([1.0, -0.10, 0.0], eye_yaw=-0.10, body=Body(-0.5)); assert abs(s[1] + 0.5 * k * 0.20) < 1e-12 and abs(s[0] + 0.5 * go) < 1e-12, s
+    assert step([0.0, 0.0, 0.0]) is None
+    assert step([0.0, 0.0, 0.0], extra=dict(onset_periph=[1.0, 0.1, 0.0], sound_side=[1.0, 1.0])) is None
+    assert gaze.approach is None                                                   # the eyes keep their saccade; the approach is the command's
+    # the cord composes it for the command under its switch; the eyes keep their saccade
+    b = Body(); b.motor = [dict(cord_n={}, now={}) for _ in anat.motors]; b.ticks = 1
+    bd = [0.0] * (GAZE_AT + 6)
+    f = types.SimpleNamespace(obs=dict(face_periph=[1.0, 0.30, 0.0], body=bd, sound_side=[0.0, 0.0], onset_periph=[0.0, 0.0, 0.0]))
+    il = anat.motors.index(loco) + 1; ig = anat.motors.index(gaze) + 1
+    c = b._cord(il, f, 0.5, None, False)
+    assert c is not None and abs(c[1] + k * 0.30) < 1e-12 and abs(c[0] - go) < 1e-12 and b.motor[il - 1]["cord_n"]["approach"] == 1, c
+    b.cfg["approach"] = 0
+    assert b._cord(il, f, 0.5, None, False) is None
+    b.cfg["approach"] = 1
+    c = b._cord(ig, f, 0.5, None, False)
+    assert c is not None and "approach" not in b.motor[ig - 1]["cord_n"], c
+    # the world sums the cord's step with the brain's own command
+    from body.core.world import Acts
+    w = G1World(seed=1, parent=False)
+    w.ghost.command = True
+    a = Acts(); a.cord = {W.LOCO_NAME: (go, -0.015)}
+    w.apply(a)
+    assert abs(w.ghost.cmd_v - go) < 1e-9 and abs(w.ghost.cmd_w + 0.015) < 1e-9, (w.ghost.cmd_v, w.ghost.cmd_w)
+    print(f"world A216: the born approach: the turn's step {k} x her bearing from the body (the eyes' yaw plus the cue's offset), at most {mx} a tick, "
+          f"the speed's {go} a tick within {zone} rad of straight ahead; the orienting gain scales both; the command alone, under the switch; "
+          f"the world sums it with the brain's own command ({w.ghost.cmd_v:.3f}, {w.ghost.cmd_w:.3f})")

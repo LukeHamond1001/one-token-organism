@@ -1012,10 +1012,11 @@ class G1World(SimWorld):
         if cg_ is not None:                                               # brainstem's saccade generator: the colliculus's command and the
             gaze_step = gaze_step + np.asarray(cg_, float)                # cortex's add)
         la = acts.get(LOCO_NAME)                                          # W8: the locomotion command's step this tick
-        if la is not None and int(la) != EFFECTOR_REST[LOCO_NAME]:
-            self.ghost.command_step(*[LOCO_SETTINGS[j][k] for j, k in enumerate(act_digits(la, len(LOCO_JOINTS)))])
-        else:
-            self.ghost.command_step(0.0, 0.0)
+        lstep = [0.0, 0.0] if la is None or int(la) == EFFECTOR_REST[LOCO_NAME] else [LOCO_SETTINGS[j][k] for j, k in enumerate(act_digits(la, len(LOCO_JOINTS)))]
+        cl_ = cord.get(LOCO_NAME)                                         # A216: the born approach's step (the colliculus's road to the
+        if cl_ is not None:                                               # locomotor command), summed with the brain's own, as the saccade is
+            lstep = [float(a_) + float(b_) for a_, b_ in zip(lstep, cl_)]
+        self.ghost.command_step(*lstep)
         va = acts.get(VOICE_NAME)
         vdig = None if va is None or int(va) == VOICE_REST else act_digits(va, len(AN.TRACT))
         wo = acts.get(WORDS_NAME)

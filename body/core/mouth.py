@@ -778,7 +778,7 @@ class MouthMixin:
                      "cont": bool(cont), "stop": stop, "reflex": rfx is not None, "world": int(rfx) if rfx is not None else int(act), "int": 0.0}
         # STEP R6h: THE CORD'S PATTERNS (body/core/cord.py): its spinal pattern generator and its born cry, added below the gate to the act
         # this tick (the world adds them to the targets it re-anchors: acts.cord); the gate's draw and the act's eligibility are the gate's
-        st["now"]["cord"] = self._cord(i, frame, p_act, dig, rfx is not None) if (e.spg or e.cry or (e.orient and e.vor)) else None
+        st["now"]["cord"] = self._cord(i, frame, p_act, dig, rfx is not None) if (e.spg or e.cry or (e.orient and e.vor) or e.approach) else None   # (A216: the born approach)
 
     def _act(self, u, felt, stri, gam, delta, acted, nxt, p_act, p_choice, probs, feat, act_on, drew=None):
         """the act: the actor's credit, the intrinsic credit, its own symbol (or its rest) enters the stream, the gate's tag; each later
