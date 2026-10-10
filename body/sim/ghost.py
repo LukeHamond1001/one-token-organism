@@ -46,6 +46,11 @@ LOWER_Z = 0.30                               # m: the pelvis at the lowering's e
 FADE = 1.0 / 2000.0                          # the strength's fall a tick on which the body bears its own weight (ours: a block of bearing takes it to 0)
 RISE = 0.002                                 # the strength's rise a tick on which the ghost carries more than HANG of its weight (ours: 500 ticks hanging bring it back)
 HANG, BEARS = 0.6, 0.3                       # the share of its weight carried that counts as hanging; under which it bears its own (ours)
+EDGE_UP, EDGE_START = 0.10, 0.20             # W7c (2026-10-09, 20:50, the owner's word: as fast as possible): PRACTICE AT THE EDGE. A fall raises the
+                                             # strength by EDGE_UP over where it fell, not back to 1, and a block begins EDGE_START over the last fall's
+                                             # strength: day 136's blocks cycled 1 to 0.2 and fell there (0.23, 0.26, 0.21), most of each block spent
+                                             # at help levels where nothing is at stake; now nearly every tick is walked near the edge, the fade
+                                             # (FADE a tick) bringing it back to the edge in 200 ticks and a little past it each time. Ours
 FALL_Z, FALL_UP = 0.45, 0.5                  # fallen: the pelvis below this (m), or the trunk's long axis past 60 deg from vertical (ours)
 CLEAR_M = 0.5                                # m: the lead turns before anything standing nearer than this (C345's WALL)
 TICK_S = 0.150
@@ -102,7 +107,7 @@ class Ghost:
         self.e_kp = np.array(EXPERT_KP); self.e_kd = np.array(EXPERT_KD); self.e_default = np.array(EXPERT_DEFAULT)
         self.e_aid = np.asarray(w.aid)[self.e_idx]; self.e_lo = np.asarray(w.lo, float)[self.e_idx]; self.e_hi = np.asarray(w.hi, float)[self.e_idx]
         self.use_expert = bool(int(__import__('os').environ.get('GHOST_EXPERT', '1')))
-        self.turning = False; self.left_room = 0
+        self.turning = False; self.left_room = 0; self.edge = None   # W7c: the strength at the last fall (None: no fall yet)
         self.base = int(w.base_dof)
 
     def _policy(self):
@@ -120,7 +125,7 @@ class Ghost:
         R = d.xmat[self.b].reshape(3, 3)
         fwd = R[:, 0]
         self.heading = float(math.atan2(fwd[1], fwd[0])) if heading is None else float(heading)
-        self.on = True; self.s = 1.0; self.ticks = 0; self.lower = 0
+        self.on = True; self.s = 1.0 if self.edge is None else min(1.0, self.edge + EDGE_START); self.ticks = 0; self.lower = 0   # W7c
         self.z_from = float(d.xipos[self.b][2]); self.z_to = self.z_stand; self.lead = np.asarray(d.xipos[self.b][:2], float).copy()
         self.pxy = np.asarray(d.xpos[self.pelvis][:2], float).copy(); self.metres = 0.0; self.win = []
         self.fz_sum = 0.0; self.n = 0
@@ -252,7 +257,7 @@ class Ghost:
                     w.carry_to_mat()
                 except Exception:
                     pass
-                self.last[:] = 0.0; self.last_p[:] = 0.0; self.left_room += 1; self.ticks = 0; self.s = 1.0
+                self.last[:] = 0.0; self.last_p[:] = 0.0; self.left_room += 1; self.ticks = 0; self.s = min(1.0, self.s + EDGE_UP)
                 self.z_from = float(d.xipos[self.b][2]); self.z_to = self.z_stand; self.lead = np.asarray(d.xipos[self.b][:2], float).copy(); self.turning = False
                 print(f"the ghost's walk left the rooms at ({x_:.1f}, {y_:.1f}) at tick {w.tick}: carried to its mat (W7b)", flush=True)
                 self.win = []; self.pxy = np.asarray(d.xpos[self.pelvis][:2], float).copy()
@@ -261,7 +266,7 @@ class Ghost:
             up = d.xmat[self.b].reshape(3, 3)[:, 2]
             fallen = pz < FALL_Z or float(up[2]) < FALL_UP
             if fallen:                                                      # the catch: the harness takes it again. The first catch
-                self.s = 1.0; self.ticks = 0; self.falls += 1               # (16:05) restarted the lift from the fallen pose and hauled a
+                self.edge = float(self.s); self.s = min(1.0, self.s + EDGE_UP); self.ticks = 0; self.falls += 1   # W7c: the edge kept, a tenth more help. (16:05) the catch restarted the lift from the fallen pose and hauled a
                 lay = getattr(w, "carry_to_mat", None)                   # child on its front up by the chest, head down (the copy: pain 13
                 if lay is not None:                                         # ticks in 30); the environment lays it on its back where it fell
                     try:                                                    # first (its laying, C338 amended), and the lift is from lying;
@@ -312,7 +317,7 @@ class Ghost:
         return dict(on=bool(self.on), s=float(self.s), heading=float(self.heading), lead=[float(x) for x in self.lead],
                     ticks=int(self.ticks), lower=int(self.lower), falls=int(self.falls), turns=int(self.turns), z_from=float(self.z_from), z_to=float(self.z_to),
                     last=[float(x) for x in self.last], metres=float(self.metres),
-                    e_action=[float(x) for x in self.e_action], e_target=[float(x) for x in self.e_target], e_count=int(self.e_count), e_steps=int(self.e_steps), turning=bool(self.turning), left_room=int(self.left_room),
+                    e_action=[float(x) for x in self.e_action], e_target=[float(x) for x in self.e_target], e_count=int(self.e_count), e_steps=int(self.e_steps), turning=bool(self.turning), left_room=int(self.left_room), edge=self.edge,
                     pxy=None if self.pxy is None else [float(x) for x in self.pxy])
 
     def load_state(self, st):
@@ -325,5 +330,5 @@ class Ghost:
                                                                                         # physics state: a loaded world applies afresh)
         self.pxy = None if st.get("pxy") is None else np.asarray(st["pxy"], float).copy()
         self.e_action = np.asarray(st.get("e_action", np.zeros(12)), float).copy(); self.e_target = np.asarray(st.get("e_target", EXPERT_DEFAULT), float).copy()
-        self.e_count = int(st.get("e_count", 0)); self.e_steps = int(st.get("e_steps", 0)); self.turning = bool(st.get("turning", False)); self.left_room = int(st.get("left_room", 0))
+        self.e_count = int(st.get("e_count", 0)); self.e_steps = int(st.get("e_steps", 0)); self.turning = bool(st.get("turning", False)); self.left_room = int(st.get("left_room", 0)); self.edge = st.get("edge", None)
         self.rec = None
