@@ -934,7 +934,7 @@ def test_the_night():
     w.dusk()
     assert w.night and np.allclose(w.m.light_diffuse, day_light * W.NIGHT_LIGHT) and w.parent.asleep
     f = w.frame()
-    assert set(f.obs) == {"body", "touch", "pain", "vestibular", "imu_torso"}, set(f.obs)   # the body's own senses alone
+    assert set(f.obs) == {"body", "touch", "pain", "strain", "vestibular", "imu_torso"}, set(f.obs)   # the body's own senses alone (the strain since A88)
     blob = w.save_state()
     w.apply({})
     night_acts = [b1.acts() for _ in range(4)]

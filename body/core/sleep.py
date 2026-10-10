@@ -463,8 +463,10 @@ class SleepMixin:
         m.train()
         nb = max(1, int(self.cfg.get("night_batch", 0)))          # night_batch 0: a dream a batch (THE BUILDER'S READING: windows of frames
         losses = []; nrem = 0; wstats = [0, 0, 0]; inv_pairs = 0  # run in lockstep batches; SIM_CFG's 16)
+        parts_sum = {}; parts_n = 0                                 # the last round's lesson parts (the night report's, W8 amended's rule)
         for _ in range(int(self.cfg["night_rounds"])):
             order = torch.randperm(len(dreams), generator=self.gen).tolist(); tot = 0.0; ok = 0
+            parts_sum = {}; parts_n = 0
             for i0 in range(0, len(order), nb):
                 opt.zero_grad(set_to_none=True); self.opt_pred.zero_grad(set_to_none=True)
                 batch = [dreams[j] for j in order[i0:i0 + nb]]
@@ -485,8 +487,13 @@ class SleepMixin:
                 inv_pairs += self._frames_inverse(parts)          # act_inv replayed over the batch's own acts (its own optimizer)
                 for k_ in range(3):
                     wstats[k_] += parts["w"][k_]
+                for k_, v_ in (parts.get("parts") or {}).items():
+                    parts_sum[k_] = parts_sum.get(k_, 0.0) + float(v_)
+                parts_n += 1
                 tot += float(loss.detach()); ok += 1; nrem += 1
             losses.append(round(tot / max(1, ok), 4))
+        if parts_n:
+            rep["nrem_parts"] = {k_: round(v_ / parts_n, 4) for k_, v_ in sorted(parts_sum.items())}   # the last round's mean per part
         mid = self._frames_gauge(g_dreams)
         # --- REM on frames (REM stays on: the owner's ruling): the cortex runs free from each dream's first positions, the words drawn from
         # its readout and every other channel's code its head's forecast, and the prefrontal forecast heads learn along the free run ---
@@ -607,7 +614,8 @@ class SleepMixin:
         words = self.anatomy.words
         y, w = self._word_targets(obs[words.name], ends, lens)
         ll, _ = m.latent_loss(m.latent_pred(C), y, w=w)
-        es = self._err_scales()
+        lp_ = {"words": float(ll.detach())}                        # THE LESSON'S PARTS (the rule of W8 amended, 2026-10-10): the words', each
+        es = self._err_scales()                                    # channel's and each effector's share of the night's loss, for the report
         pair = mask[:, 1:]
         npair = float(pair.sum())
         for i_, c_ in enumerate(self.anatomy.channels):
@@ -618,6 +626,7 @@ class SleepMixin:
                 if es and c_.name in es:
                     lc_ = lc_ / es[c_.name]
                 ll = ll + lc_
+                lp_["ch:" + str(c_.name)] = float(lc_.detach())
         W_ = G.clamp(-1.0, 1.0); WL_ = (1.0 + G).clamp(0.0, 1.0)  # act_pred_night_weight (A152: the own acts' by dopamine's credit alone) and the labels' (R8's)
         wst = [0, 0, 0]
         for b, L_ in enumerate(lens):
@@ -639,7 +648,8 @@ class SleepMixin:
                 tot = lt if tot is None else tot + lt
             if tot is not None:
                 ll = ll + tot / float(len(lens))
-        return ll, {"obs": obs, "lens": lens, "w": wst}
+                lp_["eff:" + str(self.anatomy.motors[i_ - 1].name)] = float((tot / float(len(lens))).detach())
+        return ll, {"obs": obs, "lens": lens, "w": wst, "parts": lp_}
 
     def _frames_inverse(self, parts):
         """ACT_INV REPLAYED (8's R8 row: "act_inv and the forward half replayed over the day's transitions"): for each motor effector with an
