@@ -61,8 +61,10 @@ HER_HANDS = False               # C350 (2026-10-09, the owner's word at 15:00: h
                                 # motor blocks: 4 x 2,500-3,000 ticks of the room's hold, lead and fade, the lure a step ahead (C348), her voice
                                 # and face as before (she follows at a distance; a step is paid by her smile, C284). Her shows and hand-overs stay
 GHOST_FOLLOW_M, GHOST_FOLLOW_GAP = 2.0, 100   # C350: in a ghost block she walks to the child when farther than this, this often at most (ours)
-COME_GAP, COME_DIST, COME_SPOT_WAIT, COME_MIN_M = 200, 2.0, 80, 1.2   # C351: in a command block she calls it from this far, this often; her walk to the spot waits
+COME_GAP, COME_DIST, COME_SPOT_WAIT, COME_MIN_M = 200, 2.0, 150, 1.2   # C351: in a command block she calls it from this far, this often; her walk to the spot waits
                                                                         # this long at most; no call from nearer than COME_MIN_M (the copy: a call from 0.74 m paid 'came' at once). Ours
+                                                                        # C351 amended (00:15): her shows are quiet in a command block (c.quiet_shows) and the wait is 150: day 138's first
+                                                                        # block had her kneel to show toys between her walks to the spot and never get 1.2 m away; five spots, no call
 PLAY_GAP = (30, 60)                    # ticks between her floor play's offers (ours). C341 (2026-10-08) tried (15, 30) and withdrew it the same day: no more acts done a tick, the child's stress up. C269 (2026-10-04, the owner's word: the teacher wastes
                                        # not a second): 150-300 until then (22 to 45 s between offers); life day 85's audit: she neither
                                        # acted nor spoke on 33% of the day's ticks, 6,009 of them in stretches of 3 s or more
@@ -531,7 +533,7 @@ class DayPlan:
         # C330 (2026-10-08): IN FLOOR PLAY TOO, A STAND DUE COMES BEFORE HER SHOWS. Day 123: shows open on 46% of the day's ticks and
         # stands on 25%, 10 stands done of 26 offered (the offer waits for her hands and an act-free tick); the owner's first goal is
         # walking. From STAND_SOON ticks before the floor stand is due until it is asked, her conduct asks no show of its own (C315's rule)
-        c.quiet_shows = bool((kind == "motor" and self.sit_due) or
+        c.quiet_shows = bool(kind == "command" or (kind == "motor" and self.sit_due) or
                              (kind == "floor" and t >= int(getattr(self, "next_floor_stand", 0)) - STAND_SOON))   # C315: a stand owed: her conduct asks no show of its own
         busy = (c.pending is not None or c.trial is not None or not c.fast.voice_free(t)
                 or any(a[5] not in ("done", "refused", "cancelled") for a in c.acts_open))
@@ -666,22 +668,29 @@ class DayPlan:
                 gh = world.ghost; fwd = np.array([np.cos(gh.heading), np.sin(gh.heading)])
                 cands = [ch_xy + fwd * COME_DIST, ch_xy - fwd * COME_DIST, ch_xy + np.array([-fwd[1], fwd[0]]) * COME_DIST, ch_xy + np.array([fwd[1], -fwd[0]]) * COME_DIST]
                 for q_ in cands:
+                    if not (-2.3 <= q_[0] <= 2.3 and -2.0 <= q_[1] <= 2.0):          # (her walk to a point knows the first room: 'no such place' beyond it)
+                        continue
                     if pm._in_plan(q_) and float(pm.plan.dist[pm.plan.cell(q_)]) >= 0.5:
                         st["spot"] = [float(q_[0]), float(q_[1])]; st["at"] = t
-                        c.motion.request(_Plain("walk", [float(q_[0]), float(q_[1]), 0.0]))
-                        self.log.append((t, "come here: she goes to her spot (C351)", st["spot"]))
+                        st["mid"] = c.motion.request(_Plain("walk", [float(q_[0]), float(q_[1]), 0.0]))
+                        self.log.append((t, "come here: she goes to her spot (C351)", st["spot"], st["mid"]))
                         break
                 else:
                     st["next"] = t + 60
                 return
             near_ = float(np.linalg.norm(her_ - np.asarray(st["spot"], float))) < 0.5
+            if t - int(st["at"]) == 6 and st.get("mid") is not None:            # (an instrument, 00:25: day 138's first blocks had her walk to no spot:
+                try:                                                         # five spots, no walk act in the record; its status and why, logged)
+                    a_ = pm._act(st["mid"]); self.log.append((t, "come here: her walk", a_.get("status"), str(a_.get("why"))[:80], [round(float(x), 2) for x in her_]))
+                except Exception as e_:
+                    self.log.append((t, "come here: her walk unread", repr(e_)[:60]))
             if near_ or t - int(st["at"]) >= COME_SPOT_WAIT:
                 d0 = float(np.linalg.norm(ch_xy - her_))
                 if d0 < COME_MIN_M:                                         # too near to teach coming: another spot in a while
                     st["spot"] = None; st["next"] = t + 40
                     return
                 c.request("come_call")
-                lane.come_call = [int(t), d0, False, False]
+                lane.come_call = [int(t), d0, False, False, [float(ch_xy[0]), float(ch_xy[1])], [float(her_[0]), float(her_[1])]]
                 self.log.append((t, "come here: called (C351)", round(d0, 2)))
                 st["spot"] = None; st["next"] = t + COME_GAP
         except Exception as e_:

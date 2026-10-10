@@ -600,13 +600,16 @@ class ParentLane:
         if cc_ is not None:
             try:
                 her_xy_ = np.asarray(self.conduct.motion.base["at"], float)[:2]
-                d_ = float(np.linalg.norm(np.asarray(ch.pelvis[:2], float) - her_xy_))
-                if t - int(cc_[0]) > K.COME_WINDOW:
+                xy_ = np.asarray(ch.pelvis[:2], float); d_ = float(np.linalg.norm(xy_ - her_xy_))
+                xy0_ = np.asarray(cc_[4], float) if len(cc_) > 4 else xy_; her0_ = np.asarray(cc_[5], float) if len(cc_) > 5 else her_xy_
+                to_ = her0_ - xy0_; n_ = float(np.linalg.norm(to_)); to_ = to_ / n_ if n_ > 1e-6 else to_
+                moved_ = float((xy_ - xy0_) @ to_)                            # ITS OWN way toward where she called from (C351 amended, 00:40:
+                if t - int(cc_[0]) > K.COME_WINDOW:                              # the distance alone paid when SHE came back to it)
                     self.come_call = None
                 else:
-                    if not cc_[2] and d_ < float(cc_[1]) - K.COME_NEARER_M:
+                    if not cc_[2] and moved_ >= K.COME_NEARER_M:
                         ev.append(("came_nearer", "mama")); cc_[2] = True
-                    if not cc_[3] and d_ < K.COME_M:
+                    if not cc_[3] and d_ < K.COME_M and moved_ >= K.COME_OWN_M:
                         ev.append(("came", "mama")); cc_[3] = True; self.come_call = None
             except Exception:
                 self.come_call = None

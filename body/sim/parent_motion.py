@@ -1215,7 +1215,9 @@ class ParentMotion:
         tick = self.w.tick if tick is None else int(tick)
         i = self.first_id + len(self.acts)
         chan = "gaze" if kind == "look" else "body"
-        a = dict(id=i, tick=tick, kind=kind, target=None if target is None else str(target), during=during,
+        a = dict(id=i, tick=tick, kind=kind,
+                 target=None if target is None else ([float(x) for x in target] if isinstance(target, (list, tuple, np.ndarray)) else str(target)),   # C351 amended (00:35): a point
+                 during=during,                                        # stays a point (str(target) made every walk to a point 'no such place': C300's shown walks and the come lesson's spots never walked)
                  thing=None if thing is None else str(thing), chan=chan, status="queued", why="", start=None, end=None, info={})
         self.acts.append(a)
         self.live.append(i)
