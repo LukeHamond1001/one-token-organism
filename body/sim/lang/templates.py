@@ -176,13 +176,13 @@ FRAMES = {
     "ask_give": [F("give me the {o}.", "{o}"), F("give mama the {o}.", "{o}"), F("the {o}. give me the {o}.", "{o}")],
     "confirm": [F("yes. the {o}!", "{o}"), F("yes! a {o}.", "{o}"), F("good. the {o}!", "{o}"), F("yes. it is a {o}.", "{o}")],
     "confirm_act": [F("yes! good.", "good"), F("good. good!", "good")],
-    "confirm_got": [F("you got the {o}!", "{o}"), F("yes! you have the {o}.", "{o}"), F("you hold the {o}.", "{o}")],      # C270: her words
-    "confirm_held": [F("you hold the {o}.", "{o}"), F("yes! you have the {o}.", "{o}")],                                 # for its own act
-    "confirm_stood": [F("you stand!", "stand"), F("yes! you stand.", "stand"), F("up. you are up!", "up")],     # C284
+    "confirm_got": [F("you got the {o}!", "{o}"), F("yes! you got the {o}.", "{o}"), F("you hold the {o}.", "{o}")],      # C270: her words (C351 amended twice: 'have' was never hers)
+    "confirm_held": [F("you hold the {o}.", "{o}"), F("yes! you hold the {o}.", "{o}")],                                 # for its own act
+    "confirm_stood": [F("you stand!", "stand"), F("yes! you stand.", "stand"), F("up. you got up!", "up")],     # C284
     "confirm_stepped": [F("you walk!", "walk"), F("yes! you walk.", "walk"), F("walk. walk!", "walk")],
     "confirm_lifted": [F("the {o} is up.", "up"), F("up. up! the {o}.", "{o}")],
     "confirm_shook": [F("shake! you shake the {o}.", "{o}"), F("shake. shake! the {o}.", "{o}")],
-    "confirm_hit": [F("bang! the {o}.", "{o}"), F("you hit the {o}!", "{o}")],
+    "confirm_hit": [F("oh! the {o}.", "{o}"), F("you push the {o}!", "{o}")],
     "confirm_reach_nearer": [F("yes. get the {o}.", "{o}"), F("get it! the {o}.", "{o}")],
     "recast": [F("{w}. yes. the {w}.", "{w}"), F("yes. the {w}!", "{w}")],
     "recast_word": [F("{w}. yes. {w}.", "{w}"), F("yes! {w}.", "{w}")],
@@ -196,7 +196,7 @@ FRAMES = {
     "narrate_walk": [F("walk. walk. walk.", "walk"), F("mama walk. walk.", "walk"), F("look. mama walk. walk.", "walk")],   # C300: she shows walking (C351 amended twice: 'walks', 'goes' and the commas were never hers; the frames refused since C300)
     "narrate_sib": [F("look. walk. walk. walk.", "walk"), F("see? walk. walk.", "walk"), F("walk. walk. walk.", "walk")],   # D2: the sibling walking in its view
     "narrate_sib_get": [F("look. get the {o}.", "{o}"), F("up. the {o}.", "{o}"), F("see? the {o}.", "{o}")],   # D2: the sibling getting a toy
-    "narrate_get": [F("mama gets the {o}.", "{o}"), F("up. mama has the {o}.", "{o}"), F("look. mama gets the {o}.", "{o}")],   # C300: she shows getting
+    "narrate_get": [F("mama get the {o}.", "{o}"), F("up. mama has the {o}.", "{o}"), F("look. mama get the {o}.", "{o}")],   # C300: she shows getting
     "narrate_fell": [F("uh oh. the {o} is down.", "down"), F("oh! the {o} is down.", "down")],
     "narrate_on": [F("the {o} is on the {p}.", "{p}")],
     "narrate_rolled": [F("oh! you roll.", "roll"), F("roll! you roll.", "roll")],
