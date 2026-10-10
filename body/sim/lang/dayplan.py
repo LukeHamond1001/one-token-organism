@@ -61,7 +61,8 @@ HER_HANDS = False               # C350 (2026-10-09, the owner's word at 15:00: h
                                 # motor blocks: 4 x 2,500-3,000 ticks of the room's hold, lead and fade, the lure a step ahead (C348), her voice
                                 # and face as before (she follows at a distance; a step is paid by her smile, C284). Her shows and hand-overs stay
 GHOST_FOLLOW_M, GHOST_FOLLOW_GAP = 2.0, 100   # C350: in a ghost block she walks to the child when farther than this, this often at most (ours)
-COME_GAP, COME_DIST, COME_SPOT_WAIT, COME_MIN_M = 200, 2.0, 150, 1.2   # C351: in a command block she calls it from this far, this often; her walk to the spot waits
+COME_GAP, COME_DIST, COME_SPOT_WAIT, COME_MIN_M = 200, 1.5, 150, 1.2
+COME_STAY_MAX = 900                     # C351 amended four times: she keeps her spot, calling every COME_GAP, until it comes (within COME_MIN_M) or this long   # C351: in a command block she calls it from this far, this often; her walk to the spot waits
                                                                         # this long at most; no call from nearer than COME_MIN_M (the copy: a call from 0.74 m paid 'came' at once). Ours
                                                                         # C351 amended (00:15): her shows are quiet in a command block (c.quiet_shows) and the wait is 150: day 138's first
                                                                         # block had her kneel to show toys between her walks to the spot and never get 1.2 m away; five spots, no call
@@ -656,8 +657,9 @@ class DayPlan:
                 self.log.append((t, "ghost follow failed (C350)", repr(e_)[:80])); self.ghost_follow = t
 
     def _come_tick(self, t, lane, world, c, pm):
-        """C351: every COME_GAP she walks to a spot COME_DIST from the child, in front of it, turns to it and calls it ('come here'); the
-        lane pays its coming (came_nearer, came). Between calls she stays where she is (it must come to her, not she to it)"""
+        """C351: she walks to a spot COME_DIST from the child, in front of it, turns to it and calls it ('come here') every COME_GAP from
+        there; the lane pays its coming (came_nearer, came). She keeps her spot until it comes (within COME_MIN_M: a new spot in a while)
+        or COME_STAY_MAX passes (C351 amended four times); between calls she stays where she is (it must come to her, not she to it)"""
         st = getattr(self, "come", None)
         if st is None:
             self.come = st = dict(next=t + 60, spot=None, at=None)
@@ -687,13 +689,18 @@ class DayPlan:
                     self.log.append((t, "come here: her walk unread", repr(e_)[:60]))
             if near_ or t - int(st["at"]) >= COME_SPOT_WAIT:
                 d0 = float(np.linalg.norm(ch_xy - her_))
-                if d0 < COME_MIN_M:                                         # too near to teach coming: another spot in a while
+                if d0 < COME_MIN_M:                                         # it came (or she is too near to teach coming): another spot in a while
                     st["spot"] = None; st["next"] = t + 40
                     return
-                c.request("come_call")
-                lane.come_call = [int(t), d0, False, False, [float(ch_xy[0]), float(ch_xy[1])], [float(her_[0]), float(her_[1])]]
-                self.log.append((t, "come here: called (C351)", round(d0, 2)))
-                st["spot"] = None; st["next"] = t + COME_GAP
+                if t - int(st["at"]) >= COME_STAY_MAX:                      # C351 amended four times: a spot it never came to, given up
+                    st["spot"] = None; st["next"] = t + 40
+                    return
+                if t < int(st.get("called", -10 ** 9)) + COME_GAP:          # she keeps her spot and calls again every COME_GAP (04:00: the
+                    return                                                  # first form chose a new spot 2 m off after every call, walking
+                c.request("come_call")                                      # away from a child coming to her; and at 2 to 3 m her face was
+                lane.come_call = [int(t), d0, False, False, [float(ch_xy[0]), float(ch_xy[1])], [float(her_[0]), float(her_[1])]]   # under the born
+                self.log.append((t, "come here: called (C351)", round(d0, 2)))                                                   # cue's size)
+                st["called"] = int(t)
         except Exception as e_:
             self.log.append((t, "come here failed (C351)", repr(e_)[:80])); self.come = None
 
