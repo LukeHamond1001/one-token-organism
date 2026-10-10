@@ -63,6 +63,7 @@ HER_HANDS = False               # C350 (2026-10-09, the owner's word at 15:00: h
 GHOST_FOLLOW_M, GHOST_FOLLOW_GAP = 2.0, 100   # C350: in a ghost block she walks to the child when farther than this, this often at most (ours)
 COME_GAP, COME_DIST, COME_SPOT_WAIT, COME_MIN_M = 200, 1.2, 150, 0.9   # C351 amended five times: 1.3 m, crouched (her face in its eyes' field); under 0.9 m too near to teach
 WEDGE_CLEAR_M, WEDGE_EVERY = 1.0, 50      # C352: a lying child in pain this near (m) anything standing is carried to its mat; checked every this many ticks (ours: LAY_CLEAR_M's 1.0)
+COME_FAR_M = 1.8                        # C351 amended five times: a call from farther than this (the crouched face's reach in its eyes' field) is not made: another spot nearer
 COME_STAY_MAX = 900                     # C351 amended four times: she keeps her spot, calling every COME_GAP, until it comes (within COME_MIN_M) or this long   # C351: in a command block she calls it from this far, this often; her walk to the spot waits
                                                                         # this long at most; no call from nearer than COME_MIN_M (the copy: a call from 0.74 m paid 'came' at once). Ours
                                                                         # C351 amended (00:15): her shows are quiet in a command block (c.quiet_shows) and the wait is 150: day 138's first
@@ -723,8 +724,9 @@ class DayPlan:
                 if d0 < COME_MIN_M:                                         # it came (or she is too near to teach coming): another spot in a while
                     st["spot"] = None; st["next"] = t + 40
                     return
-                if t - int(st["at"]) >= COME_STAY_MAX:                      # C351 amended four times: a spot it never came to, given up
-                    st["spot"] = None; st["next"] = t + 40
+                if t - int(st["at"]) >= COME_STAY_MAX or d0 > COME_FAR_M:   # C351 amended four times: a spot it never came to, given up;
+                    st["spot"] = None; st["next"] = t + 40                  # five times: the child drifted off while she walked and knelt
+                    self.log.append((t, "come here: too far to be seen, another spot (C351)", round(d0, 2)))
                     return
                 if t < int(st.get("called", -10 ** 9)) + COME_GAP:          # she keeps her spot and calls again every COME_GAP (04:00: the
                     return                                                  # first form chose a new spot 2 m off after every call, walking
