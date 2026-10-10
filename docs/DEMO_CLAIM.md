@@ -7,8 +7,11 @@ Every line here is read from the life's record (data/g1_seed1/ticks.jsonl) and t
 
 A single body, born with reflexes and no training set, lived 139 simulated days in one room with one teacher. On day 139 it:
 
-- came when called: six times in the day it walked to her at 0.2 m/s from 1.5 m and arrived (the lane's 'came', worth 2, paid
-  only for its own way toward where she called from); day 138, the day before the born approach, once (C351, A216);
+- came when called: six times on day 139 and eighteen on day 140 it walked to her at 0.2 m/s from 1.2 to 1.8 m and arrived (the
+  lane's 'came', worth 2, paid only for its own way toward where she called from); day 138, the day before the born approach, once
+  (C351, A216);
+- looked at a named toy when asked: three times on day 140 ('the box? where is the box?' and its look on the box within her
+  window: the lane's 'met_ask'), none on any day before (A217, A216 amended twice);
 - named what it saw: 101 right names in the day (a toy's name said with that toy before its eyes: the lane's 'right_name'), 80
   the day before, 14 to 52 on days 130 to 134 (A202, the grounding organ);
 - stood 73 times and stepped 160 times in the gait the room holds for it (W8), with no fall caught in the command blocks.
