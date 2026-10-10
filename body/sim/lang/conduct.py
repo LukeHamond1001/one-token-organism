@@ -503,6 +503,7 @@ INTENTS = {
     "call": Intent("calling", True, "call", (Act("lean_in", "child_periphery"),)),   # her face into its periphery (A3); her
                                                              # teaching's call: the name test is trial_name's (4.8)
     "hall_call": Intent("calling", True, None),                      # not judged: from the hall no look can answer it (4.7)
+    "come_call": Intent("calling", True, None),                      # C351: from across the room in a command block; the lane judges the coming, not the look
     "greet": Intent("plain", False, None, (Act("lean_in", "child_periphery"), EYES)),
     "return": Intent("plain", False, None, (Act("walk", "child"), Act("lean_in", "child_periphery"))),
     "answer_bid": Intent("calling"),
@@ -759,7 +760,7 @@ class FastLayer:
             return (t >= self.last_line + K.PAUSE_RELATED), "a set's 6-tick pause"
         if not reply and t < self.last_expect + K.PAUSE_EXPECT:
             return False, "the expectant pause"
-        if line.intent in ("call", "hall_call") and t < self.last_call + K.CALL_EVERY:
+        if line.intent in ("call", "hall_call", "come_call") and t < self.last_call + K.CALL_EVERY:
             return False, "the call at most once per 240 ticks"
         if self.last_said.get(TP.key(line.text), NEVER) > t - K.SAME_LINE:
             return False, "the same line within 60 ticks"

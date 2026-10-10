@@ -149,6 +149,7 @@ FRAMES = {
     "call": [F("{n}.", "{n}"), F("{n}. look at mama.", "mama"), F("{n}. look here.")],   # her teaching's call (4.5); the name
                                                         # test is trial_name's (its name or a foil: 4.8, 12)
     "hall_call": [F("{n}.", "{n}"), F("{n}? mama is here.")],
+    "come_call": [F("come here, {n}.", "{n}"), F("{n}. come to mama.", "mama"), F("come. come here, {n}.", "{n}")],   # C351: called from across the room (the focus word last)
     "greet": [F("hi {n}.", "{n}"), F("hi. hi {n}.", "{n}"), F("hi {n}. mama is here.")],
     "return": [F("hi {n}! mama is here."), F("hi {n}. hi.", "hi")],
     "answer_bid": [F("mama is here.")],

@@ -54,6 +54,7 @@ EVENT_KINDS = (
     "sat",           # the child came to sit
     "stood",         # C284: on its feet, its pelvis up and its trunk upright, held (lane.STOOD_*)
     "stepped",       # C284: standing, its pelvis carried a step's length over the floor (lane.STEP_*)
+    "came", "came_nearer",   # C351: called from across the room, it came within COME_M of her; nearer by COME_NEARER_M (lane; the command blocks' lesson)
     "got",           # the child took hold of a toy itself (the object)
     "found",         # the child took a toy she had hidden in the bucket out of it (the object; the hide game, A129)
     "gave",          # the child put a toy in her hand (the object)

@@ -61,6 +61,8 @@ HER_HANDS = False               # C350 (2026-10-09, the owner's word at 15:00: h
                                 # motor blocks: 4 x 2,500-3,000 ticks of the room's hold, lead and fade, the lure a step ahead (C348), her voice
                                 # and face as before (she follows at a distance; a step is paid by her smile, C284). Her shows and hand-overs stay
 GHOST_FOLLOW_M, GHOST_FOLLOW_GAP = 2.0, 100   # C350: in a ghost block she walks to the child when farther than this, this often at most (ours)
+COME_GAP, COME_DIST, COME_SPOT_WAIT, COME_MIN_M = 200, 2.0, 80, 1.2   # C351: in a command block she calls it from this far, this often; her walk to the spot waits
+                                                                        # this long at most; no call from nearer than COME_MIN_M (the copy: a call from 0.74 m paid 'came' at once). Ours
 PLAY_GAP = (30, 60)                    # ticks between her floor play's offers (ours). C341 (2026-10-08) tried (15, 30) and withdrew it the same day: no more acts done a tick, the child's stress up. C269 (2026-10-04, the owner's word: the teacher wastes
                                        # not a second): 150-300 until then (22 to 45 s between offers); life day 85's audit: she neither
                                        # acted nor spoke on 33% of the day's ticks, 6,009 of them in stretches of 3 s or more
@@ -638,6 +640,9 @@ class DayPlan:
                 world.pin_toy(lure_, pos_, ticks=2)
         except Exception as e_:
             self.log.append((t, "ghost lure failed (C350)", repr(e_)[:80])); self.lure = None
+        if gh.command:                                                      # C351: COME HERE, the command blocks' lesson
+            self._come_tick(t, lane, world, c, pm)
+            return
         if t - int(getattr(self, "ghost_follow", 0)) >= GHOST_FOLLOW_GAP and not pm.holds:
             try:
                 ch_xy = np.asarray(world.d.qpos[:2], float); her_ = np.asarray(pm.base["at"], float)[:2]
@@ -646,6 +651,41 @@ class DayPlan:
                     self.ghost_follow = t
             except Exception as e_:
                 self.log.append((t, "ghost follow failed (C350)", repr(e_)[:80])); self.ghost_follow = t
+
+    def _come_tick(self, t, lane, world, c, pm):
+        """C351: every COME_GAP she walks to a spot COME_DIST from the child, in front of it, turns to it and calls it ('come here'); the
+        lane pays its coming (came_nearer, came). Between calls she stays where she is (it must come to her, not she to it)"""
+        st = getattr(self, "come", None)
+        if st is None:
+            self.come = st = dict(next=t + 60, spot=None, at=None)
+        try:
+            ch_xy = np.asarray(world.d.qpos[:2], float); her_ = np.asarray(pm.base["at"], float)[:2]
+            if st["spot"] is None:
+                if t < st["next"] or pm.holds:
+                    return
+                gh = world.ghost; fwd = np.array([np.cos(gh.heading), np.sin(gh.heading)])
+                cands = [ch_xy + fwd * COME_DIST, ch_xy - fwd * COME_DIST, ch_xy + np.array([-fwd[1], fwd[0]]) * COME_DIST, ch_xy + np.array([fwd[1], -fwd[0]]) * COME_DIST]
+                for q_ in cands:
+                    if pm._in_plan(q_) and float(pm.plan.dist[pm.plan.cell(q_)]) >= 0.5:
+                        st["spot"] = [float(q_[0]), float(q_[1])]; st["at"] = t
+                        c.motion.request(_Plain("walk", [float(q_[0]), float(q_[1]), 0.0]))
+                        self.log.append((t, "come here: she goes to her spot (C351)", st["spot"]))
+                        break
+                else:
+                    st["next"] = t + 60
+                return
+            near_ = float(np.linalg.norm(her_ - np.asarray(st["spot"], float))) < 0.5
+            if near_ or t - int(st["at"]) >= COME_SPOT_WAIT:
+                d0 = float(np.linalg.norm(ch_xy - her_))
+                if d0 < COME_MIN_M:                                         # too near to teach coming: another spot in a while
+                    st["spot"] = None; st["next"] = t + 40
+                    return
+                c.request("come_call")
+                lane.come_call = [int(t), d0, False, False]
+                self.log.append((t, "come here: called (C351)", round(d0, 2)))
+                st["spot"] = None; st["next"] = t + COME_GAP
+        except Exception as e_:
+            self.log.append((t, "come here failed (C351)", repr(e_)[:80])); self.come = None
 
     def _away_tick(self, t, t_day, lane, world, kind):
         c = lane.conduct

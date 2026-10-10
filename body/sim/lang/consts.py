@@ -436,11 +436,15 @@ MOTOR_WORTH = {                       # event kind -> (its worth, the full act i
                                       # MASTERED_N (3) in her book from day 65's 22 shakes a day, which were toys swung against a hand
                                       # they rested on, not shakes of a held toy, so "shook" was mastered on every toy before any was held
                                       # and the held smile could never pay. A parent smiles at holding on while it is new (per toy, as any act's)
+    "came": (2, None),                # C351 (2026-10-09, 23:00): COME HERE. Called from across the room (the command blocks' lesson, dayplan), it came
+                                      # within COME_M of her: the walk toward a person who calls, the first walking a toddler's cortex learns
+    "came_nearer": (1, "came"),      # C351: shaping toward it: nearer to her by COME_NEARER_M than when she called, within COME_WINDOW, once a call
     "reach_nearer": (1, "got"),       # shaping (MacGlashan et al. 2017): a reach that ended nearer the toy than its best of the last
                                       # BOOK_LAST, worth 1 until "got" is mastered on that toy
     "half_roll": (1, "rolled"),       # onto its side, worth 1 until the whole roll is mastered
 }
-RECOVER_MOTOR = ("stood", "stepped")  # C295: the motor acts whose smiles recover over the night, as words do (C159)
+RECOVER_MOTOR = ("stood", "stepped", "came")  # C295: the motor acts whose smiles recover over the night, as words do (C159); C351: and coming when called
+COME_M, COME_NEARER_M, COME_WINDOW = 0.7, 0.3, 120   # C351: arrived within this of her (m); nearer by this than at the call; the call's window (ticks; ours)
 RECOVER_KEEP = 0.25                   # C295: ... to this share of their count (ours: at 30 steps a day the morning pays about 25 of them; at HABIT_KEEP, 7)
 HABIT_TAU = 10.0                      # the n-th smile for the same act and object is worth w e^(-n/10): A2's fall with mastery, its floor
                                       # of 1 removed (the positive circuits of Knox and Stone 2015: a smile that never ends is farmed)

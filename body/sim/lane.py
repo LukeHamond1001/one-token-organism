@@ -592,6 +592,24 @@ class ParentLane:
                     self.step_best = pend_[1]; self._lv[("stepped", None)] = pend_[1]
         else:
             self.step_from = None; self.step_pend = None
+        # C351 (2026-10-09): COME HERE. The day plan's command blocks have her call it from across the room (come_call) and set
+        # self.come_call = [tick, its distance to her then, nearer paid, came paid]; within COME_WINDOW of the call, nearer to her by
+        # COME_NEARER_M than at the call pays 'came_nearer' once, and within COME_M of her pays 'came' and ends the call. Its coming
+        # is its own act under the gait circuit it commands (W8: the room's gait, the brain's go and turn)
+        cc_ = getattr(self, "come_call", None)
+        if cc_ is not None:
+            try:
+                her_xy_ = np.asarray(self.conduct.motion.base["at"], float)[:2]
+                d_ = float(np.linalg.norm(np.asarray(ch.pelvis[:2], float) - her_xy_))
+                if t - int(cc_[0]) > K.COME_WINDOW:
+                    self.come_call = None
+                else:
+                    if not cc_[2] and d_ < float(cc_[1]) - K.COME_NEARER_M:
+                        ev.append(("came_nearer", "mama")); cc_[2] = True
+                    if not cc_[3] and d_ < K.COME_M:
+                        ev.append(("came", "mama")); cc_[3] = True; self.come_call = None
+            except Exception:
+                self.come_call = None
         up = post == "front" and float(ch.head[2] - ch.pelvis[2]) > HEAD_UP_M
         self.head_up_run = self.head_up_run + 1 if up else 0
         if self.head_up_run == HEAD_UP_TICKS and t - self.last_head_up >= HEAD_UP_GAP:   # held, once in HEAD_UP_GAP
@@ -930,6 +948,7 @@ class ParentLane:
                     posture=self.posture, face_down=self.face_down, last_posture=self.last.get("posture"), n_lines=self.n_lines,
                     off_back=self.off_back, tummy_over=self.tummy_over,   # C217
                     plan=None if self.plan is None else self.plan.state(), day=self.day, day_start=self.day_start,
+                    come_call=None if getattr(self, "come_call", None) is None else list(self.come_call),   # C351
                     eyes=dict(first=self.first, hand_prev={k: v.tolist() for k, v in self.hand_prev.items()},
                               hand_speed={k: list(v) for k, v in self.hand_speed.items()}, hand_moved_t=dict(self.hand_moved_t),
                               toy_prev={k: v.tolist() for k, v in self.toy_prev.items()}, toy_speed=dict(self.toy_speed),
@@ -1020,6 +1039,7 @@ class ParentLane:
             self.cry_down, self.distressed = int(e.get("cry_down", 0)), bool(e.get("distressed", False))
             self.touch_run = {k: int(v) for k, v in e.get("touch_run", {}).items()}; self.got_arm = {k: bool(v) for k, v in e.get("got_arm", {}).items()}
         self.n_lines = int(s["n_lines"])
+        self.come_call = None if s.get("come_call") is None else list(s["come_call"])   # (C351; older saves: none)
         if self.plan is not None and s.get("plan") is not None:
             self.plan.load_state(s["plan"])
         self.day, self.day_start = int(s.get("day", 0)), int(s.get("day_start", 0))
