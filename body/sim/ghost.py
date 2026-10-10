@@ -223,6 +223,15 @@ class Ghost:
         a = self.e_aid
         d.ctrl[a] = (1.0 - s) * d.ctrl[a] + s * np.clip(self.e_target, self.e_lo, self.e_hi)
 
+    @staticmethod
+    def _room_mid(xy):
+        """the middle of the room the point is in (ROOMS; the first room when in neither)"""
+        for x0, x1, y0, y1 in ROOMS:
+            if x0 - ROOM_SLACK <= xy[0] <= x1 + ROOM_SLACK and y0 - ROOM_SLACK <= xy[1] <= y1 + ROOM_SLACK:
+                return np.array([(x0 + x1) / 2, (y0 + y1) / 2])
+        x0, x1, y0, y1 = ROOMS[0]
+        return np.array([(x0 + x1) / 2, (y0 + y1) / 2])
+
     # ------------------------------------------------------------------ the tick's end
     def tick_end(self, w, acts, digits, settings):
         m, d = w.m, w.d
@@ -275,13 +284,16 @@ class Ghost:
                 probe = txy + fwd * look
                 par = getattr(w, "parent", None)
                 clear = getattr(par, "_standing_clear_m", None)
-                if clear is not None and not self.turning:
-                    for _ in range(3):
-                        if float(clear(probe)) >= CLEAR_M:
-                            break
-                        self.heading = _wrap(self.heading + math.pi / 2); self.turns += 1; self.turning = expert_   # (the expert turns in place)
-                        fwd = np.array([math.cos(self.heading), math.sin(self.heading)])
-                        probe = txy + fwd * look; self.lead = txy.copy()
+                if clear is not None and not self.turning and float(clear(probe)) < CLEAR_M:
+                    # blocked ahead: toward the room's middle when far from it (20:25: a quarter turn left it turning in place against
+                    # the west wall for a block, 17 m and 9% of ticks with anything in view), else a quarter turn; the expert turns in place
+                    mid = self._room_mid(txy)
+                    to_mid = mid - txy
+                    if float(np.linalg.norm(to_mid)) > 1.0:
+                        self.heading = float(math.atan2(to_mid[1], to_mid[0]))
+                    else:
+                        self.heading = _wrap(self.heading + math.pi / 2)
+                    self.turns += 1; self.turning = expert_; self.lead = txy.copy()
                 if share > HANG:
                     self.s = min(1.0, self.s + RISE)
                 elif share < BEARS:
