@@ -2768,7 +2768,7 @@ def test_the_born_approach():
     assert int(SIM_CFG["approach"]) == 1 and int(REFLEX["approach"]) == 0
     anat = SimAnatomy(born_table(), dict(SIM_CFG))
     loco = next(e for e in anat.motors if e.name == "loco"); gaze = next(e for e in anat.motors if e.name == "gaze")
-    assert loco.approach == {"go": 0, "turn": 1, "cues": ("face",), "eye": ("body", GAZE_AT), "gyro": ("imu_torso", 5)} and loco.orient == {1: ("yaw", -1)} and loco.n_in == 2
+    assert loco.approach == {"go": 0, "turn": 1, "cues": ("face", "sound"), "eye": ("body", GAZE_AT), "gyro": ("imu_torso", 5)} and loco.orient == {1: ("yaw", -1)} and loco.n_in == 2
     k, mx, go, zone, cd = (float(REFLEX[n_]) for n_ in ("approach_turn_gain", "approach_turn_max", "approach_go", "approach_zone", "approach_damp"))
 
     class Body(CordMixin):
@@ -2796,7 +2796,13 @@ def test_the_born_approach():
     s = step([1.0, -0.01, 0.0], eye_yaw=-0.01, body=Body(0.5)); assert abs(s[1] - 0.5 * k * 0.02) < 1e-12 and abs(s[0] - 0.5 * go) < 1e-12, s
     s = step([1.0, -0.01, 0.0], eye_yaw=-0.01, body=Body(-0.5)); assert abs(s[1] + 0.5 * k * 0.02) < 1e-12 and abs(s[0] + 0.5 * go) < 1e-12, s
     assert step([0.0, 0.0, 0.0]) is None
-    assert step([0.0, 0.0, 0.0], extra=dict(onset_periph=[1.0, 0.1, 0.0], sound_side=[1.0, 1.0])) is None
+    s = step([0.0, 0.0, 0.0], extra=dict(sound_side=[1.0, 0.5]))                   # her voice 0.5 rad to the left (the ears' read, + left):
+    assert abs(s[1] - mx) < 1e-12 and s[0] == 0.0, s                               # a left turn at the slew, no step toward a sound
+    s = step([0.0, 0.0, 0.0], extra=dict(sound_side=[1.0, -0.02]))
+    assert abs(s[1] + k * 0.02) < 1e-12 and s[0] == 0.0, s                         # a little to the right: proportional, no step
+    assert step([0.0, 0.0, 0.0], extra=dict(onset_periph=[1.0, 0.1, 0.0])) is None   # a sudden change in view is no one to go to
+    s = step([1.0, 0.0, 0.0], extra=dict(sound_side=[1.0, 0.5]))                   # her face straight ahead and her voice: the face leads
+    assert abs(s[1]) < 1e-12 and abs(s[0] - go) < 1e-12, s
     assert gaze.approach is None                                                   # the eyes keep their saccade; the approach is the command's
     # the cord composes it for the command under its switch; the eyes keep their saccade
     b = Body(); b.motor = [dict(cord_n={}, now={}) for _ in anat.motors]; b.ticks = 1

@@ -362,8 +362,10 @@ class CordMixin:
         together with where the eyes point in the head (Freedman and Sparks 1997: gaze shifts share the eyes' and the head's part); a
         newborn turns toward its mother's face and voice (Goren, Sarty and Wu 1975; Muir and Field 1979), and the infant's approach to
         the caregiver is the attachment system's set goal (Bowlby 1969). For an effector that declares `approach` (the G1's locomotor
-        command, W8), the first of its named standing cues that fires (the face) gives its bearing from the body: the eyes' yaw in the
-        head (approach["eye"]: the frame's observation and index) plus the cue's offset from the fovea (rad, + right); the turn joint's
+        command, W8), the first of its named cues that fires, in their declared order (her face; then her voice's side at an onset,
+        the newborn's head turn to its mother's voice: a turn alone, no step, the ears' angle being a side and not a place), gives its
+        bearing from the body: for the face the eyes' yaw in the head (approach["eye"]: the frame's observation and index) plus the
+        cue's offset from the fovea (rad, + right), for the voice the ears' born lateral read; the turn joint's
         step is approach_turn_gain x the bearing, signed by the joint's declared sense (`orient`), less approach_damp x the body's own
         yaw rate (approach["gyro"]: the trunk's gyro, + left; the vestibular damping of a turn), at most approach_turn_max a tick; the
         speed joint's step is approach_go a tick while the bearing lies within approach_zone of straight ahead (it walks when it faces
@@ -372,15 +374,18 @@ class CordMixin:
         from her face as every act does, and can hold against it. -> one step per joint, or None"""
         ap = e.approach
         names = tuple(ap.get("cues", ("face",)))
-        for c, _dy, _dp, _ in self._orient_cues(frame):
-            if c.name not in names or c.onset or c.yaw is None:
+        cues_ = {c_[0].name: c_[0] for c_ in self._orient_cues(frame)}
+        for name in names:                                                  # in the declared order: the face before the voice
+            c = cues_.get(name)
+            if c is None or c.yaw is None:
                 continue
             o_ = frame.obs.get(c.obs)
             if o_ is None or float(o_[int(c.fired)]) <= 0.0:
                 continue
-            bearing = float(c.sense) * float(o_[int(c.yaw)])
-            eye = ap.get("eye")
-            if eye is not None:
+            heard = bool(c.onset or c.side_only)                            # a sound's side at its onset (the ears' angle in the head: no eye
+            bearing = float(c.sense) * float(o_[int(c.yaw)])                # term; a turn toward the voice, never a step: its angle is a
+            eye = ap.get("eye")                                             # side, not a place, and a voice behind reads as straight ahead)
+            if eye is not None and not heard:
                 ob_ = frame.obs.get(eye[0])
                 if ob_ is not None:
                     bearing += float(ob_[int(eye[1])])
@@ -399,7 +404,7 @@ class CordMixin:
                 c = float(self._reflex_const("approach_damp"))
                 out[int(jt)] = g * max(-mx, min(mx, sg * k * bearing - c * rate)); moved = True
             jg = ap.get("go")
-            if jg is not None and abs(bearing) <= float(self._reflex_const("approach_zone")):
+            if jg is not None and not heard and abs(bearing) <= float(self._reflex_const("approach_zone")):
                 out[int(jg)] = g * float(self._reflex_const("approach_go")); moved = True
             return out if moved else None
         return None
