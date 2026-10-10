@@ -2768,7 +2768,7 @@ def test_the_born_approach():
     assert int(SIM_CFG["approach"]) == 1 and int(REFLEX["approach"]) == 0
     anat = SimAnatomy(born_table(), dict(SIM_CFG))
     loco = next(e for e in anat.motors if e.name == "loco"); gaze = next(e for e in anat.motors if e.name == "gaze")
-    assert loco.approach == {"go": 0, "turn": 1, "cues": ("face", "sound"), "eye": ("body", GAZE_AT), "gyro": ("imu_torso", 5)} and loco.orient == {1: ("yaw", -1)} and loco.n_in == 2
+    assert loco.approach == {"go": 0, "turn": 1, "cues": ("named", "face", "sound"), "eye": ("body", GAZE_AT), "gyro": ("imu_torso", 5)} and loco.orient == {1: ("yaw", -1)} and loco.n_in == 2
     k, mx, go, zone, cd = (float(REFLEX[n_]) for n_ in ("approach_turn_gain", "approach_turn_max", "approach_go", "approach_zone", "approach_damp"))
 
     class Body(CordMixin):
@@ -2779,7 +2779,8 @@ def test_the_born_approach():
     def step(face, eye_yaw=0.0, body=None, e=loco, extra=None, rate=0.0):
         b = body or Body(); b.ticks += 1
         bd = [0.0] * (GAZE_AT + 6); bd[GAZE_AT] = float(eye_yaw)
-        obs = dict(face_periph=list(face), body=bd, imu_torso=[0.0, 0.0, 9.81, 0.0, 0.0, float(rate)], sound_side=[0.0, 0.0], onset_periph=[0.0, 0.0, 0.0])
+        obs = dict(face_periph=list(face), body=bd, imu_torso=[0.0, 0.0, 9.81, 0.0, 0.0, float(rate)], sound_side=[0.0, 0.0], onset_periph=[0.0, 0.0, 0.0],
+                   named_periph=[0.0, 0.0, 0.0], gaze_periph=[0.0, 0.0, 0.0], salient_periph=[0.0, 0.0, 0.0], hand_periph=[0.0, 0.0, 0.0])
         obs.update(extra or {})
         return b._approach_step(e, types.SimpleNamespace(obs=obs))
     s = step([1.0, 0.30, 0.0], eye_yaw=0.10)
@@ -2804,11 +2805,14 @@ def test_the_born_approach():
     assert step([0.0, 0.0, 0.0], extra=dict(onset_periph=[1.0, 0.1, 0.0])) is None   # a sudden change in view is no one to go to
     s = step([1.0, 0.0, 0.0], extra=dict(sound_side=[1.0, 0.5]))                   # her face straight ahead and her voice: the face leads
     assert abs(s[1]) < 1e-12 and abs(s[0] - go) < 1e-12, s
+    s = step([1.0, 0.0, 0.0], extra=dict(named_periph=[1.0, 0.04, 0.0]))           # a heard word's look 0.04 right with her face ahead: the
+    assert abs(s[1] + k * 0.04) < 1e-12 and abs(s[0] - go) < 1e-12, s             # word's look leads (A216 amended twice), and it is in the zone
     assert gaze.approach is None                                                   # the eyes keep their saccade; the approach is the command's
     # the cord composes it for the command under its switch; the eyes keep their saccade
     b = Body(); b.motor = [dict(cord_n={}, now={}) for _ in anat.motors]; b.ticks = 1
     bd = [0.0] * (GAZE_AT + 6)
-    f = types.SimpleNamespace(obs=dict(face_periph=[1.0, 0.30, 0.0], body=bd, imu_torso=[0.0] * 6, sound_side=[0.0, 0.0], onset_periph=[0.0, 0.0, 0.0]))
+    f = types.SimpleNamespace(obs=dict(face_periph=[1.0, 0.30, 0.0], body=bd, imu_torso=[0.0] * 6, sound_side=[0.0, 0.0], onset_periph=[0.0, 0.0, 0.0],
+                                       named_periph=[0.0, 0.0, 0.0], gaze_periph=[0.0, 0.0, 0.0], salient_periph=[0.0, 0.0, 0.0], hand_periph=[0.0, 0.0, 0.0]))
     il = anat.motors.index(loco) + 1; ig = anat.motors.index(gaze) + 1
     c = b._cord(il, f, 0.5, None, False)
     assert c is not None and abs(c[1] + mx) < 1e-12 and abs(c[0] - go) < 1e-12 and b.motor[il - 1]["cord_n"]["approach"] == 1, c
