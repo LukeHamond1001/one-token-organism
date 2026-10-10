@@ -364,7 +364,8 @@ class CordMixin:
         the caregiver is the attachment system's set goal (Bowlby 1969). For an effector that declares `approach` (the G1's locomotor
         command, W8), the first of its named standing cues that fires (the face) gives its bearing from the body: the eyes' yaw in the
         head (approach["eye"]: the frame's observation and index) plus the cue's offset from the fovea (rad, + right); the turn joint's
-        step is approach_turn_gain x the bearing, at most approach_turn_max a tick, signed by the joint's declared sense (`orient`); the
+        step is approach_turn_gain x the bearing, signed by the joint's declared sense (`orient`), less approach_damp x the body's own
+        yaw rate (approach["gyro"]: the trunk's gyro, + left; the vestibular damping of a turn), at most approach_turn_max a tick; the
         speed joint's step is approach_go a tick while the bearing lies within approach_zone of straight ahead (it walks when it faces
         her); both times the orienting gain (the amygdala's toward or away: a face that forecasts bad turns it away). A cord step: summed
         with the brain's own command below the gate, no efference copy, no credit; the brain's own acts on the command earn their credit
@@ -389,7 +390,14 @@ class CordMixin:
             if jt is not None:
                 sg = float((e.orient or {}).get(int(jt), ("yaw", 1))[1])
                 k = float(self._reflex_const("approach_turn_gain")); mx = float(self._reflex_const("approach_turn_max"))
-                out[int(jt)] = g * sg * max(-mx, min(mx, k * bearing)); moved = True
+                rate = 0.0                                                  # the body's own yaw rate (approach["gyro"]: the trunk's gyro,
+                gy = ap.get("gyro")                                         # + left), the vestibular damping of the turn
+                if gy is not None:
+                    gb_ = frame.obs.get(gy[0])
+                    if gb_ is not None:
+                        rate = float(gb_[int(gy[1])])
+                c = float(self._reflex_const("approach_damp"))
+                out[int(jt)] = g * max(-mx, min(mx, sg * k * bearing - c * rate)); moved = True
             jg = ap.get("go")
             if jg is not None and abs(bearing) <= float(self._reflex_const("approach_zone")):
                 out[int(jg)] = g * float(self._reflex_const("approach_go")); moved = True

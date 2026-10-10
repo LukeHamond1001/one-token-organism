@@ -489,9 +489,17 @@ REFLEX = dict(
     # (Bowlby 1969). The sizes are ours, in the command's own units (world.LOCO_SETTINGS: m/s and rad/s a tick, decaying): a bearing of
     # 0.4 rad steps the turn at its cap, which the command's decay holds at 0.6 rad/s; facing her the speed settles at a third of a
     # metre a second. 1 = on; off at birth for every body that does not say so
+    # Sized at 02:30 on the day-139 copy: at a gain of 0.05 and a cap of 0.02 the step lost to the brain's own held act on the command
+    # (one setting, -0.1 rad/s a tick, held tick after tick by the movement unit, A176): the turn sat at its cap and the speed at zero,
+    # the approach firing on every tick. The turn's step is now approach_turn_gain x the bearing less approach_damp x the body's own yaw
+    # rate (the trunk's gyro: the vestibular damping of a turn, the vestibulospinal road that steadies the body's rotation), capped at
+    # approach_turn_max 0.05 a tick (the command's cap reached in a dozen ticks: a slew, not a jerk); with the command's decay 0.97 the
+    # turn settles at about the bearing a second (0.5 / (0.03 + 0.5)) and does not ring; the brain's held act (its settings sized the
+    # same hour, world.LOCO_SETTINGS: 0.006 rad/s a tick at the inner setting) is outweighed with her 0.012 rad off straight ahead
     approach=0,
-    approach_turn_gain=0.05,
-    approach_turn_max=0.02,
+    approach_turn_gain=0.5,
+    approach_turn_max=0.05,
+    approach_damp=0.5,
     approach_go=0.01,
     approach_zone=0.35,
     # THE VOR (3.7, A23; brainstem, present at birth): the gaze's window counter-turns by the torso gyro's rotation in each camera's frame

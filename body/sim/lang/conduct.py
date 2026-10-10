@@ -1119,9 +1119,18 @@ class Conduct:
                           face=sorted(w.get("face", ())), acts=sorted(getattr(self.motion, "DOES", ())))
 
     # ------------------------------------------------------------------ her attention log (A51)
+    STAY_PUT_KINDS = ("lean_in", "copy", "attend", "withdraw", "touch", "hand_over", "lift", "carry", "pull_to_sit", "steady")
+
     def _request(self, act, t, p):
         """an act asked of her motion: kept open (running, whatever it reports but done, refused or cancelled) until her motion
-        reports it ended, and in her log from this tick, before her motion's first report of it."""
+        reports it ended, and in her log from this tick, before her motion's first report of it. C351 amended three times
+        (2026-10-10, 02:50): while her day plan says stay_put (a command block: she calls from across the room and the child must
+        come to her), the acts that bring her to the child (STAY_PUT_KINDS: the lean-in of her asks, the copy, the attend, the hand-over,
+        the touch) are not asked: day 138's command blocks had her lean in 58 times and kneel within a metre of it on 62% of their ticks,
+        so there was nothing to come to. Her line is said from where she stands; the refusal is logged"""
+        if getattr(self, "stay_put", False) and act.kind in self.STAY_PUT_KINDS:
+            self.fast.refused.append((t, act.kind, "stay put: she calls from across the room (C351 amended three times)"))
+            return None
         mid = self.motion.request(act, t)
         self.acts_open.append([mid, act.kind, act.target, act.thing, int(t), "unreported"])
         if self.attn and self.attn[-1]["t"] == t:

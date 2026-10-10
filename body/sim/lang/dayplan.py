@@ -533,6 +533,7 @@ class DayPlan:
         # C330 (2026-10-08): IN FLOOR PLAY TOO, A STAND DUE COMES BEFORE HER SHOWS. Day 123: shows open on 46% of the day's ticks and
         # stands on 25%, 10 stands done of 26 offered (the offer waits for her hands and an act-free tick); the owner's first goal is
         # walking. From STAND_SOON ticks before the floor stand is due until it is asked, her conduct asks no show of its own (C315's rule)
+        c.stay_put = bool(kind == "command")                            # C351 amended three times: in a command block she stays where she calls from
         c.quiet_shows = bool(kind == "command" or (kind == "motor" and self.sit_due) or
                              (kind == "floor" and t >= int(getattr(self, "next_floor_stand", 0)) - STAND_SOON))   # C315: a stand owed: her conduct asks no show of its own
         busy = (c.pending is not None or c.trial is not None or not c.fast.voice_free(t)

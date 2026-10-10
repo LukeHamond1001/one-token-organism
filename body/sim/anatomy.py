@@ -499,7 +499,7 @@ class SimAnatomy(LanguageAnatomy):
             rewards.append(Competence("competence", clip=COMPETENCE_GAIN, signs=(1.0,)))   # A181: mastery of its own doing pays (+), a switch of
         loco = Loco("loco", [5, 5], rest_id=12, sense=None, fwd_gate=False, n_in=2, inverse=False,   # W8 (the last: a loaded life's window grows at the end).
                     orient={1: ("yaw", -1)}, orient_gate=True,                # A216: the turn's positive step (+ rad/s) turns the body left, so a cue on
-                    approach={"go": 0, "turn": 1, "cues": ("face",), "eye": ("body", GAZE_AT)})   # the right is turned toward by its negative step: sense -1;
+                    approach={"go": 0, "turn": 1, "cues": ("face",), "eye": ("body", GAZE_AT), "gyro": ("imu_torso", 5)})   # the right is turned toward by its negative step: sense -1;
                                                         # the born approach on the command (body/core/cord.py _approach_step): her face's bearing
                                                         # from the body is the eyes' yaw in the head (the body channel at GAZE_AT) plus the cue's
                                                         # offset from the fovea; the gate's second input "a cue appeared" (the waist's).

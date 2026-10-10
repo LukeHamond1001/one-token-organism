@@ -281,7 +281,14 @@ LOCO_NAME, LOCO_JOINTS = "loco", ("go", "turn")   # W8 (2026-10-09, 22:30): THE 
                                                     # expert gait held in the ghost's command blocks, body/sim/ghost.py): two channels of five settings,
                                                     # a step on the commanded speed and on the commanded turn, as the gaze's acts step its windows. The
                                                     # cortex does not walk; it says where (the mesencephalic locomotor region's command; Grillner 2006)
-LOCO_SETTINGS = ((-0.15, -0.05, 0.0, 0.05, 0.15), (-0.3, -0.1, 0.0, 0.1, 0.3))   # m/s a tick on the speed; rad/s a tick on the turn (ours)
+LOCO_SETTINGS = ((-0.015, -0.005, 0.0, 0.005, 0.015), (-0.018, -0.006, 0.0, 0.006, 0.018))   # m/s a tick on the speed; rad/s a tick on the turn (ours).
+                                                    # W8 amended (2026-10-10, 02:40): A HELD ACT IS A SUSTAINED DRIVE AT ITS OWN LEVEL. The command is a leaky
+                                                    # integrator of the acts (COMMAND_DECAY 0.97: a step held every tick settles at 33 times the step), and the
+                                                    # movement unit holds one act tick after tick (A176), so with the first settings (0.1 and 0.3 rad/s a tick)
+                                                    # every held act was a spin at the cap (day 138: one act on 85% of the ticks, the turn at -0.6 rad/s all
+                                                    # day, the body spinning at a wall). The settings are now the command's range over the integrator's gain:
+                                                    # a held act settles at 0.17 or 0.5 m/s and at 0.2 or 0.6 rad/s, the inner and the outer setting, and a
+                                                    # single act fades in a few seconds as before. Ours
 EFFECTOR_FACTORS = {GAZE_NAME: [SETTINGS_PER_JOINT] * len(GAZE_JOINTS), LOCO_NAME: [SETTINGS_PER_JOINT] * len(LOCO_JOINTS),
                     **{n: [SETTINGS_PER_JOINT] * len(js) for n, js in G.EFFECTORS}}
 EFFECTOR_REST = {n: rest_id(len(f)) for n, f in EFFECTOR_FACTORS.items()}
